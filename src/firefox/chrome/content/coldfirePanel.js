@@ -222,6 +222,7 @@ coldfireProgress.prototype =
     		if(aRequest.getResponseHeader){
     			try
     			{
+					var generalHeader = '';
 					var queriesHeader = '';
 					var traceHeader = '';
 					var templatesHeader = '';
@@ -229,6 +230,17 @@ coldfireProgress.prototype =
 					var cfcsHeader = '';
 					var timerHeader= '';
 					var variablesHeader= '';
+					//get all general headers
+					var i = 1;
+					try
+					{
+						while( true )
+						{
+							generalHeader += aRequest.getResponseHeader( "x-coldfire-general-" + i );
+							i++;
+						}
+					}		
+					catch(e){}			
 					//get all query headers
 					var i = 1;
 					try
@@ -308,7 +320,7 @@ coldfireProgress.prototype =
 					catch(e){}					
 					try{
 					cfObj = {
-						generalObj: eval( "(" + aRequest.getResponseHeader( "x-coldfire-general" ) + ")" ),
+						generalObj: eval( "(" + generalHeader + ")" ),
 						queriesObj: eval( "(" + queriesHeader + ")" ),
 						traceObj: eval( "(" + traceHeader + ")" ),
 						templatesObj:  eval( "(" + templatesHeader + ")" ),
@@ -335,9 +347,24 @@ coldfireProgress.prototype =
 
 
 function ColdFireExtensionPanel() {} 
-ColdFireExtensionPanel.prototype = extend(Firebug.Panel, 
+ColdFireExtensionPanel.prototype = domplate(Firebug.Panel, 
 { 
-    name: $CFSTR("ColdFireExtension"), 
+    
+	styleSheetTag:
+		LINK({	rel: "stylesheet", 
+				type: "text/css", 
+				href: "chrome://coldfireextension/skin/panel.css", 
+				id: "coldfirePanelCSS" }),
+				
+	scriptTag:
+		SCRIPT({	type: "text/javascript", 
+					id: "coldfirePanelScript"},
+					'function tRow(s) {t = s.parentNode.lastChild;tTarget(t, tSource(s)) ;}function tTable(s) {var switchToState = tSource(s) ;var table = s.parentNode.parentNode;for (var i = 1; i < table.childNodes.length; i++) {t = table.childNodes[i] ;if (t.style) {tTarget(t, switchToState);}}}function tSource(s) {if (s.style.fontStyle == "italic" || s.style.fontStyle == null) {s.style.fontStyle = "normal";s.title = "click to collapse";return "open";} else {s.style.fontStyle = "italic";s.title = "click to expand";return "closed" ;}}function tTarget (t, switchToState) {if (switchToState == "open") {t.style.display = "";} else {t.style.display = "none";}}'),
+	
+	
+	
+	
+	name: $CFSTR("ColdFireExtension"), 
     title: $CFSTR("ColdFusion"), 
     searchable: false, 
     editable: false,

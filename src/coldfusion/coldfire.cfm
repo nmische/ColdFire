@@ -208,8 +208,7 @@ Handles server side debugging for ColdFire
 	<cfif isDefined("application.applicationname")>
 		<cfset myapp = application.applicationName>
 	</cfif>
-	
-	
+		
 	<!--- Taken from classic.cfm --->
 	<!--- Total Execution Time of all top level pages --->
 	<cfquery dbType="query" name="cfdebug_execution" debug="false">
@@ -219,16 +218,44 @@ Handles server side debugging for ColdFire
 	</cfquery>
 	<cfset totaltime = cfdebug_execution.executiontime>
 		
-	<cfset result = structNew()>
-	<cfset result.coldfusionserver = "#server.coldfusion.productname# #server.coldfusion.productlevel# #server.coldfusion.productversion#">
-	<cfset result.template = cgi.script_name>
-	<cfset result.timestamp = dateFormat(now(), "short") & " " & timeFormat(now(), "short")>
-	<cfset result.locale = getLocale()>
-	<cfset result.useragent = cgi.http_user_agent>
-	<cfset result.remoteip = cgi.remote_addr>
-	<cfset result.remotehost = cgi.remote_host>
-	<cfset result.application = myapp>
+	<cfset var result = queryNew("label,value")>
 	
+	<cfset queryAddRow(result)>
+	<cfset querySetCell(result, "label", "coldfusionserver")>
+	<cfset querySetCell(result, "value", "#server.coldfusion.productname# #server.coldfusion.productlevel# #server.coldfusion.productversion#")>
+	
+	<cfset queryAddRow(result)>
+	<cfset querySetCell(result, "label", "template")>
+	<cfset querySetCell(result, "value", cgi.script_name)>
+	
+	<cfset queryAddRow(result)>
+	<cfset querySetCell(result, "label", "timestamp")>
+	<cfset querySetCell(result, "value", dateFormat(now(), "short") & " " & timeFormat(now(), "short"))>
+	
+	<cfset queryAddRow(result)>
+	<cfset querySetCell(result, "label", "locale")>
+	<cfset querySetCell(result, "value", getLocale())>
+	
+	<cfset queryAddRow(result)>
+	<cfset querySetCell(result, "label", "useragent")>
+	<cfset querySetCell(result, "value", cgi.http_user_agent)>
+	
+	<cfset queryAddRow(result)>
+	<cfset querySetCell(result, "label", "remoteip")>
+	<cfset querySetCell(result, "value", cgi.remote_addr)>
+	
+	<cfset queryAddRow(result)>
+	<cfset querySetCell(result, "label", "remotehost")>
+	<cfset querySetCell(result, "value", cgi.remote_host)>
+	
+	<cfset queryAddRow(result)>
+	<cfset querySetCell(result, "label", "application")>
+	<cfset querySetCell(result, "value", myapp)>
+	
+	<cfset queryAddRow(result)>
+	<cfset querySetCell(result, "label", "totaltime")>
+	<cfset querySetCell(result, "value", totaltime)>
+		
 	<cfreturn result>
 	
 </cffunction>
@@ -577,6 +604,7 @@ Handles server side debugging for ColdFire
 	<cfset result.variables = coldfire_udf_encode(coldfire_udf_getVariables(varArray))>
 
 	<!--- now split into arrays --->
+	<cfset result.general = coldfire_udf_sizeSplit(result.general, arguments.maxHeader)>
 	<cfset result.templates = coldfire_udf_sizeSplit(result.templates, arguments.maxHeader)>
 	<cfset result.ctemplates = coldfire_udf_sizeSplit(result.ctemplates, arguments.maxHeader)>
 	<cfset result.cfcs = coldfire_udf_sizeSplit(result.cfcs, arguments.maxHeader)>
@@ -591,7 +619,9 @@ Handles server side debugging for ColdFire
 	</cfif>
 
 	<cftry>
-	<cfheader name="x-coldfire-general" value="#result.general#">
+	<cfloop index="x" from="1" to="#arrayLen(result.general)#">
+		<cfheader name="x-coldfire-general-#x#" value="#result.general[x]#">
+	</cfloop>
 	<cfloop index="x" from="1" to="#arrayLen(result.templates)#">
 		<cfheader name="x-coldfire-templates-#x#" value="#result.templates[x]#">
 	</cfloop>
