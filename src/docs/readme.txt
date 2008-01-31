@@ -20,11 +20,16 @@ Adam Podolnick http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_w
 Nathan Mische https://www.amazon.com/gp/registry/wishlist/1PMU5WXR9RZNJ/ref=wl_web/
 
 ------------------------------------ LAST UPDATE ------------------------------------
+Last Updated: Jan 2, 2008 (1.002)
+
+Fixes to coldfire_udf_encode UDF in coldfire.cfm based on latest CFJSON. 
+
+------------------------------------ OLDER UPDATES ------------------------------------
 Last Updated: Sept 26, 2007 (1.001)
 
 Fixed Firefox extension so that ColdFire can be used in Firebug's popup window. 
 
------------------------------------- OLDER UPDATES ------------------------------------
+
 Last Updated: Sept 25, 2007 (1.0)
 
 Additional updated to both Firefox extension and coldfire.cfm to support displaying

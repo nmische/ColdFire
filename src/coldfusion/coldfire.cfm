@@ -16,6 +16,7 @@
 					Work to support variables (ray@camdenfamily.com, plus mods by nmiche@gmail.com 7/26/07)
 					Additional work to support variables (nmische@gmail.com 9/7/2007)
 					Even more work to support variables (nmische@gmail.com 9/21/2007)
+					Fixes to coldfire_udf_encode based on CFJSON (nmische@gmail.com 1/2/2008)
 					
 					
 Handles server side debugging for ColdFire
@@ -913,15 +914,19 @@ Handles server side debugging for ColdFire
 
 	<!--- BOOLEAN --->
 	<cfif IsBoolean(_data) AND NOT IsNumeric(_data) AND NOT ListFindNoCase("Yes,No", _data)>
-		<cfreturn ToString(_data) />
+		<cfreturn LCase(ToString(_data)) />
 		
 	<!--- NUMBER --->
-	<cfelseif IsNumeric(_data) AND NOT REFind("^0+[^\.]",_data)>
+	<cfelseif NOT stringNumbers AND IsNumeric(_data) AND NOT REFind("^0+[^\.]",_data)>
 		<cfreturn ToString(_data) />
 	
+	<!--- DATE --->
+	<cfelseif IsDate(_data) AND arguments.formatDates>
+		<cfreturn '"#DateFormat(_data, "medium")# #TimeFormat(_data, "medium")#"' />
+		
 	<!--- STRING --->
 	<cfelseif IsSimpleValue(_data)>
-		<cfreturn '"' & JSStringFormat(_data) & '"' />
+		<cfreturn '"' & Replace(JSStringFormat(_data), "/", "\/", "ALL") & '"' />
 	
 	<!--- ARRAY --->
 	<cfelseif IsArray(_data)>
@@ -930,6 +935,7 @@ Handles server side debugging for ColdFire
 			<cfset tempVal = coldfire_udf_encode( _data[i], arguments.queryFormat, arguments.queryKeyCase ) />
 			<cfset jsonString = ListAppend(jsonString, tempVal, ",") />
 		</cfloop>		
+			
 		<cfreturn "[" & jsonString & "]" />		
 		
 	<!--- OBJECT --->
@@ -972,7 +978,7 @@ Handles server side debugging for ColdFire
 		<cfelse>
 			<cfset recordcountKey = "RECORDCOUNT" />
 			<cfset columnlistKey = "COLUMNLIST" />
-			<cfset columnlist = _data.columnlist />
+			<cfset columnlist = UCase(_data.columnlist) />
 			<cfset dataKey = "DATA" />
 		</cfif>
 		<cfset jsonString = '"#recordcountKey#":' & _data.recordcount />
