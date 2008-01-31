@@ -61,7 +61,17 @@ Firebug.ColdFireExtension = extend(Firebug.Module,
     {
     	ColdFire.disable();
     	unmonitorColdfireProgress( context );
-    },
+    },	
+	syncFilterButtons: function(chrome)
+    {
+        var button = chrome.$("fbColdFireFilter-"+this.coldfireView);
+        button.checked = true;    
+    },	
+	reattachContext: function(context)
+    {
+        var chrome = context ? context.chrome : FirebugChrome;
+        this.syncFilterButtons(chrome);
+    },	
     shutdown: function() 
     {
       ColdFire.shutdown();
@@ -81,8 +91,6 @@ Firebug.ColdFireExtension = extend(Firebug.Module,
 		var isVariablesView = this.coldfireView == "Variables";
 		var ColdFireVariableBox = Chrome.$( "fbColdFireVariableBox" ); 
 		collapse(ColdFireVariableBox, !(isColdFireExtension && isVariablesView));
-		
-		
         
         if( panel && panel.context.coldfireProgress )
 		{
@@ -346,24 +354,37 @@ ColdFireExtensionPanel.prototype = extend(Firebug.Panel,
 	initialize: function(context, doc)
     {
         this.onMouseOver = bind(this.onMouseOver, this);
-        this.onMouseOut = bind(this.onMouseOut, this);
-		
-		var coldfirePanelCSS=doc.createElement('link');
-		coldfirePanelCSS.setAttribute('rel','stylesheet');
-		coldfirePanelCSS.setAttribute('type','text/css');
-		coldfirePanelCSS.setAttribute('href','chrome://coldfireextension/skin/panel.css');
-		doc.getElementsByTagName("head")[0].appendChild(coldfirePanelCSS);
-		
-		
-		var script = 'function tRow(s) {t = s.parentNode.lastChild;tTarget(t, tSource(s)) ;}function tTable(s) {var switchToState = tSource(s) ;var table = s.parentNode.parentNode;for (var i = 1; i < table.childNodes.length; i++) {t = table.childNodes[i] ;if (t.style) {tTarget(t, switchToState);}}}function tSource(s) {if (s.style.fontStyle == "italic" || s.style.fontStyle == null) {s.style.fontStyle = "normal";s.title = "click to collapse";return "open";} else {s.style.fontStyle = "italic";s.title = "click to expand";return "closed" ;}}function tTarget (t, switchToState) {if (switchToState == "open") {t.style.display = "";} else {t.style.display = "none";}}';		
-		var coldfirePanelScript = doc.createElement('script');
-		coldfirePanelScript.setAttribute('type', 'text/javascript');
-		coldfirePanelScript.appendChild(document.createTextNode(script));
-		doc.getElementsByTagName("head")[0].appendChild(coldfirePanelScript);
-		
-		
+        this.onMouseOut = bind(this.onMouseOut, this);		
+		this.setUpDoc(doc);		
 		Firebug.Panel.initialize.apply(this, arguments);		
-    },
+    },	   
+    reattach: function(doc)
+    {
+       	this.setUpDoc(doc);		
+		Firebug.Panel.reattach.apply(this, arguments);	
+    }, 	
+	setUpDoc: function(doc){
+		
+		// add stylesheet
+		if (!doc.getElementById('coldfirePanelCSS')) {			
+			var coldfirePanelCSS=doc.createElement('link');
+			coldfirePanelCSS.setAttribute('rel','stylesheet');
+			coldfirePanelCSS.setAttribute('type','text/css');
+			coldfirePanelCSS.setAttribute('href','chrome://coldfireextension/skin/panel.css');
+			coldfirePanelCSS.setAttribute('id','coldfirePanelCSS');
+			doc.getElementsByTagName("head")[0].appendChild(coldfirePanelCSS);
+		};
+				
+		//add script
+		if (!doc.getElementById('coldfirePanelScript')) {			
+			var script = 'function tRow(s) {t = s.parentNode.lastChild;tTarget(t, tSource(s)) ;}function tTable(s) {var switchToState = tSource(s) ;var table = s.parentNode.parentNode;for (var i = 1; i < table.childNodes.length; i++) {t = table.childNodes[i] ;if (t.style) {tTarget(t, switchToState);}}}function tSource(s) {if (s.style.fontStyle == "italic" || s.style.fontStyle == null) {s.style.fontStyle = "normal";s.title = "click to collapse";return "open";} else {s.style.fontStyle = "italic";s.title = "click to expand";return "closed" ;}}function tTarget (t, switchToState) {if (switchToState == "open") {t.style.display = "";} else {t.style.display = "none";}}';		
+			var coldfirePanelScript = doc.createElement('script');
+			coldfirePanelScript.setAttribute('type', 'text/javascript');
+			coldfirePanelScript.setAttribute('id', 'coldfirePanelScript');
+			coldfirePanelScript.appendChild(document.createTextNode(script));
+			doc.getElementsByTagName("head")[0].appendChild(coldfirePanelScript);
+		};				
+	},		
 	initializeNode: function(oldPanelNode)
     {
         this.panelNode.addEventListener("mouseover", this.onMouseOver, false);

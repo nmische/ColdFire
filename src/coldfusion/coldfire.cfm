@@ -695,7 +695,7 @@ Handles server side debugging for ColdFire
 	<cfelseif IsQuery(_data)>
 		<cfreturn "QUERY">
 		
-	<!--- QUERY --->
+	<!--- CUSTOMFUNCTION --->
 	<cfelseif IsCustomFunction(_data)>
 		<cfreturn "CUSTOMFUNCTION">
 		
