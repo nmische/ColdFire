@@ -1,0 +1,42 @@
+/* basic styles */
+.headerRow {
+	background-color:#CCCCCC
+}
+
+.headerCell {
+	border-right:1px solid #999999;
+}
+
+.labelCell,
+.valueCell {
+	padding-top: 2px;
+    padding-bottom: 2px;
+	border-bottom: 1px dotted #3D3D3D;
+}
+
+/* trace */
+.traceWarning {
+	background-color:#FFFACD;
+}
+
+.traceError {
+	background-color:#FFF0F5;
+}
+
+.traceFatal {
+	background-color:#CA226B;
+}
+
+/* queries */
+.querySlow {
+	background-color:#FFF0F5;
+}
+
+
+/* variables */
+.variableToolbox {
+    z-index: 2147483647;
+    position: absolute;
+    right: 0;
+    padding: 1px 2px;
+}

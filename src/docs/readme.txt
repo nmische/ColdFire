@@ -1,0 +1,106 @@
+LICENSE 
+Copyright 2006 Raymond Camden, Adam Podolnick, Nathan Mische
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+   
+Support Us! Like this app? Visit our wishlists:
+
+Raymond Camden http://www.amazon.com/o/registry/2TCL1D08EZEYE
+Adam Podolnick http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_web
+Nathan Mische https://www.amazon.com/gp/registry/wishlist/1PMU5WXR9RZNJ/ref=wl_web/
+
+------------------------------------ LAST UPDATE ------------------------------------
+Last Updated: Sept 25, 2007 (1.0)
+
+Additional updated to both Firefox extension and coldfire.cfm to support displaying
+complex variable values. 
+
+------------------------------------ OLDER UPDATES ------------------------------------
+Last Updated: July 25, 2007 (0.0.802)
+
+Update Firefox extension to display variable values. Also updated to fix memory leak.
+Updated coldfire.cfm to return variable labels, values as a query. 
+
+
+Last Updated: July 23, 2007 (0.0.801)
+
+Added variables tab. Variables added to the variables tab will be sent as a JSON
+array in the ColdFire-Variables request header. 
+
+
+Last Updated: July 19, 2007 (0.0.7)
+
+Completed localization for en-US. Updated extension to prevent variable name conflicts
+with other Firebug extensions.
+
+
+Last Updated: July 1, 2007 (0.0.6)
+
+The ColdFire extension now modifies your UserAgent, as other Firebug extensions do.
+coldfire.cfm debug template looks for this UA, and if it doesn't exist, it will not
+return debug information.
+
+If you use another extension that changes your UA, please disable it when using ColdFire.
+
+Last Updated: June 20, 2007 (0.0.5)
+
+This is a big update, 99% of it done by Nathan Mische (nmische@gmail.com)
+Here are his changes. Note some are removed as they apply to the source setup for the XPI which is not yet
+included in SVN.
+
+coldfire.cfm
+* added udf_coldfire_CFDebugSerializable UDF
+* changed udf_coldfire_getQueries to return query parameter as well as
+stored procedure parameter/resultset data. This data is now formatted
+by the coldfire client.
+
+coldfireextension
+* added the parseParams preference
+* added ColdFireFormatter object to handle formatting query and stored
+procedure data
+* added localized content for parseParams preference and
+ColdFireFormatter object (en-US only, but it's a start)
+
+I made one small change to his updates, which is to fix an issue where SQL with line breaks formatted a bit oddly.
+
+Last Updated: April 4, 2007 (0.0.401)
+I lost a fix that was done a while ago. It fixes replacement of bound parameters in the query.
+
+Last Updated: April 4, 2007 (0.0.4)
+udfs renamed to avoid duplicate udf error
+cftimer support added
+duplicate qEvents to prevent problems with changes to data
+coldfire.xpi updated to handle these changes
+
+Last Updated: March 21, 2007 (0.0.3)
+coldfire.cfm splits large strings and uses multiple headers
+coldfire.xpi updated to handle these changes
+
+Last Updated: March 18, 2007 (0.02)
+coldfire.cfm uses JSON now.
+coldfire.cfm uses multiple headers.
+coldfire.cfm won't break on cflocation anymore.
+coldfire.xpi updated to support json + multiple headers
+
+
+Last Updated: March 13, 2007 (0.0.1)
+coldfire.cfm updated to check if CFFLUSH was called. If so - no debug info is returned. Docs
+will eventually cover that you can't use cfflush with ColdFire.
+
+Note new version #. This matches what you see in Firefox as well. We will be 0.X until the final 
+formal release.
+
+coldfire.xpi was updated to reflect new version #.
+
+Last Updated: March 13, 2007 (RC1)
+Initial release.
