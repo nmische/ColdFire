@@ -17,6 +17,7 @@
 					Additional work to support variables (nmische@gmail.com 9/7/2007)
 					Even more work to support variables (nmische@gmail.com 9/21/2007)
 					Fixes to coldfire_udf_encode based on CFJSON (nmische@gmail.com 1/2/2008)
+					Change coldfire_udf_getGeneral to return query object (nmische@gmail.com 2/2/2008)
 					
 					
 Handles server side debugging for ColdFire
@@ -194,13 +195,13 @@ Handles server side debugging for ColdFire
 
 <cffunction 
 	name="coldfire_udf_getGeneral"
-	returntype="struct"
+	returntype="query"
 	output="false"
 	hint="Gets General info">
 	
 	<cfargument name="data" type="query" required="true">
 	
-	<cfset var result = "">	
+	<cfset var result = queryNew("label,value")>
 	<cfset var myapp = "">
 	<cfset var totaltime = 0>
 	<cfset var cfdebug_execution = "">
@@ -218,42 +219,41 @@ Handles server side debugging for ColdFire
 	</cfquery>
 	<cfset totaltime = cfdebug_execution.executiontime>
 		
-	<cfset var result = queryNew("label,value")>
 	
 	<cfset queryAddRow(result)>
-	<cfset querySetCell(result, "label", "coldfusionserver")>
+	<cfset querySetCell(result, "label", "ColdFusionServer")>
 	<cfset querySetCell(result, "value", "#server.coldfusion.productname# #server.coldfusion.productlevel# #server.coldfusion.productversion#")>
 	
 	<cfset queryAddRow(result)>
-	<cfset querySetCell(result, "label", "template")>
+	<cfset querySetCell(result, "label", "Template")>
 	<cfset querySetCell(result, "value", cgi.script_name)>
 	
 	<cfset queryAddRow(result)>
-	<cfset querySetCell(result, "label", "timestamp")>
+	<cfset querySetCell(result, "label", "Timestamp")>
 	<cfset querySetCell(result, "value", dateFormat(now(), "short") & " " & timeFormat(now(), "short"))>
 	
 	<cfset queryAddRow(result)>
-	<cfset querySetCell(result, "label", "locale")>
+	<cfset querySetCell(result, "label", "Locale")>
 	<cfset querySetCell(result, "value", getLocale())>
 	
 	<cfset queryAddRow(result)>
-	<cfset querySetCell(result, "label", "useragent")>
+	<cfset querySetCell(result, "label", "UserAgent")>
 	<cfset querySetCell(result, "value", cgi.http_user_agent)>
 	
 	<cfset queryAddRow(result)>
-	<cfset querySetCell(result, "label", "remoteip")>
+	<cfset querySetCell(result, "label", "RemoteIP")>
 	<cfset querySetCell(result, "value", cgi.remote_addr)>
 	
 	<cfset queryAddRow(result)>
-	<cfset querySetCell(result, "label", "remotehost")>
+	<cfset querySetCell(result, "label", "RemoteHost")>
 	<cfset querySetCell(result, "value", cgi.remote_host)>
 	
 	<cfset queryAddRow(result)>
-	<cfset querySetCell(result, "label", "application")>
+	<cfset querySetCell(result, "label", "Application")>
 	<cfset querySetCell(result, "value", myapp)>
 	
 	<cfset queryAddRow(result)>
-	<cfset querySetCell(result, "label", "totaltime")>
+	<cfset querySetCell(result, "label", "TotalExecTime")>
 	<cfset querySetCell(result, "value", totaltime)>
 		
 	<cfreturn result>

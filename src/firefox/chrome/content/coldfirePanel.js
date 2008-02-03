@@ -344,25 +344,124 @@ coldfireProgress.prototype =
 	onLinkIconAvailable: function() {return 0;}
 };
 
+// add two new domplate tags to handle our stylesheet and script
+
+function defineTags()
+{
+    for (var i = 0; i < arguments.length; ++i)
+    {
+        var tagName = arguments[i];
+        var fn = new Function("var newTag = new DomplateTag('"+tagName+"'); return newTag.merge(arguments);");
+
+        var fnName = tagName.toUpperCase();
+        top[fnName] = fn;
+    }
+}
+
+defineTags("link", "script");
 
 
 function ColdFireExtensionPanel() {} 
 ColdFireExtensionPanel.prototype = domplate(Firebug.Panel, 
-{ 
-    
-	styleSheetTag:
+{  
+	// domplate tags
+	
+	styleSheetTag: 
 		LINK({	rel: "stylesheet", 
 				type: "text/css", 
 				href: "chrome://coldfireextension/skin/panel.css", 
 				id: "coldfirePanelCSS" }),
-				
+		
 	scriptTag:
-		SCRIPT({	type: "text/javascript", 
-					id: "coldfirePanelScript"},
-					'function tRow(s) {t = s.parentNode.lastChild;tTarget(t, tSource(s)) ;}function tTable(s) {var switchToState = tSource(s) ;var table = s.parentNode.parentNode;for (var i = 1; i < table.childNodes.length; i++) {t = table.childNodes[i] ;if (t.style) {tTarget(t, switchToState);}}}function tSource(s) {if (s.style.fontStyle == "italic" || s.style.fontStyle == null) {s.style.fontStyle = "normal";s.title = "click to collapse";return "open";} else {s.style.fontStyle = "italic";s.title = "click to expand";return "closed" ;}}function tTarget (t, switchToState) {if (switchToState == "open") {t.style.display = "";} else {t.style.display = "none";}}'),
+		SCRIPT({type: "text/javascript", id: "coldfirePanelScript"}),		
 	
+	tableTag:
+        TABLE({width: "100%", cellpadding: 2, cellspacing: 0},
+            THEAD(),
+			TBODY()
+        ),
+		
+	generalHeaderRow:
+		TR(
+			TH({class: "headerCell", width: "25%"}),
+            TH({class: "headerCell", width: "75%"})
+		),
+		
+	generalRowTag:
+		FOR("row", "$rows",
+            TR(
+                TD({class: "valueCell", width: "25%"},"$row.LABEL|safeCFSTR"),
+				TD({class: "valueCell", width: "75%"},"$row.VALUE")                    
+            )
+        ),
+		
+	etHeaderRow:
+		TR({class: "headerRow"},
+			TH({class: "headerCell", width: "20%"}, $CFSTR('Type')),
+			TH({class: "headerCell", width: "35%"}, $CFSTR('File')),
+			TH({class: "headerCell", width: "25%"}, $CFSTR('Method')),
+			TH({class: "headerCell", width: "10%"}, $CFSTR('TotalInstances')),
+			TH({class: "headerCell", width: "10%"}, $CFSTR('AvgExecTime'))		
+		),
+		
+	etRowTag:
+		FOR("row", "$rows",
+            TR({class: "$row.AVGTIME|isSlow"},
+                TD({class: "valueCell", width: "20%"},"$row.TYPE"),
+				TD({class: "valueCell", width: "35%"},"$row.TEMPLATE"),
+				TD({class: "valueCell", width: "25%"},"$row.METHOD"),
+				TD({class: "valueCell", width: "10%", align: "right"},"$row.TOTALINSTANCES"),
+				TD({class: "valueCell", width: "10%", align: "right"},"$row.AVGTIME|formatTime")                    
+            )
+        ),
+		
+	etTotalRow:
+		TR(
+			TD({class: "valueCell bold", width: "90%", colspan: 4}, $CFSTR('TotalExecTime')),
+			TD({class: "valueCell bold", width: "10%", align: "right"}, "$totalTime|formatTime")		
+		),
+		
+	queryHeaderRow:
+		TR({class: "headerRow"},
+			TH({class: "headerCell", width: "15%"}, $CFSTR('DataSource')),
+			TH({class: "headerCell", width: "10%"}, $CFSTR('QueryName')),
+			TH({class: "headerCell", width: "8%"},  $CFSTR('ExecutionTime')),
+			TH({class: "headerCell", width: "7%"}, $CFSTR('Records')),
+			TH({class: "headerCell", width: "60%"}, $CFSTR('SQL'))		
+		),
+		
+	queryRowTag:
+		FOR("row", "$rows",
+            TR({class: "$row.ET|isSlow"},
+                TD({class: "valueCell", width: "15%"},"$row.DATASOURCE"),
+				TD({class: "valueCell", width: "10%"},"$row.QUERYNAME"),
+				TD({class: "valueCell", width: "8%", align: "right"},"$row.ET|formatTime"),
+				TD({class: "valueCell", width: "7%", align: "right"},"$row.RECORDSRETURNED"),
+				TD({class: "valueCell querySQL", width: "60%"})                    
+            )
+        ),
 	
+		
+	// Convenience for domplates
 	
+	safeCFSTR: function(name)
+    {
+        try{
+			return $CFSTR(name);			
+		} catch (e) {
+			return name;
+		}		
+    },	
+	
+	isSlow: function(time)
+	{
+		return (parseInt(time) > 250)? "slow": "";
+	},
+	
+	formatTime: function(time)
+	{
+		return time + " ms";
+	},
 	
 	name: $CFSTR("ColdFireExtension"), 
     title: $CFSTR("ColdFusion"), 
@@ -391,26 +490,16 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		Firebug.Panel.reattach.apply(this, arguments);	
     }, 	
 	setUpDoc: function(doc){
-		
+		var head = doc.getElementsByTagName("head")[0];
 		// add stylesheet
 		if (!doc.getElementById('coldfirePanelCSS')) {			
-			var coldfirePanelCSS=doc.createElement('link');
-			coldfirePanelCSS.setAttribute('rel','stylesheet');
-			coldfirePanelCSS.setAttribute('type','text/css');
-			coldfirePanelCSS.setAttribute('href','chrome://coldfireextension/skin/panel.css');
-			coldfirePanelCSS.setAttribute('id','coldfirePanelCSS');
-			doc.getElementsByTagName("head")[0].appendChild(coldfirePanelCSS);
+			var styleSheet = this.styleSheetTag.append({},head);			
 		};
-				
 		//add script
-		if (!doc.getElementById('coldfirePanelScript')) {			
-			var script = 'function tRow(s) {t = s.parentNode.lastChild;tTarget(t, tSource(s)) ;}function tTable(s) {var switchToState = tSource(s) ;var table = s.parentNode.parentNode;for (var i = 1; i < table.childNodes.length; i++) {t = table.childNodes[i] ;if (t.style) {tTarget(t, switchToState);}}}function tSource(s) {if (s.style.fontStyle == "italic" || s.style.fontStyle == null) {s.style.fontStyle = "normal";s.title = "click to collapse";return "open";} else {s.style.fontStyle = "italic";s.title = "click to expand";return "closed" ;}}function tTarget (t, switchToState) {if (switchToState == "open") {t.style.display = "";} else {t.style.display = "none";}}';		
-			var coldfirePanelScript = doc.createElement('script');
-			coldfirePanelScript.setAttribute('type', 'text/javascript');
-			coldfirePanelScript.setAttribute('id', 'coldfirePanelScript');
-			coldfirePanelScript.appendChild(document.createTextNode(script));
-			doc.getElementsByTagName("head")[0].appendChild(coldfirePanelScript);
-		};				
+		if (!doc.getElementById('coldfirePanelScript')) {				
+			var script = this.scriptTag.append({},head);
+			script.innerHTML = 'function tRow(s) {t = s.parentNode.lastChild;tTarget(t, tSource(s)) ;}function tTable(s) {var switchToState = tSource(s) ;var table = s.parentNode.parentNode;for (var i = 1; i < table.childNodes.length; i++) {t = table.childNodes[i] ;if (t.style) {tTarget(t, switchToState);}}}function tSource(s) {if (s.style.fontStyle == "italic" || s.style.fontStyle == null) {s.style.fontStyle = "normal";s.title = "click to collapse";return "open";} else {s.style.fontStyle = "italic";s.title = "click to expand";return "closed" ;}}function tTarget (t, switchToState) {if (switchToState == "open") {t.style.display = "";} else {t.style.display = "none";}}';		
+		};			
 	},		
 	initializeNode: function(oldPanelNode)
     {
@@ -429,8 +518,16 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 	{
 		try{
 		this.generalRows = new Array();
-	    for(var i in theObj.generalObj){
-			this.generalRows.push({key:i,value:theObj.generalObj[i]});
+	    for( var i = 0; i < theObj.generalObj.DATA.LABEL.length; i++ ){
+			if(theObj.generalObj.DATA.LABEL[i] == 'TotalExecTime') {
+				this.totalET = theObj.generalObj.DATA.VALUE[i]
+				continue;
+			}
+			var temp = {
+				LABEL: theObj.generalObj.DATA.LABEL[i],
+				VALUE: theObj.generalObj.DATA.VALUE[i]
+			}
+			this.generalRows.push( temp );
 		}
 		this.queryRows = new Array();
 		for( var i = 0; i < theObj.queriesObj.DATA.DATASOURCE.length; i++ ){
@@ -444,7 +541,7 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 				RESULTSETS: theObj.queriesObj.DATA.RESULTSETS[i],
 				TYPE: theObj.queriesObj.DATA.TYPE[i]
 			};	
-			this.queryRows.push( query );
+			this.queryRows.push(query);
 		}
 	    this.etRows = new Array();
 		for(var i = 0; i < theObj.templatesObj.DATA.TOTALTIME.length; i++){
@@ -456,7 +553,7 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 	   		 	TOTALINSTANCES: theObj.templatesObj.DATA.TOTALINSTANCES[i],
 				METHOD: ""
 	    	};
-	    	this.etRows.push( temp );
+	    	this.etRows.push(temp);
 	    }
 	    for(var i = 0; i < theObj.ctemplatesObj.DATA.TOTALTIME.length; i++){
 		   	var temp = { 
@@ -467,7 +564,7 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 	   		 	TOTALINSTANCES: theObj.ctemplatesObj.DATA.TOTALINSTANCES[i],
 				METHOD: ""
 	    	};
-	    	this.etRows.push( temp );
+	    	this.etRows.push(temp);
 	    }
 		for(var i = 0; i < theObj.cfcsObj.DATA.TOTALTIME.length; i++){
 		   	var temp = { 
@@ -478,7 +575,7 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 	   		 	TOTALINSTANCES: theObj.cfcsObj.DATA.TOTALINSTANCES[i],
 				METHOD: theObj.cfcsObj.DATA.METHOD[i]
 	    	};
-	    	this.etRows.push( temp );
+	    	this.etRows.push(temp);
 	    }
 		this.traceRows = new Array();
 		for( var i = 0; i < theObj.traceObj.DATA.DELTA.length; i++ )
@@ -517,9 +614,7 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		this.panelNode.innerHTML = "";
 		switch( Firebug.ColdFireExtension.coldfireView ) {
 			case "General":
-				for( var i = 0; i < this.generalRows.length; i++ ) {
-					this.addGeneralRow(this.generalRows[i].key, this.generalRows[i].value);
-				}
+				this.renderGeneralTable();
 				break;
 			case "ET":
 				this.renderETTable();
@@ -538,87 +633,46 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 				break;
 		}
 	},
-	renderETTable: function() {
-		//create table
-		var tbl = this.document.createElement( "table" );
-		tbl.width = "100%";
-		tbl.style.borderSpacing = "0px";
-		//create header
-		var tblString = new StringBuffer();
-		tblString.append("<TR class='headerRow'><TH class='headerCell' width='20%'><B>" + $CFSTR('Type') + "</B></TH><TH class='headerCell' width='35%'><B>" + $CFSTR('File') + "</B></TH><TH class='headerCell' width='25%'><B>" + $CFSTR('Method') + "</B></TH><TH class='headerCell' width='10%'><B>" + $CFSTR('TotalInstances') + "</B></TH><TH class='headerCell' width='10%'><B>" + $CFSTR('AvgExecTime') + "</B></TH></TR>");
-		//add template rows
-		for( var i = 0; i < this.etRows.length; i++ ) {
-			var style = ( parseInt( this.etRows[i].AVGTIME ) > 50 ) ? "style='background-color:#FFF0F5'" : "";
-			tblString.append("<TR "+style+" ><TD class='valueCell'>"+this.etRows[i].TYPE+"</TD><TD class='valueCell'>"+this.etRows[i].TEMPLATE+"</TD><TD class='valueCell'>"+this.etRows[i].METHOD+"</TD><TD class='valueCell'>"+this.etRows[i].TOTALINSTANCES+"</TD><TD class='valueCell'>"+this.etRows[i].AVGTIME+" ms</TD></TR>");
-		}
-		if(this.totalET != null)
-			tblString.append("<TR class='headerRow'><TD colspan='4'><B>" + $CFSTR('TotalExecTime') + "</B></TD><TD><B>"+this.totalET+"ms</B></TD></TR>");
-		tbl.innerHTML = tblString.toString();
-		this.panelNode.appendChild(tbl);
+	renderGeneralTable: function() {
+		//create table		
+		this.table = this.tableTag.append({}, this.panelNode, this);
+		//create header		
+		var headerRow =  this.generalHeaderRow.insertRows({}, this.table.firstChild)[0];
+		//add general rows       
+		var row = this.generalRowTag.insertRows({rows: this.generalRows}, this.table.lastChild)[0];	
 	},
-    addGeneralRow: function( k, v ){
-    	var realKey;
-    	switch( k ){
-    		case "COLDFUSIONSERVER":
-    			realKey = $CFSTR("ColdFusionServer");
-    			break;
-    		case "TEMPLATE":
-    			realKey = $CFSTR("Template");
-    			break;
-    		case "TIMESTAMP":
-    			realKey = $CFSTR("Timestamp");
-    			break;
-    		case "LOCALE":
-    			realKey = $CFSTR("Locale");
-    			break;
-    		case "USERAGENT":
-    			realKey = $CFSTR("UserAgent");
-    			break;
-    		case "REMOTEIP":
-    			realKey = $CFSTR("RemoteIP");
-    			break;
-    		case "REMOTEHOST":
-    			realKey = $CFSTR("RemoteHost");
-    			break;
-    		case "APPLICATION":
-    			realKey = $CFSTR("Application");
-    			break;
-    	}
-   		var tbl = this.document.createElement( "table" );
-   		tbl.width = "100%";
-		tbl.style.borderSpacing = "0px";
-   		tbl.style.borderBottom = "1px dotted #d3d3d3";
-		var row = this.document.createElement( "tr" );
-		var key = this.document.createElement( "td" );
-		key.innerHTML = realKey;
-		key.width = "25%";
-		var value = this.document.createElement("td");
-		value.innerHTML = "<b><font color=\"#0033CC\">"+v+"</font></b>";
-		value.width = "75%";
-    	row.appendChild( key );
-    	row.appendChild( value );
-    	tbl.appendChild( row );
-    	this.panelNode.appendChild( tbl );
-    },
-	renderDBTable: function() {
-		var tbl = this.document.createElement( "table" );
-		tbl.width = "100%";
-		tbl.style.borderSpacing = "0px";
-		var tblString = new StringBuffer();
-		tblString.append("<TR class='headerRow'><TH class='headerCell' width='15%'><B>" + $CFSTR('DataSource') + "</B></TH><TH class='headerCell' width='10%'><B>" + $CFSTR('QueryName') + "</B></TH><TH class='headerCell' width='8%'><B>" + $CFSTR('ExecutionTime') + "</B></TH><TH class='headerCell' width='7%'><B>" + $CFSTR('Records') + "</B></TH><TH class='headerCell' width='60%'><B>" + $CFSTR('SQL') + "</B></TH></TR>");
+	renderETTable: function() {
+		//create table		
+		this.table = this.tableTag.append({}, this.panelNode, this);
+		//create header		
+		var headerRow =  this.etHeaderRow.insertRows({}, this.table.firstChild)[0];
+		//add et rows
+		var row = this.etRowTag.insertRows({rows: this.etRows}, this.table.lastChild)[1];		
+		if(this.totalET != null) 
+			var totalRow = this.etTotalRow.insertRows({totalTime: this.totalET}, row)[0];
+	},
+    renderDBTable: function() {				
+		//create table		
+		this.table = this.tableTag.append({}, this.panelNode, this);
+		//create header		
+		var headerRow =  this.queryHeaderRow.insertRows({}, this.table.firstChild)[0];
+		//add et rows
+		var row = this.queryRowTag.insertRows({rows: this.queryRows}, this.table.lastChild)[0];		
+		// now we need to go build the sql string
+		var sqlString = "";
+		var sqlCell = null;				
 		for( var i = 0; i < this.queryRows.length; i++ ){
-			var style = ( parseInt( this.queryRows[i].ET ) > 50 ) ? " class='querySlow'" : "";
-			tblString.append("<TR"+style+"><TD class='valueCell'>"+this.queryRows[i].DATASOURCE+"</TD><TD class='valueCell'>"+this.queryRows[i].QUERYNAME+"</TD><TD class='valueCell'>"+this.queryRows[i].ET+" ms</TD><TD class='valueCell'>"+this.queryRows[i].RECORDSRETURNED+"</TD><TD class='valueCell'>");
-			if (this.queryRows[i].TYPE == 'StoredProcedure') {
-				tblString.append(this.formatter.formatSPParams(this.queryRows[i].PARAMETERS));
-				tblString.append(this.formatter.formatSPResultSets(this.queryRows[i].RESULTSETS));
+			sqlString ="";
+			sqlCell = null;
+			if (this.queryRows[i].TYPE == "StoredProcedure") {
+				sqlString += this.formatter.formatSPParams(this.queryRows[i].PARAMETERS);
+				sqlString += this.formatter.formatSPResultSets(this.queryRows[i].RESULTSETS);
 			} else {
-				tblString.append(this.formatter.formatQuery(this.queryRows[i].SQL,this.queryRows[i].PARAMETERS));
+				sqlString += this.formatter.formatQuery(this.queryRows[i].SQL,this.queryRows[i].PARAMETERS);
 			}	
-			tblString.append("</TD></TR>");		
-		}
-		tbl.innerHTML = tblString.toString(); 
-		this.panelNode.appendChild(tbl);
+			sqlCell = getElementsByClass("querySQL", this.table, "td")[i];
+			sqlCell.innerHTML = sqlString;					
+		}		
 	},
 	renderTraceTable: function() {
 		var tbl = this.document.createElement( "table" );
@@ -825,11 +879,34 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 Firebug.registerModule( Firebug.ColdFireExtension ); 
 Firebug.registerPanel( ColdFireExtensionPanel );
 
+
+
+
+
+
 }});
 
 function $CFSTR(name)
 {
     return document.getElementById("strings_coldfire").getString(name);
+}
+
+function getElementsByClass(searchClass,node,tag) {
+	var classElements = new Array();
+	if ( node == null )
+		node = document;
+	if ( tag == null )
+		tag = '*';
+	var els = node.getElementsByTagName(tag);
+	var elsLen = els.length;
+	var pattern = new RegExp("(^|\\s)"+searchClass+"(\\s|$)");
+	for (i = 0, j = 0; i < elsLen; i++) {
+		if ( pattern.test(els[i].className) ) {
+			classElements[j] = els[i];
+			j++;
+		}
+	}
+	return classElements;
 }
 
 function StringBuffer()
