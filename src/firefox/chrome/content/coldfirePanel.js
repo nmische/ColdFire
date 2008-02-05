@@ -440,6 +440,36 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 				TD({class: "valueCell querySQL", width: "60%"})                    
             )
         ),
+		
+	traceHeaderRow:
+		TR({class: "headerRow"},
+			TH({class: "headerCell", width: "10%"}, $CFSTR('Type')),
+			TH({class: "headerCell", width: "10%"},  $CFSTR('Delta')),
+			TH({class: "headerCell", width: "80%"},  $CFSTR('Message'))	
+		),
+		
+	traceRowTag:
+		FOR("row", "$rows",
+            TR({class: "$row.PRIORITY|getTraceClass"},
+                TD({class: "valueCell", width: "10%"},"$row.PRIORITY|formatPriority|safeCFSTR"),
+				TD({class: "valueCell", width: "10%", align: "right"},"$row.DELTA|formatTime"),
+				TD({class: "valueCell", width: "80"},"$row.MESSAGE")                    
+            )
+        ),
+		
+	timerHeaderRow:
+		TR({class: "headerRow"},
+			TH({class: "headerCell", width: "90%"}, $CFSTR('Message')),
+			TH({class: "headerCell", width: "10%"},  $CFSTR('Duration'))
+		),
+	
+	timerRowTag:
+		FOR("row", "$rows",
+            TR(
+                TD({class: "valueCell", width: "90%"},"$row.MESSAGE"),
+				TD({class: "valueCell", width: "10%", align: "right"},"$row.DURATION|formatTime")
+            )
+        ),
 	
 		
 	// Convenience for domplates
@@ -462,6 +492,47 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 	{
 		return time + " ms";
 	},
+	
+	getTraceClass: function(priority)
+	{
+		var tmp = "";
+		switch(priority)
+		{
+			case "warning":				
+				tmp = "traceWarning";
+				break;
+			case "error":
+				tmp = "traceError";
+				break;
+			case "fatal information":
+				tmp = "traceFatal";
+				break;
+		}	
+		return tmp;
+	},
+	
+	formatPriority: function(priority)
+	{
+		var tmp = priority;
+		switch(priority)
+		{
+			case "information":
+				tmp = "Info";
+				break;
+			case "warning":
+				tmp = "Warning";
+				break;
+			case "error":
+				tmp = "Error";
+				break;
+			case "fatal information":
+				tmp = "Fatal";
+				break;
+		}
+		return tmp;
+	},
+	
+	
 	
 	name: $CFSTR("ColdFireExtension"), 
     title: $CFSTR("ColdFusion"), 
@@ -675,47 +746,20 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		}		
 	},
 	renderTraceTable: function() {
-		var tbl = this.document.createElement( "table" );
-		tbl.width = "100%";
-		tbl.style.borderSpacing = "0px";
-		var tblString = new StringBuffer();
-		tblString.append("<TR class='headerRow'><TH class='headerCell' width='10%'><B>" + $CFSTR('Type') + "</B></TH><TH class='headerCell' width='10%'>" + $CFSTR('Delta') + "</TH><TH class='headerCell' width='80%'><B>" + $CFSTR('Message') + "</B></TH></TR>");
-		for( var i = 0; i < this.traceRows.length; i++ ){
-			var style = "";
-			var type = "";
-			switch(this.traceRows[i].PRIORITY){
-				case "information":
-					type = "Info";
-					break;
-				case "warning":
-					type = "Warning";
-					style = " class='traceWarning'";
-					break;
-				case "error":
-					type = "Error";
-					style = " class='traceError'";
-					break;
-				case "fatal information":
-					type = "Fatal";
-					style = " class='traceFatal'";
-					break;
-			}
-			tblString.append("<TR"+style+"><TD class='labelCell'>"+type+"</TD><TD class='valueCell'>"+this.traceRows[i].DELTA+" ms</TD><TD class='valueCell'>"+this.traceRows[i].MESSAGE+"</TD></TR>");
-		}
-		tbl.innerHTML = tblString.toString();
-		this.panelNode.appendChild(tbl);
+		//create table		
+		this.table = this.tableTag.append({}, this.panelNode, this);
+		//create header		
+		var headerRow =  this.traceHeaderRow.insertRows({}, this.table.firstChild)[0];
+		//add et rows
+		var row = this.traceRowTag.insertRows({rows: this.traceRows}, this.table.lastChild)[0];			
 	},
 	renderTimerTable: function() {
-		var tbl = this.document.createElement( "table" );
-		tbl.width = "100%";
-		tbl.style.borderSpacing = "0px";
-		var tblString = new StringBuffer();
-		tblString.append("<TR class='headerRow'><TH class='headerCell' width='90%'><B>" + $CFSTR('Message') + "</B></TH><TH class='headerCell' width='10%'>" + $CFSTR('Duration') + "</TH></TR>");
-		for( var i = 0; i < this.timerRows.length; i++ ){
-			tblString.append("<TR><TD class='valueCell'>"+this.timerRows[i].MESSAGE+"</TD><TD class='valueCell'>"+this.timerRows[i].DURATION+" ms</TD></TR>");
-		}
-		tbl.innerHTML = tblString.toString();
-		this.panelNode.appendChild(tbl);
+		//create table		
+		this.table = this.tableTag.append({}, this.panelNode, this);
+		//create header		
+		var headerRow =  this.timerHeaderRow.insertRows({}, this.table.firstChild)[0];
+		//add et rows
+		var row = this.timerRowTag.insertRows({rows: this.timerRows}, this.table.lastChild)[0];		
 	},
 	renderVariablesTable: function() {		
 		var tbl = this.document.createElement( "table" );
@@ -753,9 +797,7 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 			valRow.appendChild(valCell2);			
 			tbl.appendChild(valRow);
 		}		
-		this.panelNode.appendChild(tbl);
-		
-		
+		this.panelNode.appendChild(tbl);		
 	},
 	showToolbox: function(row) {
         var toolbox = this.getToolbox();
