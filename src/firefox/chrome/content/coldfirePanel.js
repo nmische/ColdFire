@@ -41,6 +41,20 @@ const STATE_START = Components.interfaces.nsIWebProgressListener.STATE_START;
 const STATE_STOP = Components.interfaces.nsIWebProgressListener.STATE_STOP;
 const STATE_IS_REQUEST = Components.interfaces.nsIWebProgressListener.STATE_IS_REQUEST;
 const NOTIFY_ALL = Components.interfaces.nsIWebProgress.NOTIFY_ALL;
+
+const ToolboxPlate = domplate(
+{
+    tag:
+        DIV({class: "variableToolbox", _domPanel: "$domPanel", onclick: "$onClick"},
+            IMG({class: "variableDeleteButton closeButton", src: "blank.gif"})
+        ),
+    
+    onClick: function(event)
+    {
+        var toolbox = event.currentTarget;
+        toolbox.domPanel.deleteVariable(toolbox.varRow);
+    }
+});
 	
 var ColdFire;
 var Chrome;
@@ -470,10 +484,22 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 				TD({class: "valueCell", width: "10%", align: "right"},"$row.DURATION|formatTime")
             )
         ),
-	
 		
-	// Convenience for domplates
+	varHeaderRow:
+		TR({class: "headerRow"},
+			TH({class: "headerCell", width: "20%"}, $CFSTR('Variable')),
+			TH({class: "headerCell", width: "80%"},  $CFSTR('Value'))
+		),
 	
+	varRowTag:
+		FOR("row", "$rows",
+            TR({class: "variableRow", level: 0},
+                TD({class: "valueCell", width: "20%", valign: "top"},"$row"),
+				TD({class: "valueCell varValue", width: "80%", valign: "top"})
+            )
+        ),
+	
+	// Convenience for domplates	
 	safeCFSTR: function(name)
     {
         try{
@@ -482,17 +508,14 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 			return name;
 		}		
     },	
-	
 	isSlow: function(time)
 	{
 		return (parseInt(time) > 250)? "slow": "";
-	},
-	
+	},	
 	formatTime: function(time)
 	{
 		return time + " ms";
-	},
-	
+	},	
 	getTraceClass: function(priority)
 	{
 		var tmp = "";
@@ -509,8 +532,7 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 				break;
 		}	
 		return tmp;
-	},
-	
+	},	
 	formatPriority: function(priority)
 	{
 		var tmp = priority;
@@ -531,9 +553,7 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		}
 		return tmp;
 	},
-	
-	
-	
+	// panel	
 	name: $CFSTR("ColdFireExtension"), 
     title: $CFSTR("ColdFusion"), 
     searchable: false, 
@@ -576,6 +596,11 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
     {
         this.panelNode.addEventListener("mouseover", this.onMouseOver, false);
         this.panelNode.addEventListener("mouseout", this.onMouseOut, false);
+    },
+	destroyNode: function()
+    {
+        this.panelNode.removeEventListener("mouseover", this.onMouseOver, false);
+        this.panelNode.removeEventListener("mouseout", this.onMouseOut, false);
     },	
 	getOptionsMenuItems: function()
 	{
@@ -727,7 +752,7 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		this.table = this.tableTag.append({}, this.panelNode, this);
 		//create header		
 		var headerRow =  this.queryHeaderRow.insertRows({}, this.table.firstChild)[0];
-		//add et rows
+		//add db rows
 		var row = this.queryRowTag.insertRows({rows: this.queryRows}, this.table.lastChild)[0];		
 		// now we need to go build the sql string
 		var sqlString = "";
@@ -750,7 +775,7 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		this.table = this.tableTag.append({}, this.panelNode, this);
 		//create header		
 		var headerRow =  this.traceHeaderRow.insertRows({}, this.table.firstChild)[0];
-		//add et rows
+		//add trace rows
 		var row = this.traceRowTag.insertRows({rows: this.traceRows}, this.table.lastChild)[0];			
 	},
 	renderTimerTable: function() {
@@ -758,46 +783,29 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		this.table = this.tableTag.append({}, this.panelNode, this);
 		//create header		
 		var headerRow =  this.timerHeaderRow.insertRows({}, this.table.firstChild)[0];
-		//add et rows
+		//add timer rows
 		var row = this.timerRowTag.insertRows({rows: this.timerRows}, this.table.lastChild)[0];		
 	},
 	renderVariablesTable: function() {		
-		var tbl = this.document.createElement( "table" );
-		tbl.width = "100%";
-		tbl.style.borderSpacing = "0px";
-		var hdrRow = this.document.createElement( "tr" );
-		hdrRow.className = "headerRow";
-		var hdrCell1 = this.document.createElement( "th" );
-		hdrCell1.className="headerCell";
-		hdrCell1.width="20%";
-		hdrCell1.innerHTML = "<B>" + $CFSTR('Variable') + "</B>";
-		var hdrCell2 = this.document.createElement( "th" );
-		hdrCell2.className="headerCell";
-		hdrCell2.width="80%";
-		hdrCell2.innerHTML = "<B>" + $CFSTR('Value') + "</B>";
-		hdrRow.appendChild(hdrCell1);
-		hdrRow.appendChild(hdrCell2);
-		tbl.appendChild(hdrRow);
-		var vars = ColdFire.getVariables();
+		//create table		
+		this.table = this.tableTag.append({}, this.panelNode, this);
+		//create header		
+		var headerRow =  this.varHeaderRow.insertRows({}, this.table.firstChild)[0];
+		//add variable rows
+		var vars = ColdFire.getVariables();				
+		var row = this.varRowTag.insertRows({rows: vars}, this.table.lastChild)[0];		
+		// now we need to go build the var string
+		var varString = "";
+		var varCell = null;	
 		for( var i = 0; i < vars.length; i++ ){
-			var valRow = this.document.createElement( "tr" );
-			valRow.className = "variableRow";
-			valRow.panelNode = this.panelNode;
-			valRow.addEventListener("onmouseover",this.onMouseOver,false);
-			valRow.addEventListener("onmouseout",this.onMouseOut,false);
-			var valCell1 = this.document.createElement( "td" );
-			valCell1.className = 'labelCell';
-			valCell1.innerHTML = vars[i];
-			var valCell2 = this.document.createElement( "td" );
-			valCell2.className = 'valueCell';
+			varString ="";
+			varCell = null;
 			if (this.variablesRows && this.variablesRows[i] && this.variablesRows[i].VALUE) {
-				valCell2.innerHTML = this.dumper.dump(this.variablesRows[i].VALUE,false);
+				varString = this.dumper.dump(this.variablesRows[i].VALUE,false);
 			}
-			valRow.appendChild(valCell1);
-			valRow.appendChild(valCell2);			
-			tbl.appendChild(valRow);
-		}		
-		this.panelNode.appendChild(tbl);		
+			varCell = getElementsByClass("varValue", this.table, "td")[i];
+			varCell.innerHTML = varString;
+		}				
 	},
 	showToolbox: function(row) {
         var toolbox = this.getToolbox();
@@ -814,32 +822,19 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
         }
         else
         {
-            delete toolbox.watchRow;
+            delete toolbox.varRow;
             if (toolbox.parentNode)
                 toolbox.parentNode.removeChild(toolbox);
         }
     },
 	getToolbox: function() {
-        if (!this.toolbox){
-			/* delete button */
-			var toolbox = this.document.createElement( "div" );
-			toolbox.className = "variableToolbox";
-			toolbox.varPanel = this;
-			toolbox.onclick = function(event) {
-				var toolbox = event.currentTarget;
-				toolbox.varPanel.deleteVariable(toolbox.varRow);				
-			};	
-			var cancelBtn = this.document.createElement( "img" );
-			cancelBtn.className = "closeButton";
-			cancelBtn.src = "blank.gif";
-			toolbox.appendChild(cancelBtn);	
-			
-			this.toolbox = toolbox;	
-		}
-            
+        if (!this.toolbox)
+            this.toolbox = ToolboxPlate.tag.replace({domPanel: this}, this.document);
+
         return this.toolbox;
     },
-	onMouseOver: function(event) {			
+	onMouseOver: function(event) {	
+		
 		var variableRow = getAncestorByClass(event.target, "variableRow");
 		if (variableRow) 			
 			 this.showToolbox(variableRow);			
@@ -921,11 +916,6 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 Firebug.registerModule( Firebug.ColdFireExtension ); 
 Firebug.registerPanel( ColdFireExtensionPanel );
 
-
-
-
-
-
 }});
 
 function $CFSTR(name)
@@ -933,7 +923,8 @@ function $CFSTR(name)
     return document.getElementById("strings_coldfire").getString(name);
 }
 
-function getElementsByClass(searchClass,node,tag) {
+function getElementsByClass(searchClass,node,tag) 
+{
 	var classElements = new Array();
 	if ( node == null )
 		node = document;
@@ -951,16 +942,11 @@ function getElementsByClass(searchClass,node,tag) {
 	return classElements;
 }
 
-function StringBuffer()
+/* A logger
+var gConsoleService = Components.classes['@mozilla.org/consoleservice;1'].getService(Components.interfaces.nsIConsoleService);
+
+function coldfire_logMessage(aMessage) 
 {
-	this.buffer = [];
+  gConsoleService.logStringMessage('ColdFire: ' + aMessage);
 }
-StringBuffer.prototype.append = function(string)
-{
-	this.buffer.push(string);
-	return this;
-}
-StringBuffer.prototype.toString = function()
-{
-	return this.buffer.join("");
-}
+*/

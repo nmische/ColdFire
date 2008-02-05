@@ -108,10 +108,10 @@ function ColdFireProxy() {
 
 // nsIObserver interface method
 ColdFireProxy.prototype.observe = function(subject, topic, data) {
-    coldfire_logMessage("Entered ColdFireProxy.prototype.observe");
+   //coldfire_logMessage("Entered ColdFireProxy.prototype.observe");
 
     if (topic == 'http-on-modify-request') {
-        coldfire_logMessage("topic is http-on-modify-request");
+        //coldfire_logMessage("topic is http-on-modify-request");
 
         subject.QueryInterface(Components.interfaces.nsIHttpChannel);
         
@@ -129,7 +129,7 @@ ColdFireProxy.prototype.observe = function(subject, topic, data) {
 		  
         }
     } else if (topic == 'app-startup') {
-      coldfire_logMessage("topic is app-startup");
+      //coldfire_logMessage("topic is app-startup");
         
       if ("nsINetModuleMgr" in Components.interfaces) {
           // Should be an old version of Mozilla (before september 15, 2003
@@ -140,10 +140,10 @@ ColdFireProxy.prototype.observe = function(subject, topic, data) {
         observerService.addObserver(this, "http-on-modify-request", false);
       }
     } else {
-       coldfire_logMessage("No observable topic defined");
+       //coldfire_logMessage("No observable topic defined");
     }
     
-    coldfire_logMessage("Exiting ColdFireProxy.prototype.observe");
+    //coldfire_logMessage("Exiting ColdFireProxy.prototype.observe");
 }
 
 // nsISupports interface method
@@ -247,7 +247,7 @@ function NSGetModule(compMgr, fileSpec) {
 }
 
 
-// A logger
+/* A logger
 var gConsoleService = Components.classes['@mozilla.org/consoleservice;1'].getService(Components.interfaces.nsIConsoleService);
 
 
@@ -256,6 +256,7 @@ function coldfire_logMessage(aMessage) {
   gConsoleService.logStringMessage('ColdFire Service: ' + aMessage);
   
 }
+*/
 
 /*
     json.js
