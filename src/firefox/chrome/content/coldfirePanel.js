@@ -734,8 +734,9 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		this.table = this.tableTag.append({}, this.panelNode, this);
 		//create header		
 		var headerRow =  this.generalHeaderRow.insertRows({}, this.table.firstChild)[0];
-		//add general rows       
-		var row = this.generalRowTag.insertRows({rows: this.generalRows}, this.table.lastChild)[0];	
+		//add general rows  
+		if(this.generalRows.length)
+			var row = this.generalRowTag.insertRows({rows: this.generalRows}, this.table.lastChild)[0];			
 	},
 	renderETTable: function() {
 		//create table		
@@ -743,7 +744,8 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		//create header		
 		var headerRow =  this.etHeaderRow.insertRows({}, this.table.firstChild)[0];
 		//add et rows
-		var row = this.etRowTag.insertRows({rows: this.etRows}, this.table.lastChild)[1];		
+		if(this.etRows.length)
+			var row = this.etRowTag.insertRows({rows: this.etRows}, this.table.lastChild)[1];		
 		if(this.totalET != null) 
 			var totalRow = this.etTotalRow.insertRows({totalTime: this.totalET}, row)[0];
 	},
@@ -753,7 +755,8 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		//create header		
 		var headerRow =  this.queryHeaderRow.insertRows({}, this.table.firstChild)[0];
 		//add db rows
-		var row = this.queryRowTag.insertRows({rows: this.queryRows}, this.table.lastChild)[0];		
+		if (this.queryRows.length)
+			var row = this.queryRowTag.insertRows({rows: this.queryRows}, this.table.lastChild)[0];		
 		// now we need to go build the sql string
 		var sqlString = "";
 		var sqlCell = null;				
@@ -776,7 +779,8 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		//create header		
 		var headerRow =  this.traceHeaderRow.insertRows({}, this.table.firstChild)[0];
 		//add trace rows
-		var row = this.traceRowTag.insertRows({rows: this.traceRows}, this.table.lastChild)[0];			
+		if (this.traceRows.length)
+			var row = this.traceRowTag.insertRows({rows: this.traceRows}, this.table.lastChild)[0];			
 	},
 	renderTimerTable: function() {
 		//create table		
@@ -784,7 +788,8 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		//create header		
 		var headerRow =  this.timerHeaderRow.insertRows({}, this.table.firstChild)[0];
 		//add timer rows
-		var row = this.timerRowTag.insertRows({rows: this.timerRows}, this.table.lastChild)[0];		
+		if (this.timerRows.length)
+			var row = this.timerRowTag.insertRows({rows: this.timerRows}, this.table.lastChild)[0];		
 	},
 	renderVariablesTable: function() {		
 		//create table		
@@ -792,8 +797,9 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		//create header		
 		var headerRow =  this.varHeaderRow.insertRows({}, this.table.firstChild)[0];
 		//add variable rows
-		var vars = ColdFire.getVariables();				
-		var row = this.varRowTag.insertRows({rows: vars}, this.table.lastChild)[0];		
+		var vars = ColdFire.getVariables();	
+		if (vars.length)			
+			var row = this.varRowTag.insertRows({rows: vars}, this.table.lastChild)[0];		
 		// now we need to go build the var string
 		var varString = "";
 		var varCell = null;	

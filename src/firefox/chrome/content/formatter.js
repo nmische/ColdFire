@@ -35,7 +35,7 @@ ColdFireFormatter.prototype =
 			var paramString = new StringBuffer();
 			paramString.append("<I><BR/>" + $CFSTR("QueryParamValues") + " -");
 			for( var x = 0; x < params.length; x++ ){
-				paramString.append("<BR/>" + $CFSTR("Parameter") + "#" + (x + 1) + "(" + this.cfsqltypes[params[x][0]] + ") = " + params[x][1]);
+				paramString.append("<BR/>" + $CFSTR("Parameter") + "#" + (x + 1) + "(" + this.cfsqltypes[params[x][0]] + ") = " + this.escapeHTML(params[x][1]));
 			}
 			paramString.append("</I>");
 			return paramString.toString();
@@ -47,7 +47,7 @@ ColdFireFormatter.prototype =
 			var tblString = new StringBuffer();
 			tblString.append("<TABLE border='0' cellpadding='2' cellspacing='0' width='100%'><TR style='background-color:#CCCCCC'><TH colspan='5' align='center'><B>" + $CFSTR("StoredProcedureParameters") + "</B></TH></TR><TR><TD><I>" + $CFSTR("lcType") + "</I></TD><TD><I>" + $CFSTR("lcCFSqlType") + "</I></TD><TD><I>" + $CFSTR("lcValue") +"</I></TD><TD><I>" + $CFSTR("lcVariable") + "</I></TD><TD><I>" + $CFSTR("lcDBVarname") + "</I></TD></TR>");
 			for( var x = 0; x < params.length; x++ ){
-				tblString.append("<TR><TD>" + params[x][0] + "</TD><TD>" + this.cfsqltypes[params[x][1]] + "</TD><TD>" + params[x][2] + "</TD><TD>" + params[x][3] + "</TD><TD>" + params[x][4] + "</TD></TR>");
+				tblString.append("<TR><TD>" + params[x][0] + "</TD><TD>" + this.cfsqltypes[params[x][1]] + "</TD><TD>" + this.escapeHTML(params[x][2]) + "</TD><TD>" + params[x][3] + "</TD><TD>" + params[x][4] + "</TD></TR>");
 			}
 			tblString.append("</TABLE>");
 			return tblString.toString();			
@@ -69,19 +69,54 @@ ColdFireFormatter.prototype =
 	formatParamValue: function( param ) {
 		var type = param[0];
 		var value = param[1];
+		var tmpVal = value;
 		if (type == 2){
 			// handle bit types
-			return (value == "1" || value.toUpperCase() == "TRUE" || value.toUpperCase() == "YES") ? 1 : 0;
+			tmpVal = (value == "1" || value.toUpperCase() == "TRUE" || value.toUpperCase() == "YES") ? 1 : 0;
 		} else if ( type < 15){
 			// handle numeric types
-			return  value;
+			tmpVal =  value;
 		} else if (type < 18) {
 			// handle date time types
-			return (value.indexOf("{") == 0) ? value : "'" + value + "'";
+			tmpVal = (value.indexOf("{") == 0) ? value : "'" + value + "'";
 		} else if (type < 23) {
 			// handle text types
-			return "'" + value.replace(/'/, "''") + "'";
+			tmpVal = "'" + value.replace(/'/, "''") + "'";
 		}		
-		return value;		
+		return this.escapeHTML(tmpVal);		
+	},
+	escapeHTML: function (value){
+		function replaceChars(ch)
+        {
+            switch (ch)
+            {
+                case "<":
+                    return "&lt;";
+                case ">":
+                    return "&gt;";
+                case "&":
+                    return "&amp;";
+                case "'":
+                    return "&#39;";
+                case '"':
+                    return "&quot;";
+            }
+            return "?";
+        };
+        return String(value).replace(/[<>&"']/g, replaceChars);
 	}	
 };
+
+function StringBuffer()
+{
+	this.buffer = [];
+}
+StringBuffer.prototype.append = function(string)
+{
+	this.buffer.push(string);
+	return this;
+}
+StringBuffer.prototype.toString = function()
+{
+	return this.buffer.join("");
+}
