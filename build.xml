@@ -1,4 +1,4 @@
-<project name="coldfire" default="make-docs-dist" basedir=".">
+<project name="coldfire" default="make-dist-zip" basedir=".">
 	<description>coldfire build file</description>
 	<property name="src" location="src" />
 	<property name="cfsrc" location ="src/coldfusion" />
@@ -6,16 +6,22 @@
 	<property name="build" location="build" />
 	<property name="cfbuild" location ="build/coldfusion" />
 	<property name="ffbuild" location ="build/firefox" />
-	<property name="geckosdk" location="C:/gecko-sdk" />
 	<property name="dist" location="dist" />
+	<property name="cfserver" location="C:/JRun4/servers/cfusion/cfusion-ear/cfusion-war/WEB-INF/debug" />
 	<xmlproperty file="src/firefox/install.rdf" />
-
+	
 	<!--
-	 the name will be used to make the jars and should be the name used in the chrome.manifest file 
+	the name will be used to make the jars and should be the name used in the chrome.manifest file 
 	-->
 	<property name="name" value="${ant.project.name}" />
 	<property name="extension-id" value="${RDF.Description.em:id}" />
 	<property name="version" value="${RDF.Description.em:version}" />
+	
+	<!-- 
+	uncomment the following property if you have the Gecko SDK installed and want to build the XPCOM interface
+	
+	<property name="geckosdk" location="C:/gecko-sdk" /> 
+	-->
 
 	
 	<!-- targets used for creating a distribution -->
@@ -50,13 +56,16 @@
 
 	</target>
 
-	<target name="build-xpi-components" depends="build-xpi-chrome" description="create the xpi components contents including the XPCOM interface">
-		<mkdir dir="${ffbuild}/components" />
-        
-    	<exec dir="${ffsrc}/components" executable="${geckosdk}/bin/xpidl.exe"> 
+	<target name="compile-xpi-components" depends="build-xpi-chrome" if="geckosdk" description="compile the XPCOM interface using the Gecko SDK">
+      	<exec dir="${ffsrc}/components" executable="${geckosdk}/bin/xpidl.exe"> 
         	<arg line="-m typelib -w -v -I ${geckosdk}/idl -e nsIColdFire.xpt nsIColdFire.idl"/>
-    	</exec>  
-
+    	</exec>		
+	</target>
+	
+	
+	<target name="build-xpi-components" depends="compile-xpi-components" description="create the xpi components contents including the XPCOM interface">
+		<mkdir dir="${ffbuild}/components" />
+  
 		<copy todir="${ffbuild}/components">
 			<fileset dir="${ffsrc}/components" excludes="**/*.idl" />
 		</copy>		
@@ -108,11 +117,28 @@
 			<fileset dir="${src}/docs" />
 		</copy>
 	</target>
+	
+	<target name="make-dist-zip" depends="make-docs-dist" description="zip up the distribution">
+		<mkdir dir="${dist}/zip" />
+		<zip destfile="${dist}/zip/${name}_v${version}.zip">
+			<zipfileset dir="${dist}" includes="*.*" />
+		</zip>
+	</target>
+	
+	<target name="copy-coldfire" description="this target can be used during development to copy the coldfire.cfm template to your ColdFusion server">
+		<copy file="${cfsrc}/coldfire.cfm" todir="${cfserver}"/>
+	</target>
 
-	<target name="clean" description="clean up">
+	<target name="clean" depends="clean-xpt" description="clean up">
 		<!-- Delete the ${build} and ${dist} directory trees -->
 		<delete dir="${build}" />
 		<delete dir="${dist}" />
+		
+	</target>
+	
+	<target name="clean-xpt" if="geckosdk" description="clean up">
+		<!-- Delete the XPCOM interface if we are going to rebuild it -->
 		<delete file="${ffsrc}/components/nsIColdFire.xpt" />
 	</target>
+	
 </project>
