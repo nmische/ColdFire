@@ -1,10 +1,8 @@
+// This code is based on:
 // Class: Dump
 // Author: Shuns (www.netgrow.com.au/files)
 // Last Updated: 10/10/06
 // Version: 1.1
-
-
-
 
 function ColdFireDump() {} 
 ColdFireDump.prototype =
@@ -15,7 +13,7 @@ ColdFireDump.prototype =
   		var obj = eval( '(' + object + ')' );
 		this.st = typeof showTypes == 'undefined' ? true : showTypes;
 		
-  		dump += (/string|number|undefined|boolean/.test(typeof(obj)) || obj == null) ? obj : this.recurse(obj, typeof obj);
+  		dump += (/string|number|undefined|boolean/.test(typeof(obj)) || obj == null) ? this.escapeHTML(obj) : this.recurse(obj, typeof obj);
   		return dump;
 	},
 	recurse: function (o, type) {
@@ -27,13 +25,13 @@ ColdFireDump.prototype =
 		  case 'regexp':
 		    var t = type;
 		    r += '<table' + this.dumpStyles(t,'table') + '><tr><th colspan="2"' + this.dumpStyles(t,'th') + '>' + t + '</th></tr>';
-		    r += '<tr><td colspan="2"' + this.dumpStyles(t,'td-value') + '><table' + this.dumpStyles('arguments','table') + '><tr><td' + this.dumpStyles('arguments','td-key') + '><i>RegExp: </i></td><td' + this.dumpStyles(type,'td-value') + '>' + o + '</td></tr></table>';  
+		    r += '<tr><td colspan="2"' + this.dumpStyles(t,'td-value') + '><table' + this.dumpStyles('arguments','table') + '><tr><td' + this.dumpStyles('arguments','td-key') + '><i>RegExp: </i></td><td' + this.dumpStyles(type,'td-value') + '>' + this.escapeHTML(o) + '</td></tr></table>';  
 		    j++;
 		    break;
 		  case 'date':
 		    var t = type;
 		    r += '<table' + this.dumpStyles(t,'table') + '><tr><th colspan="2"' + this.dumpStyles(t,'th') + '>' + t + '</th></tr>';
-		    r += '<tr><td colspan="2"' + this.dumpStyles(t,'td-value') + '><table' + this.dumpStyles('arguments','table') + '><tr><td' + this.dumpStyles('arguments','td-key') + '><i>Date: </i></td><td' + this.dumpStyles(type,'td-value') + '>' + o + '</td></tr></table>';  
+		    r += '<tr><td colspan="2"' + this.dumpStyles(t,'td-value') + '><table' + this.dumpStyles('arguments','table') + '><tr><td' + this.dumpStyles('arguments','td-key') + '><i>Date: </i></td><td' + this.dumpStyles(type,'td-value') + '>' + this.escapeHTML(o) + '</td></tr></table>';  
 		    j++;
 		    break;
 		  case 'function':
@@ -41,7 +39,7 @@ ColdFireDump.prototype =
 		    var a = o.toString().match(/^.*function.*?\((.*?)\)/im); 
 		    var args = (a == null || typeof a[1] == 'undefined' || a[1] == '') ? 'none' : a[1];
 		    r += '<table' + this.dumpStyles(t,'table') + '><tr><th colspan="2"' + this.dumpStyles(t,'th') + '>' + t + '</th></tr>';
-		    r += '<tr><td colspan="2"' + this.dumpStyles(t,'td-value') + '><table' + this.dumpStyles('arguments','table') + '><tr><td' + this.dumpStyles('arguments','td-key') + '><i>Arguments: </i></td><td' + this.dumpStyles(type,'td-value') + '>' + args + '</td></tr><tr><td' + this.dumpStyles('arguments','td-key') + '><i>Function: </i></td><td' + this.dumpStyles(type,'td-value') + '>' + o + '</td></tr></table>';  
+		    r += '<tr><td colspan="2"' + this.dumpStyles(t,'td-value') + '><table' + this.dumpStyles('arguments','table') + '><tr><td' + this.dumpStyles('arguments','td-key') + '><i>Arguments: </i></td><td' + this.dumpStyles(type,'td-value') + '>' + args + '</td></tr><tr><td' + this.dumpStyles('arguments','td-key') + '><i>Function: </i></td><td' + this.dumpStyles(type,'td-value') + '>' + this.escapeHTML(o) + '</td></tr></table>';  
 		    j++;
 		    break;
 		  case 'domelement':
@@ -66,7 +64,7 @@ ColdFireDump.prototype =
 		    } else if (typeof o[i] == 'function') {
 			  r += '<tr><td' + this.dumpStyles(type ,'td-key') + '>' + i + (this.st ? ' [' + t + ']' : '') + '</td><td' + this.dumpStyles(type,'td-value') + '>' + this.recurse(o[i], t) + '</td></tr>';  	
 			} else {
-			  r += '<tr><td' + this.dumpStyles(type,'td-key') + '>' + i + (this.st ? ' [' + t + ']' : '') + '</td><td' + this.dumpStyles(type,'td-value') + '>' + o[i] + '</td></tr>';  
+			  r += '<tr><td' + this.dumpStyles(type,'td-key') + '>' + i + (this.st ? ' [' + t + ']' : '') + '</td><td' + this.dumpStyles(type,'td-value') + '>' + this.escapeHTML(o[i]) + '</td></tr>';  
 		    }
 		  }
 		}
@@ -276,6 +274,26 @@ ColdFireDump.prototype =
 		    }
 		  }
 		  return t;
+	},
+	escapeHTML: function (value){
+		function replaceChars(ch)
+        {
+            switch (ch)
+            {
+                case "<":
+                    return "&lt;";
+                case ">":
+                    return "&gt;";
+                case "&":
+                    return "&amp;";
+                case "'":
+                    return "&#39;";
+                case '"':
+                    return "&quot;";
+            }
+            return "?";
+        };
+        return String(value).replace(/[<>&"']/g, replaceChars);
 	}
 };
 
