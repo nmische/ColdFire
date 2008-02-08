@@ -9,9 +9,15 @@
 
 .labelCell,
 .valueCell {
-	padding-top: 2px;
-    padding-bottom: 2px;
 	border-bottom: 1px dotted #3D3D3D;
+}
+
+.slow {
+	background-color:#FFF0F5;
+}
+
+.bold {
+	font-weight: bold;
 }
 
 /* trace */
