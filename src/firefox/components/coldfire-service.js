@@ -50,7 +50,7 @@ function ColdFireService() {
   this.aExtensionVersion = false;  
   this.aVariables = new Array();
   // Observer service is used to notify observing ColdFireProxy objects that the headers have been updated
-  this.observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+  // this.observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
 }
 
 ColdFireService.prototype = {
@@ -86,6 +86,14 @@ ColdFireService.prototype = {
 	
 	clearVariables: function(){
 		this.aVariables.length = 0;		
+	},
+	
+	// nsISupports interface method
+	QueryInterface: function(iid) {
+    	if (!iid.equals(nsIColdFire) && !iid.equals(nsISupports)) {
+        	throw Components.results.NS_ERROR_NO_INTERFACE;
+    	}
+    	return this;
 	}
 }
 
@@ -127,14 +135,6 @@ ColdFireProxy.prototype = {
     	} else {
        		// No observable topic defined
     	}    
-	},
-	
-	// nsISupports interface method
-	QueryInterface: function(iid) {
-    	if (!iid.equals(nsIColdFire) && !iid.equals(nsISupports)) {
-        	throw Components.results.NS_ERROR_NO_INTERFACE;
-    	}
-    	return this;
 	}
 	
 }
