@@ -1,5 +1,6 @@
-content coldfireextension chrome/content/
+content coldfireextension chrome/content/ xpcnativewrappers=no
 locale  coldfireextension en-US chrome/locale/en-US/
 skin    coldfireextension classic/1.0 chrome/skin/classic/
+skin	coldfireextension-os classic/1.0 chrome/skin/classic/win/
 overlay chrome://firebug/content/browserOverlay.xul chrome://coldfireextension/content/cfBrowserOverlay.xul
 overlay chrome://firebug/content/firebugOverlay.xul chrome://coldfireextension/content/cfFirebugOverlay.xul
