@@ -34,13 +34,82 @@
  * ***** END LICENSE BLOCK ***** */
 
 
-/* This code is inspired and adapted from:
+/* 
+ * This code is inspired and adapted from:
  * http://modifyheaders.mozdev.org/
- * http://www.firephp.org/  */
+ */
 
-const nsIColdFire = Components.interfaces.nsIColdFire;
-const nsISupports = Components.interfaces.nsISupports;
-const nsIObserver = Components.interfaces.nsIObserver;
+
+/*
+ * PreferncesUtil
+ */ 
+function PreferencesUtil() {
+  this.prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService);
+  this.prefService = this.prefService.getBranch("");
+}
+
+PreferencesUtil.prototype = {
+	
+	getPreference: function(type, name) {
+  		
+		var prefValue;
+  
+		if (this.prefService.prefHasUserValue(name)) {
+		    if (type=='bool') {
+		    	prefValue = this.prefService.getBoolPref(name);
+		    } else if (type=='char') {
+		    	prefValue = this.prefService.getCharPref(name);
+		    } else if (type=='int') {
+		    	prefValue = this.prefService.getIntPref(name);
+		    }  			
+  		} else {
+			if (type=='bool') {
+				this.setPreference(type, name, false);
+				prefValue = false
+			} else if (type=='char') {
+				this.setPreference(type, name, "");
+				prefValue = ""
+			} else if (type=='int') {
+				this.setPreference(type, name, 0);
+				prefValue = 0;
+			}
+  		}
+  
+  		return prefValue;
+	},
+	
+	setPreference: function(type, name, value) {
+		if (type=='bool') {
+			this.prefService.setBoolPref(name, value)
+		} else if (type=='char') {
+			this.prefService.setCharPref(name, value)
+		} else if (type=='int') {
+			this.prefService.setIntPref(name, value)
+		}
+	},
+
+	deletePreference: function(name) {
+  		this.prefService.clearUserPref(name);
+	}
+}
+
+/*
+ * LoggingUtil
+ */
+
+function LoggingUtil() {
+	this.prefUtil = new PreferencesUtil();
+	this.consoleService = Components.classes['@mozilla.org/consoleservice;1'].getService(Components.interfaces.nsIConsoleService);	
+}
+
+LoggingUtil.prototype = {
+	logMessage: function(msg){
+		if (this.prefUtil.getPreference("bool","extensions.coldfire.logSvcMsgs"))
+			this.consoleService.logStringMessage('coldfire-service: ' + msg);
+	}
+}
+
+const Logger = new LoggingUtil();
 
 /*
  * ColdFire Service
@@ -88,11 +157,13 @@ ColdFireService.prototype = {
 	},
 	
 	// nsISupports interface method
-	QueryInterface: function(iid) {
-    	if (!iid.equals(nsIColdFire) && !iid.equals(nsISupports)) {
+	QueryInterface: function(iid) {    	
+		Logger.logMessage("Entering ColdFireService.prototype.QueryInterface with iid of " + iid);
+		
+		if (!iid.equals(Components.interfaces.nsIColdFire) && !iid.equals(Components.interfaces.nsISupports)) {
         	throw Components.results.NS_ERROR_NO_INTERFACE;
     	}
-    	return this;
+    	return this;		
 	}
 }
 
@@ -101,13 +172,14 @@ ColdFireService.prototype = {
  */
 
 function ColdFireProxy() {    
-	this.service = Components.classes[ColdFireModule.serviceContractID].getService(nsIColdFire);
+	this.service = Components.classes[ColdFireModule.serviceContractID].getService(Components.interfaces.nsIColdFire);
 }
 
 ColdFireProxy.prototype = {
 
 	// nsIObserver interface method
-	observe: function(subject, topic, data) {
+	observe: function(subject, topic, data) {		
+		Logger.logMessage("Entering ColdFireProxy.prototype.observe with topic of " + topic);
        	
 		if (topic == 'http-on-modify-request') {
         
@@ -135,15 +207,18 @@ ColdFireProxy.prototype = {
       		}
     	} else {
        		// No observable topic defined
-    	}    
+    	} 
+		 
 	},
 	
 	// nsISupports interface method
 	QueryInterface: function(iid) {
-    	if (!iid.equals(nsIObserver) && !iid.equals(nsISupports)) {
+    	Logger.logMessage("Entering ColdFireProxy.prototype.QueryInterface with iid of " + iid);
+		
+		if (!iid.equals(Components.interfaces.nsIObserver) && !iid.equals(Components.interfaces.nsISupports)) {
         	throw Components.results.NS_ERROR_NO_INTERFACE;
     	}
-    	return this;
+    	return this;		
 	}
 	
 }
@@ -163,7 +238,8 @@ var ColdFireModule = {
 	
 	// Register the component with the browser
 	registerSelf: function (compMgr, fileSpec, location, type) {
-    	
+    	Logger.logMessage("Entering ColdFireModule.registerSelf");
+		
 		if (this.firstTime) {
         	this.firstTime = false;
        	 	throw Components.results.NS_ERROR_FACTORY_REGISTER_AGAIN;
@@ -182,6 +258,7 @@ var ColdFireModule = {
 	
 	// Removes the component from the app-startup category
     unregisterSelf: function(compMgr, fileSpec, location) {
+		Logger.logMessage("Entering ColdFireModule.unregisterSelf");
 		
 		var compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
 
@@ -196,32 +273,47 @@ var ColdFireModule = {
 	
 	// Return the Factory object
     getClassObject: function (compMgr, cid, iid) {
-        
+        Logger.logMessage("Entering ColdFireModule.getClassObject");
+		
 		if (!iid.equals(Components.interfaces.nsIFactory))
-            throw Components.results.NS_ERROR_NOT_IMPLEMENTED
+            throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
         
         // Check that the component ID is the Modifyheaders Proxy
-        if (cid.equals(this.proxyCID) || cid.equals(this.serviceCID)) {
-        	return this.factory
+        if (cid.equals(this.proxyCID)){
+			return {
+				createInstance: function (outer, iid) {
+		           	Logger.logMessage("Entering createInstance with iid of " + iid);
+				   	
+		            if (outer != null)
+		                throw Components.results.NS_ERROR_NO_AGGREGATION;
+		            
+		           	if (iid.equals(Components.interfaces.nsISupports) || iid.equals(Components.interfaces.nsIObserver)) {
+		                Logger.logMessage("Returning ColdFireProxy from createInstance");
+						return new ColdFireProxy();
+		            } 
+		            
+		            throw Components.results.NS_ERROR_NO_INTERFACE;
+		        }	
+			}			
+		} else if (cid.equals(this.serviceCID)) {
+        	return {
+				createInstance: function (outer, iid) {
+		           	Logger.logMessage("Entering createInstance with iid of " + iid);
+				   	
+		            if (outer != null)
+		                throw Components.results.NS_ERROR_NO_AGGREGATION;
+		            		           
+		            if (iid.equals(Components.interfaces.nsISupports) || iid.equals(Components.interfaces.nsIColdFire)) {
+		                Logger.logMessage("Returning ColdFireService from createInstance");
+						return new ColdFireService();
+		            } 
+		            
+		            throw Components.results.NS_ERROR_NO_INTERFACE;
+		        }
+			}
         }
 		    
         throw Components.results.NS_ERROR_NO_INTERFACE;
-    },
-	
-	factory: {
-        createInstance: function (outer, iid) {
-           
-            if (outer != null)
-                throw Components.results.NS_ERROR_NO_AGGREGATION
-            
-            if (iid.equals(nsIObserver)) {
-                return (new ColdFireProxy()).QueryInterface(iid);
-            } else if (iid.equals(nsIColdFire)) {
-                return (new ColdFireService()).QueryInterface(iid);
-            } 
-            
-            throw Components.results.NS_ERROR_NO_INTERFACE
-        }
     },
 	
 	canUnload: function(compMgr) {
@@ -232,16 +324,9 @@ var ColdFireModule = {
 
 /* Entrypoint - registers the component with the browser */
 function NSGetModule(compMgr, fileSpec) {
-    return ColdFireModule;
+	Logger.logMessage("Entering NSGetModule");
+	return ColdFireModule;
 }
-
-/* A logger 
-var gConsoleService = Components.classes['@mozilla.org/consoleservice;1'].getService(Components.interfaces.nsIConsoleService);
-
-function coldfire_logMessage(aMessage) {
-  gConsoleService.logStringMessage('ColdFire Service: ' + aMessage);
-}
-*/
 
 /*
     json.js
