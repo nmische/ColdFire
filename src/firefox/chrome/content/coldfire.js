@@ -56,19 +56,19 @@ var cfOptionUpdateMap = {};
  
 top.ColdFire = {
 
-    version: '@@Version@@',
+    version: '@VERSION@',
     name: 'ColdFire',
     title: 'ColdFire',
-    parseParams: false,
-
+    
     initialize: function() 
     {  	
-       
-	    /* Set the ColdFire Extension version for the ColdFire Service Component */  
+       	  
+	    /* Set the ColdFire Extension version for the ColdFire Service Component  */
         try {
            cfColdFire.extensionVersion = this.version;
         } catch (err) {}
     
+			
         /* Set preferences */
         for (var i = 0; i < cfPrefNames.length; ++i)
             this[cfPrefNames[i]] = this.getPref(cfPrefNames[i]);

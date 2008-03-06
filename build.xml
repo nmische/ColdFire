@@ -1,144 +1,275 @@
 <project name="coldfire" default="make-dist-zip" basedir=".">
 	<description>coldfire build file</description>
-	<property name="src" location="src" />
-	<property name="cfsrc" location ="src/coldfusion" />
-	<property name="ffsrc" location ="src/firefox" />
-	<property name="build" location="build" />
-	<property name="cfbuild" location ="build/coldfusion" />
-	<property name="ffbuild" location ="build/firefox" />
-	<property name="dist" location="dist" />
-	<property name="cfserver" location="C:/JRun4/servers/cfusion/cfusion-ear/cfusion-war/WEB-INF/debug" />
+	
+	<property file="branch.properties" />
 	<xmlproperty file="src/firefox/install.rdf" />
 	
-	<!--
-	the name will be used to make the jars and should be the name used in the chrome.manifest file 
-	-->
-	<property name="name" value="${ant.project.name}" />
-	<property name="extension-id" value="${RDF.Description.em:id}" />
-	<property name="version" value="${RDF.Description.em:version}" />
-	
-	<!-- 
-	uncomment the following property if you have the Gecko SDK installed and want to build the XPCOM interface
-	
-	<property name="geckosdk" location="C:/gecko-sdk" /> 
-	-->
+	<!-- project directories -->
+	<property name="src.dir" location="src" />
+	<property name="src.cf.dir" location ="src/coldfusion" />
+	<property name="src.ff.dir" location ="src/firefox" />
+	<property name="build.dir" location="build" />
+	<property name="build.cf.dir" location ="build/coldfusion" />
+	<property name="build.ff.dir" location ="build/firefox" />
+	<property name="dist.dir" location="dist" />
 
+	<property name="excludes" value="**/.*, **/*.jar, **/*.db" />
+	<property name="name" value="${ant.project.name}" />
+	<property name="extension.id" value="${RDF.Description.em:id}" />
 	
+	<!-- get version info -->
+	<target name="version" depends="properties-local, no-properties-local" description="compute version number">
+        <tstamp/>
+        <property name="version" value="${branch}${release}"/>
+    </target>
+	
+	<!-- set up properties -->
+	<target name="local-check" description="check to see if a local.properties file exists">
+        <available file="${basedir}/local.properties" property="local.properties.available"/>
+    </target>
+
+	<target name="properties-local" if="local.properties.available" depends="local-check">
+    	<echo message="Loading local properties file."/>
+    	<property file="local.properties"/>
+    </target>
+
+    <target name="no-properties-local" unless="local.properties.available" depends="local-check">
+        <echo message="No local properties file, setting defaults."/>
+        <!-- set these values -->
+		<property name="install.dir" value="OperatingSystemPathToTestPofile"/>
+        <property name="geckosdk.dir" value="OperatingSystemPathToGecko-SDK"/>
+		<property name="cfserver.debug.dir" value="OperatingSystemPathToColdFusionDebugTemplates" />
+		<property name="profile.name" value="NameOfTestProfile" />
+    </target>
+
+	<!-- expand templates -->
+	<target name="install-dependency" description="check template or branch properties changes">
+        <uptodate property="install.expansion.notRequired" targetfile="${src.ff.dir}/install.rdf">
+            <srcfiles dir="${src.ff.dir}" includes="install.rdf.tpl.xml, branch.properties"/>
+        </uptodate>
+    </target>
+
+	<target name="expand-install-template" depends="install-dependency, version" unless="install.expansion.notRequired" description="update install.rdf based on template and branch.properties">
+        <copy file="${src.ff.dir}/install.rdf.tpl.xml" tofile="${src.ff.dir}/install.rdf" overwrite="true">
+               <filterchain>
+                       <replacetokens>
+                            <token key="VERSION" value="${version}"/>
+                       </replacetokens>
+               </filterchain>
+        </copy>
+    </target>
+
+	<target name="expand-templates" depends="expand-install-template" description="fill in version info" />
+
+	<!-- targets for incremental builds -->
+
+	<target name="copy-to-extensions" depends="clean-reg, clean-xpti" description="copies extension files to profle">
+        <copy todir="${install.dir}/extensions/${extension.id}" >
+            <fileset dir="${src.ff.dir}" excludes="**/*.idl, **/*.tpl.xml" />
+			<filterchain>
+                   <replacetokens>
+                        <token key="VERSION" value="${version}"/>
+                   </replacetokens>
+           </filterchain>
+        </copy>
+    </target>
+
+	<target name="copy-to-cfserver" depends="version" description="copies coldfusion debug template to server">
+        <copy file="${src.cf.dir}/coldfire.cfm" tofile="${cfserver.debug.dir}/coldfire.cfm" overwrite="true">
+               <filterchain>
+                       <replacetokens>
+                            <token key="VERSION" value="${version}"/>
+                       </replacetokens>
+               </filterchain>
+        </copy>
+    </target>
+
+	<target name="incremental-ff" depends="version, expand-templates, copy-to-extensions" description="builds a development version of the firefox extension and copies to profile" />
+
+	<target name="incremental-cf" depends="version, copy-to-cfserver" description="builds a development version of the coldfusion debug template and copies to server" />
+
+	<target name="incremental-both" depends="version, expand-templates, copy-to-extensions, copy-to-cfserver" />
+
+	<target name="incremental-relaunch" depends="version, expand-templates, copy-to-extensions, copy-to-cfserver, start-firefox" />
+		
+	<target name="coldfire-service" description="check for service changes">
+        <uptodate property="deleteCompreg.notRequired" srcfile="${src.ff.dir}/components/coldfire-service.js" targetfile="${install.dir}/compreg.dat" />
+    </target>
+
+    <target name="clean-reg" depends="coldfire-service" unless="deleteCompreg.notRequired" description="delete compreg.dat to reload service" >
+        <delete file="${install.dir}/compreg.dat"/>
+    </target>
+
+	<!-- idl/xpt targets -->
+	<target name="idl" description="check for idl changes">
+        <uptodate property="xpidl.notRequired" srcfile="${src.ff.dir}/components/nsIColdFire.idl" targetfile="${src.ff.dir}/components/nsIColdFire.xpt" />
+    </target>
+
+    <target name="compile-idl" depends="idl" description="compile idl" unless="xpidl.notRequired">
+        <exec dir="${src.ff.dir}/components" executable="${geckosdk.dir}/bin/xpidl.exe"> 
+        	<arg line="-m typelib -w -v -I ${geckosdk.dir}/idl -e nsIColdFire.xpt nsIColdFire.idl"/>
+    	</exec>	
+    </target>
+
+    <target name="xpti" depends="compile-idl" description="check for xpt changes">
+        <uptodate property="deleteXPTI.notRequired" srcfile="${src.ff.dir}/components/nsIColdFire.xpt" targetfile="${install.dir}/xpti.dat" />
+    </target>
+
+    <target name="clean-xpti" depends="xpti" unless="deleteXPTI.notRequired" description="delete xpti.dat to reload xpt" >
+		<delete file="${install.dir}/xpti.dat"/>
+    </target>
+
 	<!-- targets used for creating a distribution -->
-	<target name="set-up-build" depends="clean" description="sets up build directory">
-		<mkdir dir="${build}" />
+	<target name="set-up-build" depends="clean, version, expand-templates, compile-idl" description="sets up build directory">
+		<mkdir dir="${build.dir}" />
 	</target>
 
 	<target name="build-coldfusion" depends="set-up-build" description="prepares coldfusion debug template for distribution">
-		<mkdir dir="${cfbuild}" />
-		<copy todir="${cfbuild}">
-			<fileset dir="${cfsrc}" />
-		</copy>
-		<replace file="${cfbuild}/coldfire.cfm" token="@@Version@@" value="${version}" />
+		<mkdir dir="${build.cf.dir}" />
+		<copy file="${src.cf.dir}/coldfire.cfm" tofile="${build.cf.dir}/coldfire.cfm" overwrite="true">
+               <filterchain>
+                       <replacetokens>
+                            <token key="VERSION" value="${version}"/>
+                       </replacetokens>
+               </filterchain>
+        </copy>
 	</target>
 
-	<target name="build-xpi-chrome" depends="build-coldfusion" description="create the xpi chrome contents including the chrome jar">
-		<mkdir dir="${ffbuild}" />
-		<mkdir dir="${ffbuild}/jar" />
-		<mkdir dir="${ffbuild}/chrome" />
+	<target name="build-chrome-jar" depends="build-coldfusion" description="create the xpi chrome contents including the chrome jar">
+		<mkdir dir="${build.ff.dir}" />
+		<mkdir dir="${build.ff.dir}/jar" />
+		<mkdir dir="${build.ff.dir}/chrome" />
 
-		<copy todir="${ffbuild}/jar">
-			<fileset dir="${ffsrc}/chrome" includes="**/*" />
+		<copy todir="${build.ff.dir}/jar">
+			<fileset dir="${src.ff.dir}/chrome" includes="content/**, locale/**, skin/**" excludes="${excludes}"/>
+			<filterchain>
+                   <replacetokens>
+                        <token key="VERSION" value="${version}"/>
+                   </replacetokens>
+           </filterchain>
 		</copy>
 		
-		<replace dir="${ffbuild}/jar" token="@@Version@@" value="${version}" />
-		
-		<zip destfile="${ffbuild}/chrome/${name}.jar">
-			<zipfileset dir="${ffbuild}/jar" includes="**/*" />
-		</zip>
+		<zip destfile="${build.ff.dir}/chrome/${name}.jar" 
+			update="true"
+			basedir="${build.ff.dir}/jar"
+			includes="**" />		
 
-		<delete dir="${ffbuild}/jar" />
+		<delete dir="${build.ff.dir}/jar" />
 
 	</target>
 
-	<target name="compile-xpi-components" depends="build-xpi-chrome" if="geckosdk" description="compile the XPCOM interface using the Gecko SDK">
-      	<exec dir="${ffsrc}/components" executable="${geckosdk}/bin/xpidl.exe"> 
-        	<arg line="-m typelib -w -v -I ${geckosdk}/idl -e nsIColdFire.xpt nsIColdFire.idl"/>
-    	</exec>		
-	</target>
+	<!--
+	<target name="build-platform-jars" description="create xpi platform jars">
+        <mkdir dir="${build.ff.dir}/Darwin" />
+        <mkdir dir="${build.ff.dir}/Linux" />
+        <mkdir dir="${build.ff.dir}/linux-gnu" />
+        <mkdir dir="${build.ff.dir}/WINNT" />
+        <zip destfile="${build.ff.dir}/Darwin/${ant.project.name}.jar" 
+			update="true"
+            basedir="${src.ff.dir}/platform/Darwin" 
+			includes="skin/**" 
+			excludes="${excludes}" />
+        <zip destfile="${build.ff.dir}/Linux/${ant.project.name}.jar" 
+			update="true"
+            basedir="${src.ff.dir}/platform/Linux"
+            includes="skin/**"
+            excludes="${excludes}" />
+        <zip destfile="${build.ff.dir}/linux-gnu/${ant.project.name}.jar" 
+			update="true"
+            basedir="${src.ff.dir}/platform/linux-gnu"
+            includes="skin/**"
+            excludes="${excludes}" />
+        <zip destfile="${build.ff.dir}/WINNT/${ant.project.name}.jar" 
+			update="true"
+            basedir="${src.ff.dir}/platform/WINNT"
+            includes="skin/**"
+            excludes="${excludes}" />
+    </target>
+	-->
 	
-	
-	<target name="build-xpi-components" depends="compile-xpi-components" description="create the xpi components contents including the XPCOM interface">
-		<mkdir dir="${ffbuild}/components" />
+	<target name="build-xpi-components" depends="build-chrome-jar" description="create the xpi components contents including the XPCOM interface">
+		<mkdir dir="${build.ff.dir}/components" />
   
-		<copy todir="${ffbuild}/components">
-			<fileset dir="${ffsrc}/components" excludes="**/*.idl" />
+		<copy todir="${build.ff.dir}/components">
+			<fileset dir="${src.ff.dir}/components" excludes="**/*.idl" />
 		</copy>		
 		
 	</target>
 
 	<target name="build-xpi-defaults" depends="build-xpi-components" description="create the xpi defaults contents">
-		<mkdir dir="${ffbuild}/defaults" />		
+		<mkdir dir="${build.ff.dir}/defaults" />		
 
-		<copy todir="${ffbuild}/defaults">
-			<fileset dir="${ffsrc}/defaults" />
+		<copy todir="${build.ff.dir}/defaults">
+			<fileset dir="${src.ff.dir}/defaults" />
+		</copy>
+		
+	</target>
+
+	<target name="build-xpi-platform" depends="build-xpi-defaults" description="create the xpi platform contents">
+		<mkdir dir="${build.ff.dir}/platform" />		
+
+		<copy todir="${build.ff.dir}/platform">
+			<fileset dir="${src.ff.dir}/platform" includes="**" excludes="${excludes}, **/skin/**"  />
 		</copy>
 		
 	</target>
 
 	<target name="build-xpi" depends="build-xpi-defaults" description="create root xpi contents">
 		
-		<copy file="${ffsrc}/install.rdf" toDir="${ffbuild}" />
-		<copy file="${ffsrc}/chrome.manifest" toDir="${ffbuild}" />
+		<copy file="${src.ff.dir}/install.rdf" toDir="${build.ff.dir}" />
+		<copy file="${src.ff.dir}/chrome.manifest" toDir="${build.ff.dir}" />
 		<!--
  		Need to include the space because "chrome/" recursively matches (replace is stupid). 
 		-->
-		<replace file="${ffbuild}/chrome.manifest" token=" chrome/" value=" jar:chrome/${name}.jar!/" />	
+		<replace file="${build.ff.dir}/chrome.manifest" token=" chrome/" value=" jar:chrome/${name}.jar!/" />	
 	
 	</target>
 
 	<target name="set-up-dist" depends="build-xpi" description="sets up dist directory">
-		<mkdir dir="${dist}" />
+		<mkdir dir="${dist.dir}" />
 	</target>
 
 	<target name="make-xpi-dist" depends="set-up-dist" description="generate the xpi for distribution">
-		<zip destfile="${dist}/${name}_v${version}.xpi">
-			<zipfileset dir="${ffbuild}/chrome" includes="${name}.jar" prefix="chrome" />
-			<zipfileset dir="${ffbuild}/defaults" includes="**/*" prefix="defaults" />
-			<zipfileset dir="${ffbuild}/components" includes="**/*" prefix="components" />
-			<zipfileset dir="${ffbuild}" includes="install.rdf" />
-			<zipfileset dir="${ffbuild}" includes="chrome.manifest" />
+		<zip destfile="${dist.dir}/${name}_v${version}.xpi">
+			<zipfileset dir="${build.ff.dir}" includes="**" />
 		</zip>
 	</target>
 	
 	<target name="make-coldfuion-dist" depends="make-xpi-dist" description="copy the codfusion template for distribution">
-		<copy todir="${dist}">
-			<fileset dir="${cfbuild}" />
+		<copy todir="${dist.dir}">
+			<fileset dir="${build.cf.dir}" />
 		</copy>
 	</target>
 
 	<target name="make-docs-dist" depends="make-coldfuion-dist" description="copy the docs for distribution">
-		<copy todir="${dist}">
-			<fileset dir="${src}/docs" />
+		<copy todir="${dist.dir}">
+			<fileset dir="${src.dir}/docs" />
 		</copy>
 	</target>
 	
 	<target name="make-dist-zip" depends="make-docs-dist" description="zip up the distribution">
-		<mkdir dir="${dist}/zip" />
-		<zip destfile="${dist}/zip/${name}_v${version}.zip">
-			<zipfileset dir="${dist}" includes="*.*" />
+		<mkdir dir="${dist.dir}/zip" />
+		<zip destfile="${dist.dir}/zip/${name}_v${version}.zip">
+			<zipfileset dir="${dist.dir}" includes="**" excludes="zip/**" />
 		</zip>
 	</target>
 	
-	<target name="copy-coldfire" description="this target can be used during development to copy the coldfire.cfm template to your ColdFusion server">
-		<copy file="${cfsrc}/coldfire.cfm" todir="${cfserver}"/>
+	<target name="clean" description="clean up">
+		<!-- Delete the ${build.dir} and ${dist.dir} directory trees -->
+		<delete dir="${build.dir}" />
+		<delete dir="${dist.dir}" />		
 	</target>
 
-	<target name="clean" depends="clean-xpt" description="clean up">
-		<!-- Delete the ${build} and ${dist} directory trees -->
-		<delete dir="${build}" />
-		<delete dir="${dist}" />
-		
+	<target name="kill-firefox" description="closes and opens firefox on windows">
+		<exec executable="cmd"> 
+        	<arg line="/c TASKKILL /IM firefox.exe" />
+	   	</exec>
 	</target>
-	
-	<target name="clean-xpt" if="geckosdk" description="clean up">
-		<!-- Delete the XPCOM interface if we are going to rebuild it -->
-		<delete file="${ffsrc}/components/nsIColdFire.xpt" />
+
+	<target name="start-firefox" depends="version, kill-firefox">
+		<exec executable="cmd"> 
+        	<arg line='/c START firefox -P "${profile.name}"'/>
+    	</exec>
 	</target>
 	
 </project>

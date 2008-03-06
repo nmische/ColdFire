@@ -27,7 +27,7 @@ Handles server side debugging for ColdFire
 <!--- Check that ColdFire is enabled --->
 <cfif IsDebugMode()
 	and StructKeyExists(GetHttpRequestData().headers,"User-Agent")
-	and FindNoCase("ColdFire/@@Version@@",GetHttpRequestData().headers["User-Agent"]) gt 0
+	and FindNoCase("ColdFire/@VERSION@",GetHttpRequestData().headers["User-Agent"]) gt 0
 	and not GetPageContext().GetResponse().containsHeader("location")>
 	
 	<!--- Build Headers --->
