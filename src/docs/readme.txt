@@ -20,13 +20,19 @@ Adam Podolnick http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_w
 Nathan Mische https://www.amazon.com/gp/registry/wishlist/1PMU5WXR9RZNJ/ref=wl_web/
 
 ------------------------------------ LAST UPDATE ------------------------------------
+Last Updated: March 5, 2008 (1.004)
+
+Updated build file to use branch and local property files. Updates to coldfire-
+service including new extensions.coldfire.logSvcMsgs property to control logging. 
+Added platform specific chrome.manifest overrides.
+
+------------------------------------ OLDER UPDATES ------------------------------------
 Last Updated: Feb 6, 2008 (1.003)
 
 Updated extension to escape HTML. Core coldfirePanel now uses Firebug's DOMPlate 
 templating engine. Minor change to coldfire.cfm to return general info as 
 a query object.
 
------------------------------------- OLDER UPDATES ------------------------------------
 Last Updated: Jan 2, 2008 (1.002)
 
 Fixes to coldfire_udf_encode UDF in coldfire.cfm based on latest CFJSON. 
