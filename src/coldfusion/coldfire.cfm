@@ -271,7 +271,7 @@ Handles server side debugging for ColdFire
 		
 	<cfargument name="data" type="query" required="true">
 	
-	<cfset var result = queryNew("datasource, queryname, et, sql, parameters, resultsets, recordsreturned, type")>	
+	<cfset var result = queryNew("datasource, queryname, et, sql, parameters, resultsets, recordsreturned, type, cachedquery, template, timestamp")>	
 	<cfset var coldfire_queries = "">
 	<cfset var coldfire_storedproc = "">		
 	<cfset var x = "">
@@ -301,7 +301,7 @@ Handles server side debugging for ColdFire
 		</cfscript>
 		<cfcatch type="Any">
 			<cfscript>
-				coldfire_queries = queryNew("datasource, queryname, et, sql, parameters, resultsets, recordsreturned, type");
+				coldfire_queries = queryNew("datasource, queryname, et, sql, parameters, resultsets, recordsreturned, type, cachedquery, template, timestamp");
 			</cfscript>		
 		</cfcatch>
 	</cftry>
@@ -316,9 +316,7 @@ Handles server side debugging for ColdFire
 		
 		<cfset sql = replace(sql, "<", "&lt;", "all")>	
 		<cfset sql = replace(sql, ">", "&gt;", "all")>	
-		<cfset sql = reReplace(sql, "[\n\r]{2,}", " ", "all")>
-		<cfset sql = reReplace(sql, "[[:space:]]{2,}", " ", "all")>
-		
+				
 		<cfif ArrayLen(coldfire_queries.attributes[coldfire_queries.currentRow])>
 			<cfset parameters = ArrayNew(1)>		
 			<!--- build an array of parameter data --->
@@ -355,6 +353,9 @@ Handles server side debugging for ColdFire
 		<cfset QuerySetCell(result,"resultsets",resultsets)>
 		<cfset QuerySetCell(result,"recordsreturned",recordcount)>
 		<cfset QuerySetCell(result,"type",coldfire_queries.type)>
+		<cfset QuerySetCell(result,"cachedquery",coldfire_queries.cachedquery)>
+		<cfset QuerySetCell(result,"template",coldfire_queries.template)>
+		<cfset QuerySetCell(result,"timestamp",coldfire_queries.timestamp)>
 	
 	</cfloop>
 	
@@ -373,7 +374,7 @@ Handles server side debugging for ColdFire
 		</cfscript>
 		<cfcatch type="Any">
 			<cfscript>
-				coldfire_storedproc = queryNew('attributes, body, cachedquery, category, datasource, endtime, executiontime, line, message, name, parent, priority, result, rowcount, stacktrace, starttime, template, timestamp, type, url');
+				coldfire_storedproc = queryNew('datasource, queryname, et, sql, parameters, resultsets, recordsreturned, type, cachedquery, template, timestamp');
 			</cfscript>						
 		</cfcatch>
 	</cftry>
@@ -448,6 +449,10 @@ Handles server side debugging for ColdFire
 		<cfset QuerySetCell(result,"resultsets",resultsets)>
 		<cfset QuerySetCell(result,"recordsreturned",recordcount)>
 		<cfset QuerySetCell(result,"type",coldfire_storedproc.type)>
+		<cfset QuerySetCell(result,"cachedquery",coldfire_storedproc.cachedquery)>
+		<cfset QuerySetCell(result,"template",coldfire_storedproc.template)>
+		<cfset QuerySetCell(result,"timestamp",coldfire_storedproc.timestamp)>
+	
 	
 	</cfloop>	
 	

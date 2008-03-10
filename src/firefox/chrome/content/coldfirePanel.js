@@ -441,19 +441,28 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 			TH({class: "headerCell", width: "10%"}, $CFSTR('QueryName')),
 			TH({class: "headerCell", width: "8%"},  $CFSTR('ExecutionTime')),
 			TH({class: "headerCell", width: "7%"}, $CFSTR('Records')),
-			TH({class: "headerCell", width: "60%"}, $CFSTR('SQL'))		
+			TH({class: "headerCell", width: "7%"}, $CFSTR('Cached')),
+			TH({class: "headerCell", width: "43%"}, $CFSTR('Template')),
+			TH({class: "headerCell", width: "10%"},  $CFSTR('Timestamp'))					
 		),
 		
 	queryRowTag:
 		FOR("row", "$rows",
             TR({class: "$row.ET|isSlow"},
-                TD({class: "valueCell", width: "15%"},"$row.DATASOURCE"),
-				TD({class: "valueCell", width: "10%"},"$row.QUERYNAME"),
-				TD({class: "valueCell", width: "8%", align: "right"},"$row.ET|formatTime"),
-				TD({class: "valueCell", width: "7%", align: "right"},"$row.RECORDSRETURNED"),
-				TD({class: "valueCell querySQL", width: "60%"})                    
-            )
+                TD({width: "15%"},"$row.DATASOURCE"),
+				TD({width: "10%"},"$row.QUERYNAME"),
+				TD({width: "8%", align: "right"},"$row.ET|formatTime"),
+				TD({width: "7%", align: "right"},"$row.RECORDSRETURNED"),
+				TD({width: "7%"}, "$row.CACHEDQUERY"),
+				TD({width: "43%"}, "$row.TEMPLATE"),
+				TD({width: "10%"}, "$row.TIMESTAMP")                    
+            )			
         ),
+		
+	querySqlTag:
+		TR(
+			TD({class: "valueCell querySQL", width: "100%", colspan: 7})
+		),
 		
 	traceHeaderRow:
 		TR({class: "headerRow"},
@@ -635,7 +644,10 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 				SQL: theObj.queriesObj.DATA.SQL[i],
 				PARAMETERS: theObj.queriesObj.DATA.PARAMETERS[i],
 				RESULTSETS: theObj.queriesObj.DATA.RESULTSETS[i],
-				TYPE: theObj.queriesObj.DATA.TYPE[i]
+				TYPE: theObj.queriesObj.DATA.TYPE[i],
+				CACHEDQUERY: theObj.queriesObj.DATA.CACHEDQUERY[i],
+				TEMPLATE: theObj.queriesObj.DATA.TEMPLATE[i],
+				TIMESTAMP: theObj.queriesObj.DATA.TIMESTAMP[i]
 			};	
 			this.queryRows.push(query);
 		}
@@ -755,8 +767,13 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		//create header		
 		var headerRow =  this.queryHeaderRow.insertRows({}, this.table.firstChild)[0];
 		//add db rows
-		if (this.queryRows.length)
-			var row = this.queryRowTag.insertRows({rows: this.queryRows}, this.table.lastChild)[0];		
+		if (this.queryRows.length) {
+			var row = this.queryRowTag.insertRows({rows: this.queryRows}, this.table.lastChild)[0];
+			do {
+				newRow = this.querySqlTag.insertRows({},row)[0];
+				row = newRow.nextSibling;
+			} while (row)					
+		}			
 		// now we need to go build the sql string
 		var sqlString = "";
 		var sqlCell = null;				
@@ -770,7 +787,7 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 				sqlString += this.formatter.formatQuery(this.queryRows[i].SQL,this.queryRows[i].PARAMETERS);
 			}	
 			sqlCell = getElementsByClass("querySQL", this.table, "td")[i];
-			sqlCell.innerHTML = sqlString;					
+			sqlCell.innerHTML = '<div class="sql"> <pre>' + sqlString + "</pre></div>";					
 		}		
 	},
 	renderTraceTable: function() {

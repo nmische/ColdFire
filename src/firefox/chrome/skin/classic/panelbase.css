@@ -38,6 +38,11 @@
 	background-color:#FFF0F5;
 }
 
+.sql {
+	font-family: Monaco, monospace;
+}
+
+
 
 /* variables */
 .variableToolbox {
@@ -46,3 +51,5 @@
     right: 0;
     padding: 1px 2px;
 }
+
+
