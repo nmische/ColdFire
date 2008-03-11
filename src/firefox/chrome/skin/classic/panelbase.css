@@ -34,14 +34,23 @@
 }
 
 /* queries */
-.querySlow {
+.queryRow {
+	background-color:#EFEFEF;
+}
+
+.queryRow.slow {
 	background-color:#FFF0F5;
 }
 
-.sql {
+.querySQL {
 	font-family: Monaco, monospace;
+	margin-bottom: 2px;
+	background: url(chrome://coldfireextension/skin/sqlnormalbg.gif) repeat-x #FFFFFF;
 }
 
+.querySQL.slow {
+	background: url(chrome://coldfireextension/skin/sqlslowbg.gif) repeat-x #FFFFFF;
+}
 
 
 /* variables */

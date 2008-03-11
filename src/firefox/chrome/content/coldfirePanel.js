@@ -448,7 +448,7 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		
 	queryRowTag:
 		FOR("row", "$rows",
-            TR({class: "$row.ET|isSlow"},
+            TR({class: "queryRow $row.ET|isSlow"},
                 TD({width: "10%"},"$row.QUERYNAME"),
 				TD({width: "10%"},"$row.DATASOURCE"),				
 				TD({width: "7%", align: "right"},"$row.ET|formatTime"),
@@ -461,7 +461,7 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		
 	querySqlTag:
 		TR(
-			TD({class: "valueCell querySQL", width: "100%", colspan: 7})
+			TD({class: "valueCell querySQL $row.ET|isSlow", width: "100%", colspan: 7},PRE())
 		),
 		
 	traceHeaderRow:
@@ -523,7 +523,7 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 	},
 	formatCachedQuery: function(cached)
 	{
-		return (cached == "1")?"true":"";
+		return (cached == "1")?"Cached":"";
 	},	
 	formatTime: function(time)
 	{
@@ -774,28 +774,26 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		this.table = this.tableTag.append({}, this.panelNode, this);
 		//create header		
 		var headerRow =  this.queryHeaderRow.insertRows({}, this.table.firstChild)[0];
+		var sqlString = "";
+		var rowNum = 0;
 		//add db rows
 		if (this.queryRows.length) {
 			var row = this.queryRowTag.insertRows({rows: this.queryRows}, this.table.lastChild)[0];
 			do {
-				newRow = this.querySqlTag.insertRows({},row)[0];
+				newRow = this.querySqlTag.insertRows({row: this.queryRows[rowNum]},row)[0];
+				// build SQL string
+				sqlString ="";
+				if (this.queryRows[rowNum].TYPE == "StoredProcedure") {
+					sqlString += this.formatter.formatSPParams(this.queryRows[rowNum].PARAMETERS);
+					sqlString += this.formatter.formatSPResultSets(this.queryRows[rowNum].RESULTSETS);
+				} else {
+					sqlString += this.formatter.formatQuery(this.queryRows[rowNum].SQL,this.queryRows[rowNum].PARAMETERS);
+				}	
+				// put this string in new row
+				newRow.firstChild.firstChild.innerHTML = sqlString;				
 				row = newRow.nextSibling;
+				rowNum++;				
 			} while (row)					
-		}			
-		// now we need to go build the sql string
-		var sqlString = "";
-		var sqlCell = null;				
-		for( var i = 0; i < this.queryRows.length; i++ ){
-			sqlString ="";
-			sqlCell = null;
-			if (this.queryRows[i].TYPE == "StoredProcedure") {
-				sqlString += this.formatter.formatSPParams(this.queryRows[i].PARAMETERS);
-				sqlString += this.formatter.formatSPResultSets(this.queryRows[i].RESULTSETS);
-			} else {
-				sqlString += this.formatter.formatQuery(this.queryRows[i].SQL,this.queryRows[i].PARAMETERS);
-			}	
-			sqlCell = getElementsByClass("querySQL", this.table, "td")[i];
-			sqlCell.innerHTML = '<div class="sql"> <pre>' + sqlString + "</pre></div>";					
 		}		
 	},
 	renderTraceTable: function() {
@@ -973,11 +971,11 @@ function getElementsByClass(searchClass,node,tag)
 	return classElements;
 }
 
-/* A logger
+/* A logger */
 var gConsoleService = Components.classes['@mozilla.org/consoleservice;1'].getService(Components.interfaces.nsIConsoleService);
 
 function coldfire_logMessage(aMessage) 
 {
   gConsoleService.logStringMessage('ColdFire: ' + aMessage);
 }
-*/
+
