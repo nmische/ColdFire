@@ -20,8 +20,8 @@
 	<!-- get version info -->
 	<target name="version" depends="properties-local, no-properties-local, cf-rev, ff-rev" description="compute version number">
         <tstamp/>
-        <property file="cf.rev.properties"/>
-		<property file="ff.rev.properties"/>
+        <property file="cfrev.properties"/>
+		<property file="ffrev.properties"/>
 		<property name="version" value="${major.version}.${minor.version}.${coldfusion.revision}.${firefox.revision}"/>
 		<echo message="Version ${version}" />
     </target>
@@ -44,7 +44,7 @@
 	<target name="cf-rev" unless="cf.rev.notRequired" depends="cf-rev-check">		
 		<exec executable="svn" dir="${src.cf.dir}" >
 			<arg line="log --quiet --limit 1"/>
-			<redirector output="cf.rev.properties">
+			<redirector output="cfrev.properties">
 				<outputfilterchain>
 					<linecontainsregexp>
 					  <regexp pattern="r[0-9]+"/>
@@ -62,7 +62,7 @@
 	<target name="ff-rev" unless="ff.rev.notRequired" depends="ff-rev-check">		
 		<exec executable="svn" dir="${src.ff.dir}" >
 			<arg line="log --quiet --limit 1"/>
-			<redirector output="ff.rev.properties">
+			<redirector output="ffrev.properties">
 				<outputfilterchain>
 					<linecontainsregexp>
 					  <regexp pattern="r[0-9]+"/>
@@ -98,8 +98,9 @@
 	<!-- expand templates -->
 	<target name="install-dependency" description="check template or branch properties changes">
         <uptodate property="install.expansion.notRequired" targetfile="${src.ff.dir}/install.rdf">
-            <srcfiles dir="${src.ff.dir}" includes="install.rdf.tpl.xml, branch.properties"/>
+            <srcfiles dir="." includes="src/firefox/install.rdf.tpl.xml,*.properties"/>
         </uptodate>
+		<echo message="${install.expansion.notRequired}" />
     </target>
 
 	<target name="expand-install-template" depends="install-dependency, version" unless="install.expansion.notRequired" description="update install.rdf based on template and branch.properties">

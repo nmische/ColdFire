@@ -437,25 +437,25 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		
 	queryHeaderRow:
 		TR({class: "headerRow"},
-			TH({class: "headerCell", width: "15%"}, $CFSTR('DataSource')),
 			TH({class: "headerCell", width: "10%"}, $CFSTR('QueryName')),
-			TH({class: "headerCell", width: "8%"},  $CFSTR('ExecutionTime')),
+			TH({class: "headerCell", width: "10%"}, $CFSTR('DataSource')),			
+			TH({class: "headerCell", width: "7%"},  $CFSTR('Time')),
 			TH({class: "headerCell", width: "7%"}, $CFSTR('Records')),
 			TH({class: "headerCell", width: "7%"}, $CFSTR('Cached')),
-			TH({class: "headerCell", width: "43%"}, $CFSTR('Template')),
+			TH({class: "headerCell", width: "49%"}, $CFSTR('Template')),
 			TH({class: "headerCell", width: "10%"},  $CFSTR('Timestamp'))					
 		),
 		
 	queryRowTag:
 		FOR("row", "$rows",
             TR({class: "$row.ET|isSlow"},
-                TD({width: "15%"},"$row.DATASOURCE"),
-				TD({width: "10%"},"$row.QUERYNAME"),
-				TD({width: "8%", align: "right"},"$row.ET|formatTime"),
+                TD({width: "10%"},"$row.QUERYNAME"),
+				TD({width: "10%"},"$row.DATASOURCE"),				
+				TD({width: "7%", align: "right"},"$row.ET|formatTime"),
 				TD({width: "7%", align: "right"},"$row.RECORDSRETURNED"),
-				TD({width: "7%"}, "$row.CACHEDQUERY"),
-				TD({width: "43%"}, "$row.TEMPLATE"),
-				TD({width: "10%"}, "$row.TIMESTAMP")                    
+				TD({width: "7%", align: "center"}, "$row.CACHEDQUERY|formatCachedQuery"),
+				TD({width: "49%"}, "$row.TEMPLATE"),
+				TD({width: "10%"}, "$row.TIMESTAMP|formatTimeStamp")                    
             )			
         ),
 		
@@ -520,11 +520,19 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 	isSlow: function(time)
 	{
 		return (parseInt(time) > 250)? "slow": "";
+	},
+	formatCachedQuery: function(cached)
+	{
+		return (cached == "1")?"true":"";
 	},	
 	formatTime: function(time)
 	{
 		return time + " ms";
 	},	
+	formatTimeStamp: function(time)
+	{
+		return time.replace(/.*([0-9]{2}:[0-9]{2}:[0-9]{2}).*/,"$1");
+	},
 	getTraceClass: function(priority)
 	{
 		var tmp = "";
