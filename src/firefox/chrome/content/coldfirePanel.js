@@ -236,14 +236,14 @@ coldfireProgress.prototype =
     		if(aRequest.getResponseHeader){
     			try
     			{
-					var generalHeader = '';
-					var queriesHeader = '';
-					var traceHeader = '';
-					var templatesHeader = '';
-					var ctemplatesHeader = '';
-					var cfcsHeader = '';
-					var timerHeader= '';
-					var variablesHeader= '';
+					var generalHeader = "";
+					var queriesHeader = "";
+					var traceHeader = "";
+					var templatesHeader = "";
+					var ctemplatesHeader = "";
+					var cfcsHeader = "";
+					var timerHeader = "";
+					var variablesHeader = "";
 					//get all general headers
 					var i = 1;
 					try
@@ -331,7 +331,25 @@ coldfireProgress.prototype =
 							i++;
 						}						
 					}					
-					catch(e){}					
+					catch(e){}
+					
+					if (generalHeader == "")
+						generalHeader = "{}";
+					if (queriesHeader == "")
+						queriesHeader = "{}";
+					if (traceHeader == "")
+						traceHeader = "{}";
+					if (templatesHeader == "")
+						templatesHeader = "{}";
+					if (ctemplatesHeader == "")
+						ctemplatesHeader = "{}";
+					if (cfcsHeader == "")
+						cfcsHeader = "{}";
+					if (timerHeader == "")
+						timerHeader = "{}";
+					if (variablesHeader == "")
+						variablesHeader = "{}";					
+										
 					try{
 					cfObj = {
 						generalObj: eval( "(" + generalHeader + ")" ),
@@ -346,7 +364,7 @@ coldfireProgress.prototype =
 					}catch(e){}
 		   			this.post( cfObj ); 
 		   		} 
-		   		catch( e ) {}
+		   		catch(e){}
 		   	}
 	   	}
 	   	return 0;
@@ -629,9 +647,17 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
     },	
     generateRows: function( theObj )
 	{
-		try{
+		
 		this.generalRows = new Array();
-	    for( var i = 0; i < theObj.generalObj.DATA.LABEL.length; i++ ){
+		this.queryRows = new Array();
+		this.etRows = new Array();		
+		this.traceRows = new Array();
+		this.timerRows = new Array();
+		this.variablesRows = new Array();
+		
+		try{		
+		//general rows
+		for( var i = 0; i < theObj.generalObj.DATA.LABEL.length; i++ ){
 			if(theObj.generalObj.DATA.LABEL[i] == 'TotalExecTime') {
 				this.totalET = theObj.generalObj.DATA.VALUE[i]
 				continue;
@@ -642,7 +668,10 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 			}
 			this.generalRows.push( temp );
 		}
-		this.queryRows = new Array();
+		}catch(e){}
+		
+		try{
+		//query rows		
 		for( var i = 0; i < theObj.queriesObj.DATA.DATASOURCE.length; i++ ){
 			var query = {
 				DATASOURCE: theObj.queriesObj.DATA.DATASOURCE[i],
@@ -659,7 +688,10 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 			};	
 			this.queryRows.push(query);
 		}
-	    this.etRows = new Array();
+		}catch(e){}
+		
+		try{
+		//et rows	  
 		for(var i = 0; i < theObj.templatesObj.DATA.TOTALTIME.length; i++){
 		   	var temp = { 
 		   		TYPE: "Template",
@@ -693,7 +725,10 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 	    	};
 	    	this.etRows.push(temp);
 	    }
-		this.traceRows = new Array();
+		}catch(e){}
+		
+		try{
+		//trace rows
 		for( var i = 0; i < theObj.traceObj.DATA.DELTA.length; i++ )
 		{
 			var trace = {
@@ -704,7 +739,10 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 			};
 			this.traceRows.push(trace);
 		}
-		this.timerRows = new Array();
+		}catch(e){}
+		
+		try{
+		//timer rows
 		for( var i = 0; i < theObj.timerObj.DATA.MESSAGE.length; i++ )
 		{
 			var timer = {
@@ -713,7 +751,10 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 			};
 			this.timerRows.push(timer);
 		}
-		this.variablesRows = new Array();
+		}catch(e){}
+		
+		try{
+		//variable rows
 		for( var i = 0; i < theObj.variablesObj.DATA.VALUE.length; i++ )
 		{
 			var variable = {
@@ -723,7 +764,8 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 			};
 			this.variablesRows.push(variable);
 		}
-		}catch(e){/*alert(e.message);*/}
+		}catch(e){}
+		
 	    this.displayCurrentView();
 	},
 	displayCurrentView: function(){
@@ -750,6 +792,7 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		}
 	},
 	renderGeneralTable: function() {
+		
 		//create table		
 		this.table = this.tableTag.append({}, this.panelNode, this);
 		//create header		
@@ -971,11 +1014,12 @@ function getElementsByClass(searchClass,node,tag)
 	return classElements;
 }
 
-/* A logger */
+/* A logger 
 var gConsoleService = Components.classes['@mozilla.org/consoleservice;1'].getService(Components.interfaces.nsIConsoleService);
 
 function coldfire_logMessage(aMessage) 
 {
   gConsoleService.logStringMessage('ColdFire: ' + aMessage);
 }
+*/
 

@@ -27,15 +27,53 @@ Handles server side debugging for ColdFire
 <!--- Check that ColdFire is enabled --->
 <cfif IsDebugMode()
 	and StructKeyExists(GetHttpRequestData().headers,"User-Agent")
-	and FindNoCase("ColdFire/@VERSION@",GetHttpRequestData().headers["User-Agent"]) gt 0
+	and FindNoCase("ColdFire",GetHttpRequestData().headers["User-Agent"]) gt 0
 	and not GetPageContext().GetResponse().containsHeader("location")>
 	
-	<!--- Build Headers --->
-	<cfset coldfire_udf_main(debugMode=false,maxHeader=8000)>
+	<!--- Do we have the correct version of the extension for this debug template --->
+	<cfif REFind("ColdFire/\d*\.\d*\.@CF_REVISION@\.\d*",GetHttpRequestData().headers["User-Agent"]) gt 0>
+		<!--- Build Headers --->
+		<cfset coldfire_udf_main(debugMode=false,maxHeader=8000)>
+	<cfelse>
+		<!--- Return Error --->
+		<cfset coldfire_udf_error(debugMode=false,maxHeader=8000,msg="This version of the ColdFire extension, #REReplace(GetHttpRequestData().headers['User-Agent'],'.*ColdFire/(\d*\.\d*\.\d*\.\d*).*','\1')#, is incompatible with the server's version of the ColdFire debug template, @CF_REVISION@.")>
+	</cfif>	
 	
 </cfif>
 
+<cffunction 
+	name="coldfire_udf_error" 
+	returntype="void" 
+	output="true"
+	hint="Returns an error message in the general header.">
+	
+	<cfargument name="debugMode" type="boolean" required="false" default="false">
+	<cfargument name="maxHeader" type="numeric" required="false" default="8000">
+	<cfargument name="msg" type="string" required="true">
+	
+	<cfset var result = StructNew()>
+	<cfset var general = queryNew("label,value")>
+	
+	<cfset queryAddRow(general)>
+	<cfset querySetCell(general, "label", "Error")>
+	<cfset querySetCell(general, "value", arguments.msg)>
+	
+	<cfset result.general= coldfire_udf_encode(general)>
+	<cfset result.general = coldfire_udf_sizeSplit(result.general, arguments.maxHeader)>
+	
+	<cfif arguments.debugMode>
+		<cfdump var="#result#">
+	</cfif>
 
+	<cftry>
+	<cfloop index="x" from="1" to="#arrayLen(result.general)#">
+		<cfheader name="x-coldfire-general-#x#" value="#result.general[x]#">
+	</cfloop>
+	<cfcatch></cfcatch>
+	</cftry>
+	
+	
+</cffunction>
 
 
 <cffunction 
