@@ -236,14 +236,17 @@ coldfireProgress.prototype =
     		if(aRequest.getResponseHeader){
     			try
     			{
-					var generalHeader = '';
-					var queriesHeader = '';
-					var traceHeader = '';
-					var templatesHeader = '';
-					var ctemplatesHeader = '';
-					var cfcsHeader = '';
-					var timerHeader= '';
-					var variablesHeader= '';
+					
+					var coldfireHeaders = 0;
+					
+					var generalHeader = "";
+					var queriesHeader = "";
+					var traceHeader = "";
+					var templatesHeader = "";
+					var ctemplatesHeader = "";
+					var cfcsHeader = "";
+					var timerHeader = "";
+					var variablesHeader = "";
 					//get all general headers
 					var i = 1;
 					try
@@ -251,6 +254,7 @@ coldfireProgress.prototype =
 						while( true )
 						{
 							generalHeader += aRequest.getResponseHeader( "x-coldfire-general-" + i );
+							coldfireHeaders++;
 							i++;
 						}
 					}		
@@ -262,6 +266,7 @@ coldfireProgress.prototype =
 						while( true )
 						{
 							queriesHeader += aRequest.getResponseHeader( "x-coldfire-queries-" + i );
+							coldfireHeaders++;
 							i++;
 						}
 					}
@@ -273,6 +278,7 @@ coldfireProgress.prototype =
 						while( true )
 						{
 							traceHeader += aRequest.getResponseHeader( "x-coldfire-trace-" + i );
+							coldfireHeaders++;
 							i++;
 						}
 					}
@@ -284,6 +290,7 @@ coldfireProgress.prototype =
 						while( true )
 						{
 							templatesHeader += aRequest.getResponseHeader( "x-coldfire-templates-" + i );
+							coldfireHeaders++;
 							i++;
 						}
 					}
@@ -295,6 +302,7 @@ coldfireProgress.prototype =
 						while( true )
 						{
 							ctemplatesHeader += aRequest.getResponseHeader( "x-coldfire-ctemplates-" + i );
+							coldfireHeaders++;
 							i++;
 						}
 					}
@@ -306,6 +314,7 @@ coldfireProgress.prototype =
 						while( true )
 						{
 							cfcsHeader += aRequest.getResponseHeader( "x-coldfire-cfcs-" + i );
+							coldfireHeaders++;
 							i++;
 						}
 					}
@@ -317,6 +326,7 @@ coldfireProgress.prototype =
 						while( true )
 						{
 							timerHeader += aRequest.getResponseHeader( "x-coldfire-timer-" + i );
+							coldfireHeaders++;
 							i++;
 						}
 					}
@@ -328,25 +338,50 @@ coldfireProgress.prototype =
 						while( true )
 						{
 							variablesHeader += aRequest.getResponseHeader( "x-coldfire-variables-" + i );
+							coldfireHeaders++;
 							i++;
 						}						
 					}					
-					catch(e){}					
-					try{
-					cfObj = {
-						generalObj: eval( "(" + generalHeader + ")" ),
-						queriesObj: eval( "(" + queriesHeader + ")" ),
-						traceObj: eval( "(" + traceHeader + ")" ),
-						templatesObj:  eval( "(" + templatesHeader + ")" ),
-						ctemplatesObj: eval( "(" + ctemplatesHeader + ")" ),
-						cfcsObj: eval( "(" + cfcsHeader + ")" ),
-						timerObj: eval( "(" + timerHeader + ")"),
-						variablesObj: eval( "(" + variablesHeader + ")")
-					};
-					}catch(e){}
-		   			this.post( cfObj ); 
+					catch(e){}
+					
+					coldfire_logMessage(coldfireHeaders);
+					
+					if (coldfireHeaders > 0) {
+					
+						if (generalHeader == "")
+							generalHeader = "{}";
+						if (queriesHeader == "")
+							queriesHeader = "{}";
+						if (traceHeader == "")
+							traceHeader = "{}";
+						if (templatesHeader == "")
+							templatesHeader = "{}";
+						if (ctemplatesHeader == "")
+							ctemplatesHeader = "{}";
+						if (cfcsHeader == "")
+							cfcsHeader = "{}";
+						if (timerHeader == "")
+							timerHeader = "{}";
+						if (variablesHeader == "")
+							variablesHeader = "{}";					
+											
+						try{
+							cfObj = {
+								generalObj: eval( "(" + generalHeader + ")" ),
+								queriesObj: eval( "(" + queriesHeader + ")" ),
+								traceObj: eval( "(" + traceHeader + ")" ),
+								templatesObj:  eval( "(" + templatesHeader + ")" ),
+								ctemplatesObj: eval( "(" + ctemplatesHeader + ")" ),
+								cfcsObj: eval( "(" + cfcsHeader + ")" ),
+								timerObj: eval( "(" + timerHeader + ")"),
+								variablesObj: eval( "(" + variablesHeader + ")")
+							};
+							this.post(cfObj); 
+						}catch(e){}
+		   			
+					}
 		   		} 
-		   		catch( e ) {}
+		   		catch(e){}
 		   	}
 	   	}
 	   	return 0;
@@ -437,23 +472,32 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		
 	queryHeaderRow:
 		TR({class: "headerRow"},
-			TH({class: "headerCell", width: "15%"}, $CFSTR('DataSource')),
 			TH({class: "headerCell", width: "10%"}, $CFSTR('QueryName')),
-			TH({class: "headerCell", width: "8%"},  $CFSTR('ExecutionTime')),
+			TH({class: "headerCell", width: "10%"}, $CFSTR('DataSource')),			
+			TH({class: "headerCell", width: "7%"},  $CFSTR('Time')),
 			TH({class: "headerCell", width: "7%"}, $CFSTR('Records')),
-			TH({class: "headerCell", width: "60%"}, $CFSTR('SQL'))		
+			TH({class: "headerCell", width: "7%"}, $CFSTR('Cached')),
+			TH({class: "headerCell", width: "49%"}, $CFSTR('Template')),
+			TH({class: "headerCell", width: "10%"},  $CFSTR('Timestamp'))					
 		),
 		
 	queryRowTag:
 		FOR("row", "$rows",
-            TR({class: "$row.ET|isSlow"},
-                TD({class: "valueCell", width: "15%"},"$row.DATASOURCE"),
-				TD({class: "valueCell", width: "10%"},"$row.QUERYNAME"),
-				TD({class: "valueCell", width: "8%", align: "right"},"$row.ET|formatTime"),
-				TD({class: "valueCell", width: "7%", align: "right"},"$row.RECORDSRETURNED"),
-				TD({class: "valueCell querySQL", width: "60%"})                    
-            )
+            TR({class: "queryRow $row.ET|isSlow"},
+                TD({width: "10%"},"$row.QUERYNAME"),
+				TD({width: "10%"},"$row.DATASOURCE"),				
+				TD({width: "7%", align: "right"},"$row.ET|formatTime"),
+				TD({width: "7%", align: "right"},"$row.RECORDSRETURNED"),
+				TD({width: "7%", align: "center"}, "$row.CACHEDQUERY|formatCachedQuery"),
+				TD({width: "49%"}, "$row.TEMPLATE"),
+				TD({width: "10%", align:"right"}, "$row.TIMESTAMP|formatTimeStamp")                    
+            )			
         ),
+		
+	querySqlTag:
+		TR(
+			TD({class: "valueCell querySQL $row.ET|isSlow", width: "100%", colspan: 7},PRE())
+		),
 		
 	traceHeaderRow:
 		TR({class: "headerRow"},
@@ -511,11 +555,19 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 	isSlow: function(time)
 	{
 		return (parseInt(time) > 250)? "slow": "";
+	},
+	formatCachedQuery: function(cached)
+	{
+		return (cached == "1")?"Cached":"";
 	},	
 	formatTime: function(time)
 	{
 		return time + " ms";
 	},	
+	formatTimeStamp: function(time)
+	{
+		return time.replace(/.*([0-9]{2}:[0-9]{2}:[0-9]{2}).*/,"$1");
+	},
 	getTraceClass: function(priority)
 	{
 		var tmp = "";
@@ -612,9 +664,17 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
     },	
     generateRows: function( theObj )
 	{
-		try{
+		
 		this.generalRows = new Array();
-	    for( var i = 0; i < theObj.generalObj.DATA.LABEL.length; i++ ){
+		this.queryRows = new Array();
+		this.etRows = new Array();		
+		this.traceRows = new Array();
+		this.timerRows = new Array();
+		this.variablesRows = new Array();
+		
+		try{		
+		//general rows
+		for( var i = 0; i < theObj.generalObj.DATA.LABEL.length; i++ ){
 			if(theObj.generalObj.DATA.LABEL[i] == 'TotalExecTime') {
 				this.totalET = theObj.generalObj.DATA.VALUE[i]
 				continue;
@@ -625,7 +685,10 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 			}
 			this.generalRows.push( temp );
 		}
-		this.queryRows = new Array();
+		}catch(e){}
+		
+		try{
+		//query rows		
 		for( var i = 0; i < theObj.queriesObj.DATA.DATASOURCE.length; i++ ){
 			var query = {
 				DATASOURCE: theObj.queriesObj.DATA.DATASOURCE[i],
@@ -635,11 +698,17 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 				SQL: theObj.queriesObj.DATA.SQL[i],
 				PARAMETERS: theObj.queriesObj.DATA.PARAMETERS[i],
 				RESULTSETS: theObj.queriesObj.DATA.RESULTSETS[i],
-				TYPE: theObj.queriesObj.DATA.TYPE[i]
+				TYPE: theObj.queriesObj.DATA.TYPE[i],
+				CACHEDQUERY: theObj.queriesObj.DATA.CACHEDQUERY[i],
+				TEMPLATE: theObj.queriesObj.DATA.TEMPLATE[i],
+				TIMESTAMP: theObj.queriesObj.DATA.TIMESTAMP[i]
 			};	
 			this.queryRows.push(query);
 		}
-	    this.etRows = new Array();
+		}catch(e){}
+		
+		try{
+		//et rows	  
 		for(var i = 0; i < theObj.templatesObj.DATA.TOTALTIME.length; i++){
 		   	var temp = { 
 		   		TYPE: "Template",
@@ -673,7 +742,10 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 	    	};
 	    	this.etRows.push(temp);
 	    }
-		this.traceRows = new Array();
+		}catch(e){}
+		
+		try{
+		//trace rows
 		for( var i = 0; i < theObj.traceObj.DATA.DELTA.length; i++ )
 		{
 			var trace = {
@@ -684,7 +756,10 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 			};
 			this.traceRows.push(trace);
 		}
-		this.timerRows = new Array();
+		}catch(e){}
+		
+		try{
+		//timer rows
 		for( var i = 0; i < theObj.timerObj.DATA.MESSAGE.length; i++ )
 		{
 			var timer = {
@@ -693,7 +768,10 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 			};
 			this.timerRows.push(timer);
 		}
-		this.variablesRows = new Array();
+		}catch(e){}
+		
+		try{
+		//variable rows
 		for( var i = 0; i < theObj.variablesObj.DATA.VALUE.length; i++ )
 		{
 			var variable = {
@@ -703,7 +781,8 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 			};
 			this.variablesRows.push(variable);
 		}
-		}catch(e){/*alert(e.message);*/}
+		}catch(e){}
+		
 	    this.displayCurrentView();
 	},
 	displayCurrentView: function(){
@@ -730,6 +809,7 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		}
 	},
 	renderGeneralTable: function() {
+		
 		//create table		
 		this.table = this.tableTag.append({}, this.panelNode, this);
 		//create header		
@@ -754,23 +834,26 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		this.table = this.tableTag.append({}, this.panelNode, this);
 		//create header		
 		var headerRow =  this.queryHeaderRow.insertRows({}, this.table.firstChild)[0];
-		//add db rows
-		if (this.queryRows.length)
-			var row = this.queryRowTag.insertRows({rows: this.queryRows}, this.table.lastChild)[0];		
-		// now we need to go build the sql string
 		var sqlString = "";
-		var sqlCell = null;				
-		for( var i = 0; i < this.queryRows.length; i++ ){
-			sqlString ="";
-			sqlCell = null;
-			if (this.queryRows[i].TYPE == "StoredProcedure") {
-				sqlString += this.formatter.formatSPParams(this.queryRows[i].PARAMETERS);
-				sqlString += this.formatter.formatSPResultSets(this.queryRows[i].RESULTSETS);
-			} else {
-				sqlString += this.formatter.formatQuery(this.queryRows[i].SQL,this.queryRows[i].PARAMETERS);
-			}	
-			sqlCell = getElementsByClass("querySQL", this.table, "td")[i];
-			sqlCell.innerHTML = sqlString;					
+		var rowNum = 0;
+		//add db rows
+		if (this.queryRows.length) {
+			var row = this.queryRowTag.insertRows({rows: this.queryRows}, this.table.lastChild)[0];
+			do {
+				newRow = this.querySqlTag.insertRows({row: this.queryRows[rowNum]},row)[0];
+				// build SQL string
+				sqlString ="";
+				if (this.queryRows[rowNum].TYPE == "StoredProcedure") {
+					sqlString += this.formatter.formatSPParams(this.queryRows[rowNum].PARAMETERS);
+					sqlString += this.formatter.formatSPResultSets(this.queryRows[rowNum].RESULTSETS);
+				} else {
+					sqlString += this.formatter.formatQuery(this.queryRows[rowNum].SQL,this.queryRows[rowNum].PARAMETERS);
+				}	
+				// put this string in new row
+				newRow.firstChild.firstChild.innerHTML = sqlString;				
+				row = newRow.nextSibling;
+				rowNum++;				
+			} while (row)					
 		}		
 	},
 	renderTraceTable: function() {
@@ -948,11 +1031,12 @@ function getElementsByClass(searchClass,node,tag)
 	return classElements;
 }
 
-/* A logger
+/* A logger */
 var gConsoleService = Components.classes['@mozilla.org/consoleservice;1'].getService(Components.interfaces.nsIConsoleService);
 
 function coldfire_logMessage(aMessage) 
 {
   gConsoleService.logStringMessage('ColdFire: ' + aMessage);
 }
-*/
+
+

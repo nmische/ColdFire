@@ -20,13 +20,24 @@ Adam Podolnick http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_w
 Nathan Mische https://www.amazon.com/gp/registry/wishlist/1PMU5WXR9RZNJ/ref=wl_web/
 
 ------------------------------------ LAST UPDATE ------------------------------------
+Last Updated: March 12, 2008 (@VERSION@)
+
+The first 1.1 release:
+ * added support for Firefox 3. 
+ * updated to use new version numbering 
+   (major_version.minor_version.cf_revision.ff_revision). 
+ * updated coldfire.cfm to check for cf_revision only.
+ * added template, cached, and timestamp columns to DB Queries tab.
+ * updated build file to generate version number based on SVN revisions.
+
+------------------------------------ OLDER UPDATES ------------------------------------
 Last Updated: March 5, 2008 (1.004)
 
 Updated build file to use branch and local property files. Updates to coldfire-
 service including new extensions.coldfire.logSvcMsgs property to control logging. 
 Added platform specific chrome.manifest overrides.
 
------------------------------------- OLDER UPDATES ------------------------------------
+
 Last Updated: Feb 6, 2008 (1.003)
 
 Updated extension to escape HTML. Core coldfirePanel now uses Firebug's DOMPlate 

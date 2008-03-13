@@ -18,6 +18,7 @@
 					Even more work to support variables (nmische@gmail.com 9/21/2007)
 					Fixes to coldfire_udf_encode based on CFJSON (nmische@gmail.com 1/2/2008)
 					Change coldfire_udf_getGeneral to return query object (nmische@gmail.com 2/2/2008)
+					Added check for cf_revision, added coldfire_udf_error (nmische@gmail.com) 3/12/2008)
 					
 					
 Handles server side debugging for ColdFire
@@ -27,15 +28,53 @@ Handles server side debugging for ColdFire
 <!--- Check that ColdFire is enabled --->
 <cfif IsDebugMode()
 	and StructKeyExists(GetHttpRequestData().headers,"User-Agent")
-	and FindNoCase("ColdFire/@VERSION@",GetHttpRequestData().headers["User-Agent"]) gt 0
+	and FindNoCase("ColdFire",GetHttpRequestData().headers["User-Agent"]) gt 0
 	and not GetPageContext().GetResponse().containsHeader("location")>
 	
-	<!--- Build Headers --->
-	<cfset coldfire_udf_main(debugMode=false,maxHeader=8000)>
+	<!--- Do we have the correct version of the extension for this debug template --->
+	<cfif REFind("ColdFire/\d*\.\d*\.@CF_REVISION@\.\d*",GetHttpRequestData().headers["User-Agent"]) gt 0>
+		<!--- Build Headers --->
+		<cfset coldfire_udf_main(debugMode=false,maxHeader=8000)>
+	<cfelse>
+		<!--- Return Error --->
+		<cfset coldfire_udf_error(debugMode=false,maxHeader=8000,msg="This version of the ColdFire extension, #REReplace(GetHttpRequestData().headers['User-Agent'],'.*ColdFire/(\d*\.\d*\.\d*\.\d*).*','\1')#, is incompatible with the server's version of the ColdFire debug template, @CF_REVISION@.")>
+	</cfif>	
 	
 </cfif>
 
+<cffunction 
+	name="coldfire_udf_error" 
+	returntype="void" 
+	output="true"
+	hint="Returns an error message in the general header.">
+	
+	<cfargument name="debugMode" type="boolean" required="false" default="false">
+	<cfargument name="maxHeader" type="numeric" required="false" default="8000">
+	<cfargument name="msg" type="string" required="true">
+	
+	<cfset var result = StructNew()>
+	<cfset var general = queryNew("label,value")>
+	
+	<cfset queryAddRow(general)>
+	<cfset querySetCell(general, "label", "Error")>
+	<cfset querySetCell(general, "value", arguments.msg)>
+	
+	<cfset result.general= coldfire_udf_encode(general)>
+	<cfset result.general = coldfire_udf_sizeSplit(result.general, arguments.maxHeader)>
+	
+	<cfif arguments.debugMode>
+		<cfdump var="#result#">
+	</cfif>
 
+	<cftry>
+	<cfloop index="x" from="1" to="#arrayLen(result.general)#">
+		<cfheader name="x-coldfire-general-#x#" value="#result.general[x]#">
+	</cfloop>
+	<cfcatch></cfcatch>
+	</cftry>
+	
+	
+</cffunction>
 
 
 <cffunction 
@@ -271,7 +310,7 @@ Handles server side debugging for ColdFire
 		
 	<cfargument name="data" type="query" required="true">
 	
-	<cfset var result = queryNew("datasource, queryname, et, sql, parameters, resultsets, recordsreturned, type")>	
+	<cfset var result = queryNew("datasource, queryname, et, sql, parameters, resultsets, recordsreturned, type, cachedquery, template, timestamp")>	
 	<cfset var coldfire_queries = "">
 	<cfset var coldfire_storedproc = "">		
 	<cfset var x = "">
@@ -301,7 +340,7 @@ Handles server side debugging for ColdFire
 		</cfscript>
 		<cfcatch type="Any">
 			<cfscript>
-				coldfire_queries = queryNew("datasource, queryname, et, sql, parameters, resultsets, recordsreturned, type");
+				coldfire_queries = queryNew("datasource, queryname, et, sql, parameters, resultsets, recordsreturned, type, cachedquery, template, timestamp");
 			</cfscript>		
 		</cfcatch>
 	</cftry>
@@ -316,9 +355,7 @@ Handles server side debugging for ColdFire
 		
 		<cfset sql = replace(sql, "<", "&lt;", "all")>	
 		<cfset sql = replace(sql, ">", "&gt;", "all")>	
-		<cfset sql = reReplace(sql, "[\n\r]{2,}", " ", "all")>
-		<cfset sql = reReplace(sql, "[[:space:]]{2,}", " ", "all")>
-		
+				
 		<cfif ArrayLen(coldfire_queries.attributes[coldfire_queries.currentRow])>
 			<cfset parameters = ArrayNew(1)>		
 			<!--- build an array of parameter data --->
@@ -355,6 +392,9 @@ Handles server side debugging for ColdFire
 		<cfset QuerySetCell(result,"resultsets",resultsets)>
 		<cfset QuerySetCell(result,"recordsreturned",recordcount)>
 		<cfset QuerySetCell(result,"type",coldfire_queries.type)>
+		<cfset QuerySetCell(result,"cachedquery",coldfire_queries.cachedquery)>
+		<cfset QuerySetCell(result,"template",coldfire_queries.template)>
+		<cfset QuerySetCell(result,"timestamp",coldfire_queries.timestamp)>
 	
 	</cfloop>
 	
@@ -373,7 +413,7 @@ Handles server side debugging for ColdFire
 		</cfscript>
 		<cfcatch type="Any">
 			<cfscript>
-				coldfire_storedproc = queryNew('attributes, body, cachedquery, category, datasource, endtime, executiontime, line, message, name, parent, priority, result, rowcount, stacktrace, starttime, template, timestamp, type, url');
+				coldfire_storedproc = queryNew('datasource, queryname, et, sql, parameters, resultsets, recordsreturned, type, cachedquery, template, timestamp');
 			</cfscript>						
 		</cfcatch>
 	</cftry>
@@ -448,6 +488,10 @@ Handles server side debugging for ColdFire
 		<cfset QuerySetCell(result,"resultsets",resultsets)>
 		<cfset QuerySetCell(result,"recordsreturned",recordcount)>
 		<cfset QuerySetCell(result,"type",coldfire_storedproc.type)>
+		<cfset QuerySetCell(result,"cachedquery",coldfire_storedproc.cachedquery)>
+		<cfset QuerySetCell(result,"template",coldfire_storedproc.template)>
+		<cfset QuerySetCell(result,"timestamp",coldfire_storedproc.timestamp)>
+	
 	
 	</cfloop>	
 	
