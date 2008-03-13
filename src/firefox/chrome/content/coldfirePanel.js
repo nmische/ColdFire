@@ -488,7 +488,7 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 				TD({width: "10%"},"$row.DATASOURCE"),				
 				TD({width: "7%", align: "right"},"$row.ET|formatTime"),
 				TD({width: "7%", align: "right"},"$row.RECORDSRETURNED"),
-				TD({width: "7%", align: "center"}, "$row.CACHEDQUERY|formatCachedQuery"),
+				TD({width: "7%", align: "center", nowrap: "true"}, "$row.CACHEDQUERY|formatCachedQuery"),
 				TD({width: "49%"}, "$row.TEMPLATE"),
 				TD({width: "10%", align:"right"}, "$row.TIMESTAMP|formatTimeStamp")                    
             )			
@@ -558,7 +558,7 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 	},
 	formatCachedQuery: function(cached)
 	{
-		return (cached == "1")?"Cached":"";
+		return (cached == "1")?$CFSTR("Yes"):$CFSTR("No");
 	},	
 	formatTime: function(time)
 	{
