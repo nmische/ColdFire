@@ -5,7 +5,7 @@
 
   <Description about="urn:mozilla:install-manifest">
     <em:id>ColdFireExtension@crspy.net</em:id>
-    <em:version>1.1.43.45</em:version>
+    <em:version>1.1.46.46</em:version>
     <em:type>2</em:type>
    
     <!-- Firefox -->

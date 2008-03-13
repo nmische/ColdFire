@@ -18,6 +18,7 @@
 					Even more work to support variables (nmische@gmail.com 9/21/2007)
 					Fixes to coldfire_udf_encode based on CFJSON (nmische@gmail.com 1/2/2008)
 					Change coldfire_udf_getGeneral to return query object (nmische@gmail.com 2/2/2008)
+					Added check for cf_revision, added coldfire_udf_error (nmische@gmail.com) 3/12/2008)
 					
 					
 Handles server side debugging for ColdFire

@@ -317,6 +317,11 @@
 	<target name="make-docs-dist" depends="make-coldfuion-dist" description="copy the docs for distribution">
 		<copy todir="${dist.dir}">
 			<fileset dir="${src.dir}/docs" />
+			 <filterchain>
+                   <replacetokens>
+						<token key="VERSION" value="${version}"/>
+                   </replacetokens>
+           </filterchain>
 		</copy>
 	</target>
 	

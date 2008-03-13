@@ -236,6 +236,9 @@ coldfireProgress.prototype =
     		if(aRequest.getResponseHeader){
     			try
     			{
+					
+					var coldfireHeaders = 0;
+					
 					var generalHeader = "";
 					var queriesHeader = "";
 					var traceHeader = "";
@@ -251,6 +254,7 @@ coldfireProgress.prototype =
 						while( true )
 						{
 							generalHeader += aRequest.getResponseHeader( "x-coldfire-general-" + i );
+							coldfireHeaders++;
 							i++;
 						}
 					}		
@@ -262,6 +266,7 @@ coldfireProgress.prototype =
 						while( true )
 						{
 							queriesHeader += aRequest.getResponseHeader( "x-coldfire-queries-" + i );
+							coldfireHeaders++;
 							i++;
 						}
 					}
@@ -273,6 +278,7 @@ coldfireProgress.prototype =
 						while( true )
 						{
 							traceHeader += aRequest.getResponseHeader( "x-coldfire-trace-" + i );
+							coldfireHeaders++;
 							i++;
 						}
 					}
@@ -284,6 +290,7 @@ coldfireProgress.prototype =
 						while( true )
 						{
 							templatesHeader += aRequest.getResponseHeader( "x-coldfire-templates-" + i );
+							coldfireHeaders++;
 							i++;
 						}
 					}
@@ -295,6 +302,7 @@ coldfireProgress.prototype =
 						while( true )
 						{
 							ctemplatesHeader += aRequest.getResponseHeader( "x-coldfire-ctemplates-" + i );
+							coldfireHeaders++;
 							i++;
 						}
 					}
@@ -306,6 +314,7 @@ coldfireProgress.prototype =
 						while( true )
 						{
 							cfcsHeader += aRequest.getResponseHeader( "x-coldfire-cfcs-" + i );
+							coldfireHeaders++;
 							i++;
 						}
 					}
@@ -317,6 +326,7 @@ coldfireProgress.prototype =
 						while( true )
 						{
 							timerHeader += aRequest.getResponseHeader( "x-coldfire-timer-" + i );
+							coldfireHeaders++;
 							i++;
 						}
 					}
@@ -328,41 +338,48 @@ coldfireProgress.prototype =
 						while( true )
 						{
 							variablesHeader += aRequest.getResponseHeader( "x-coldfire-variables-" + i );
+							coldfireHeaders++;
 							i++;
 						}						
 					}					
 					catch(e){}
 					
-					if (generalHeader == "")
-						generalHeader = "{}";
-					if (queriesHeader == "")
-						queriesHeader = "{}";
-					if (traceHeader == "")
-						traceHeader = "{}";
-					if (templatesHeader == "")
-						templatesHeader = "{}";
-					if (ctemplatesHeader == "")
-						ctemplatesHeader = "{}";
-					if (cfcsHeader == "")
-						cfcsHeader = "{}";
-					if (timerHeader == "")
-						timerHeader = "{}";
-					if (variablesHeader == "")
-						variablesHeader = "{}";					
-										
-					try{
-					cfObj = {
-						generalObj: eval( "(" + generalHeader + ")" ),
-						queriesObj: eval( "(" + queriesHeader + ")" ),
-						traceObj: eval( "(" + traceHeader + ")" ),
-						templatesObj:  eval( "(" + templatesHeader + ")" ),
-						ctemplatesObj: eval( "(" + ctemplatesHeader + ")" ),
-						cfcsObj: eval( "(" + cfcsHeader + ")" ),
-						timerObj: eval( "(" + timerHeader + ")"),
-						variablesObj: eval( "(" + variablesHeader + ")")
-					};
-					}catch(e){}
-		   			this.post( cfObj ); 
+					coldfire_logMessage(coldfireHeaders);
+					
+					if (coldfireHeaders > 0) {
+					
+						if (generalHeader == "")
+							generalHeader = "{}";
+						if (queriesHeader == "")
+							queriesHeader = "{}";
+						if (traceHeader == "")
+							traceHeader = "{}";
+						if (templatesHeader == "")
+							templatesHeader = "{}";
+						if (ctemplatesHeader == "")
+							ctemplatesHeader = "{}";
+						if (cfcsHeader == "")
+							cfcsHeader = "{}";
+						if (timerHeader == "")
+							timerHeader = "{}";
+						if (variablesHeader == "")
+							variablesHeader = "{}";					
+											
+						try{
+							cfObj = {
+								generalObj: eval( "(" + generalHeader + ")" ),
+								queriesObj: eval( "(" + queriesHeader + ")" ),
+								traceObj: eval( "(" + traceHeader + ")" ),
+								templatesObj:  eval( "(" + templatesHeader + ")" ),
+								ctemplatesObj: eval( "(" + ctemplatesHeader + ")" ),
+								cfcsObj: eval( "(" + cfcsHeader + ")" ),
+								timerObj: eval( "(" + timerHeader + ")"),
+								variablesObj: eval( "(" + variablesHeader + ")")
+							};
+							this.post(cfObj); 
+						}catch(e){}
+		   			
+					}
 		   		} 
 		   		catch(e){}
 		   	}
@@ -473,7 +490,7 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 				TD({width: "7%", align: "right"},"$row.RECORDSRETURNED"),
 				TD({width: "7%", align: "center"}, "$row.CACHEDQUERY|formatCachedQuery"),
 				TD({width: "49%"}, "$row.TEMPLATE"),
-				TD({width: "10%"}, "$row.TIMESTAMP|formatTimeStamp")                    
+				TD({width: "10%", align:"right"}, "$row.TIMESTAMP|formatTimeStamp")                    
             )			
         ),
 		
@@ -1014,12 +1031,12 @@ function getElementsByClass(searchClass,node,tag)
 	return classElements;
 }
 
-/* A logger 
+/* A logger */
 var gConsoleService = Components.classes['@mozilla.org/consoleservice;1'].getService(Components.interfaces.nsIConsoleService);
 
 function coldfire_logMessage(aMessage) 
 {
   gConsoleService.logStringMessage('ColdFire: ' + aMessage);
 }
-*/
+
 
