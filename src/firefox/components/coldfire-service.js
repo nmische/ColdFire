@@ -194,7 +194,7 @@ ColdFireProxy.prototype = {
 		  		var vars = this.service.getVariables({});
 		  
 		 		if(vars.length)
-		  			subject.setRequestHeader("ColdFire-Variables", vars.toJSONString(), true);					 
+		  			subject.setRequestHeader("x-coldfire-variables", vars.toJSONString(), true);					 
 		   	}
     	} else if (topic == 'app-startup') {        
 			if ("nsINetModuleMgr" in Components.interfaces) {

@@ -37,7 +37,7 @@ Handles server side debugging for ColdFire
 		<cfset coldfire_udf_main(debugMode=false,maxHeader=8000)>
 	<cfelse>
 		<!--- Return Error --->
-		<cfset coldfire_udf_error(debugMode=false,maxHeader=8000,msg="This version of the ColdFire extension, #REReplace(GetHttpRequestData().headers['User-Agent'],'.*ColdFire/(\d*\.\d*\.\d*\.\d*).*','\1')#, is incompatible with the server's version of the ColdFire debug template, @CF_REVISION@.")>
+		<cfset coldfire_udf_error(debugMode=false,maxHeader=8000,msg="This version of the ColdFire extension, #REReplace(GetHttpRequestData().headers['User-Agent'],'.*ColdFire/(\d*[\.\d*]+).*','\1')#, is incompatible with the server's version of the ColdFire debug template, @CF_REVISION@.")>
 	</cfif>	
 	
 </cfif>
@@ -633,8 +633,8 @@ Handles server side debugging for ColdFire
 	<cfset var requestData = GetHttpRequestData()>
 	<cfset var response = getPageContext().getResponse()>
 
-	<cfif structKeyExists(requestData.headers,"ColdFire-Variables")>
-		<cfset varJSON = requestData.headers["ColdFire-Variables"]>
+	<cfif structKeyExists(requestData.headers,"x-coldfire-variables")>
+		<cfset varJSON = requestData.headers["x-coldfire-variables"]>
 		<cfset varArray = coldfire_udf_decode(varJSON)>
 	</cfif>			
 	
