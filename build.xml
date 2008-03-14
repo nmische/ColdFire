@@ -316,12 +316,15 @@
 
 	<target name="make-docs-dist" depends="make-coldfuion-dist" description="copy the docs for distribution">
 		<copy todir="${dist.dir}">
-			<fileset dir="${src.dir}/docs" />
+			<fileset dir="${src.dir}/docs" includes="*.txt" />
 			 <filterchain>
                    <replacetokens>
 						<token key="VERSION" value="${version}"/>
                    </replacetokens>
            </filterchain>
+		</copy>
+		<copy todir="${dist.dir}">
+			<fileset dir="${src.dir}/docs" excludes="*.txt" />
 		</copy>
 	</target>
 	
