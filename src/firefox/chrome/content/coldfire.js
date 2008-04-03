@@ -46,12 +46,6 @@ const cfPrefNames =
     "parseParams"
 ];
 
-
-const nsIColdFire = Components.interfaces.nsIColdFire;
-const cfColdFireService = Components.classes['@coldfire.riaforge.org/service;1'];
-const cfColdFire = cfColdFireService.getService(nsIColdFire);
-
-
 var cfOptionUpdateMap = {};
  
 top.ColdFire = {
@@ -62,13 +56,7 @@ top.ColdFire = {
     
     initialize: function() 
     {  	
-       	  
-	    /* Set the ColdFire Extension version for the ColdFire Service Component  */
-        try {
-           cfColdFire.extensionVersion = this.version;
-        } catch (err) {}
-    
-			
+       				
         /* Set preferences */
         for (var i = 0; i < cfPrefNames.length; ++i)
             this[cfPrefNames[i]] = this.getPref(cfPrefNames[i]);
@@ -81,42 +69,7 @@ top.ColdFire = {
     {        
  		cfPrefs.removeObserver(cfPrefDomain, this, false);       
     },
-    
-  
-    /* Enable and disable ColdFire */ 
-    enable: function() 
-    {
-        /* Enable the ColdFire Service Component */  
-        try {
-            cfColdFire.requestHeaderEnabled = true;
-        } catch (err) {}
-    },
 	
-    disable: function() 
-    {
-        /* Disable the ColdFire Service Component */  
-        try {
-            cfColdFire.requestHeaderEnabled = false;
-        } catch (err) {}
-    },
-	
-	/* Add and Remove ColdFire Variables */
-	addVariable: function(variable) {
-		cfColdFire.addVariable(variable);
-	},	
-	
-	removeVariable: function(index) {
-		cfColdFire.removeVariable(index);
-	},
-	
-	getVariables: function() {		
-		return cfColdFire.getVariables({});
-	},
-	
-	clearVariables: function() {
-		cfColdFire.clearVariables();
-	},
-
     togglePref: function(name)
     {
         this.setPref(name, !this[name]);

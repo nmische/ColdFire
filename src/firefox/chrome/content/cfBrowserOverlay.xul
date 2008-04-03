@@ -4,6 +4,7 @@
 	<script type="application/x-javascript" src="chrome://coldfireextension/content/coldfire.js"/>
 	<script type="application/x-javascript" src="chrome://coldfireextension/content/formatter.js"/>
 	<script type="application/x-javascript" src="chrome://coldfireextension/content/dump.js"/>
-	<script type="application/x-javascript" src="chrome://coldfireextension/content/coldfirePanel.js"/>
+	<script type="application/x-javascript" src="chrome://coldfireextension/content/json2.js"/>
+	<script type="application/x-javascript" src="chrome://coldfireextension/content/coldfusion.js"/>
 
 </overlay>

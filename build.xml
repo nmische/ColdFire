@@ -109,8 +109,7 @@
         <echo message="No local properties file, setting defaults."/>
         <!-- set these values -->
 		<property name="install.dir" value="OperatingSystemPathToTestPofile"/>
-        <property name="geckosdk.dir" value="OperatingSystemPathToGecko-SDK"/>
-		<property name="cfserver.debug.dir" value="OperatingSystemPathToColdFusionDebugTemplates" />
+       	<property name="cfserver.debug.dir" value="OperatingSystemPathToColdFusionDebugTemplates" />
 		<property name="profile.name" value="NameOfTestProfile" />
     </target>
 
@@ -136,9 +135,9 @@
 
 	<!-- targets for incremental builds -->
 
-	<target name="copy-to-extensions" depends="clean-reg, clean-xpti" description="copies extension files to profle">
+	<target name="copy-to-extensions" depends="clean-reg" description="copies extension files to profle">
         <copy todir="${install.dir}/extensions/${extension.id}" >
-            <fileset dir="${src.ff.dir}" excludes="**/*.idl, **/*.tpl.xml" />
+            <fileset dir="${src.ff.dir}" excludes="**/*.tpl.xml" />
 			<filterchain>
                    <replacetokens>
                         <token key="VERSION" value="${version}"/>
@@ -165,35 +164,12 @@
 
 	<target name="incremental-relaunch" depends="version, expand-templates, copy-to-extensions, copy-to-cfserver, start-firefox" />
 		
-	<target name="coldfire-service" description="check for service changes">
-        <uptodate property="deleteCompreg.notRequired" srcfile="${src.ff.dir}/components/coldfire-service.js" targetfile="${install.dir}/compreg.dat" />
-    </target>
-
-    <target name="clean-reg" depends="coldfire-service" unless="deleteCompreg.notRequired" description="delete compreg.dat to reload service" >
+	<target name="clean-reg" description="delete compreg.dat to reload service" >
         <delete file="${install.dir}/compreg.dat"/>
     </target>
-
-	<!-- idl/xpt targets -->
-	<target name="idl" description="check for idl changes">
-        <uptodate property="xpidl.notRequired" srcfile="${src.ff.dir}/components/nsIColdFire.idl" targetfile="${src.ff.dir}/components/nsIColdFire.xpt" />
-    </target>
-
-    <target name="compile-idl" depends="idl" description="compile idl" unless="xpidl.notRequired">
-        <exec dir="${src.ff.dir}/components" executable="${geckosdk.dir}/bin/xpidl.exe"> 
-        	<arg line="-m typelib -w -v -I ${geckosdk.dir}/idl -e nsIColdFire.xpt nsIColdFire.idl"/>
-    	</exec>	
-    </target>
-
-    <target name="xpti" depends="compile-idl" description="check for xpt changes">
-        <uptodate property="deleteXPTI.notRequired" srcfile="${src.ff.dir}/components/nsIColdFire.xpt" targetfile="${install.dir}/xpti.dat" />
-    </target>
-
-    <target name="clean-xpti" depends="xpti" unless="deleteXPTI.notRequired" description="delete xpti.dat to reload xpt" >
-		<delete file="${install.dir}/xpti.dat"/>
-    </target>
-
+	
 	<!-- targets used for creating a distribution -->
-	<target name="set-up-build" depends="clean, version, expand-templates, compile-idl" description="sets up build directory">
+	<target name="set-up-build" depends="clean, version, expand-templates" description="sets up build directory">
 		<mkdir dir="${build.dir}" />
 	</target>
 

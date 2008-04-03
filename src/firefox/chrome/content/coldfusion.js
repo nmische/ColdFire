@@ -41,377 +41,226 @@ const STATE_START = Components.interfaces.nsIWebProgressListener.STATE_START;
 const STATE_STOP = Components.interfaces.nsIWebProgressListener.STATE_STOP;
 const STATE_IS_REQUEST = Components.interfaces.nsIWebProgressListener.STATE_IS_REQUEST;
 const NOTIFY_ALL = Components.interfaces.nsIWebProgress.NOTIFY_ALL;
+const nsIObserverService = CI("nsIObserverService");
+const observerService = CCSV("@mozilla.org/observer-service;1", "nsIObserverService");
+const logger = new LoggingUtil();
 
 const ToolboxPlate = domplate(
 {
-    tag:
-        DIV({class: "variableToolbox", _domPanel: "$domPanel", onclick: "$onClick"},
-            IMG({class: "variableDeleteButton closeButton", src: "blank.gif"})
-        ),
-    
-    onClick: function(event)
-    {
-        var toolbox = event.currentTarget;
-        toolbox.domPanel.deleteVariable(toolbox.varRow);
-    }
+	tag:
+		DIV({class: "variableToolbox", _domPanel: "$domPanel", onclick: "$onClick"},
+			IMG({class: "variableDeleteButton closeButton", src: "blank.gif"})
+		),
+	
+	onClick: function(event)
+	{
+		var toolbox = event.currentTarget;
+		toolbox.domPanel.deleteVariable(toolbox.varRow);
+	}
 });
 	
 var ColdFire;
 var Chrome;
 
-Firebug.ColdFireExtension = extend(Firebug.Module, 
+Firebug.ColdFireModule = extend(Firebug.Module, 
 { 
-	coldfireView: "General",
-	initialize: function() {
-	    ColdFire = FirebugChrome.window.ColdFire;
-	    ColdFire.initialize();
-    },
+	
+	// extends module
+	
+	initialize: function() 
+	{
+		ColdFire = FirebugChrome.window.ColdFire;
+		ColdFire.initialize();
+		observerService.addObserver(this, "http-on-modify-request", false);
+	},
+	
+	shutdown: function() 
+	{
+		ColdFire.shutdown();
+		ColdFire = null;
+		observerService.removeObserver(context.coldfireProxy, "http-on-modify-request", false);
+		if(Firebug.getPref( 'defaultPanelName')=='coldfire' ) 
+		{
+			Firebug.setPref( 'defaultPanelName','console' );
+		}
+	},	
+	
 	initContext: function( context ) 
 	{
-		ColdFire.enable();
-		monitorColdFireProgress( context );
-    },
-    destroyContext: function( context ) 
-    {
-    	ColdFire.disable();
-    	unmonitorColdfireProgress( context );
-    },	
-	syncFilterButtons: function(chrome)
-    {
-        var button = chrome.$("fbColdFireFilter-"+this.coldfireView);
-        button.checked = true;    
-    },	
-	reattachContext: function(context)
-    {
-        var chrome = context ? context.chrome : FirebugChrome;
-        this.syncFilterButtons(chrome);
-    },	
-    shutdown: function() 
-    {
-      ColdFire.shutdown();
-	  ColdFire = null;
-	  if(Firebug.getPref( 'defaultPanelName')=='ColdFireExtension' ) {
-        Firebug.setPref( 'defaultPanelName','console' );
-      }
-    },
-    showPanel: function( browser, panel ) 
-    { 
-        Chrome = browser.chrome;		
 		
-        var isColdFireExtension = panel && panel.name == "ColdFireExtension"; 
+		if (context.netProgress) 
+		{
+			context.netProgress.activatecf = function(panel){
+				this.cfpanel = panel;
+			}
+			context.netProgress.post = (function(old){
+				return function(handler, args){				
+					old.apply(this,arguments);								
+					if (this.cfpanel)
+					{
+						var file = handler.apply(this, args);
+						if (file)
+						{
+							this.cfpanel.updateFile(file);
+						}
+					}				
+				}
+			})(context.netProgress.post);		
+		}	 
+		
+	},
+	
+	reattachContext: function(context)
+	{
+		var chrome = context ? context.chrome : FirebugChrome;
+		this.syncFilterButtons(chrome);
+	},	
+	
+	destroyContext: function( context ) 
+	{
+		
+	},	
+		
+	showPanel: function( browser, panel ) 
+	{ 
+		Chrome = browser.chrome;		
+		
+		var isColdFireExtension = panel && panel.name == "coldfusion"; 
 		var ColdFireExtensionButtons = Chrome.$( "fbColdFireExtensionButtons" ); 
-        collapse( ColdFireExtensionButtons, !isColdFireExtension ); 
+		collapse( ColdFireExtensionButtons, !isColdFireExtension ); 
 		
 		var isVariablesView = this.coldfireView == "Variables";
 		var ColdFireVariableBox = Chrome.$( "fbColdFireVariableBox" ); 
 		collapse(ColdFireVariableBox, !(isColdFireExtension && isVariablesView));
-        
-        if( panel && panel.context.coldfireProgress )
+		
+		if( panel && panel.context.netProgress )
 		{
-			if( panel.name == "ColdFireExtension" )
-				panel.context.coldfireProgress.activate( panel );
+			if( panel.name == "coldfusion" )
+				panel.context.netProgress.activatecf( panel );
 			else
-				panel.context.coldfireProgress.activate( null );
+				panel.context.netProgress.activatecf( null );
 		}
 		
 		
-		if (panel && panel.name == "ColdFireExtension")
+		if (panel && panel.name == "coldfusion")
 			this.changeCurrentView(this.coldfireView);
 		
+	},
+	
+	// coldfire
+	
+	coldfireView: "General",
+	
+	clear: function(context)
+    {
+       
+	    logger.logMessage("ColdFireModule.clear");
+	    var panel = context.getPanel("coldfusion", true);
+        if (panel)
+            panel.clear();
+
+        if (context.netProgress)
+            context.netProgress.clear();
     },
-    changeCurrentView: function( view ) {
-    	this.coldfireView = view;
+	
+	syncFilterButtons: function(chrome)
+	{
+		var button = chrome.$("fbColdFireFilter-"+this.coldfireView);
+		button.checked = true;    
+	},	
+			
+	changeCurrentView: function( view ) {
+		this.coldfireView = view;
 				
 		var isVariablesView = this.coldfireView == "Variables";
 		var ColdFireVariableBox = Chrome.$( "fbColdFireVariableBox" ); 
 		collapse(ColdFireVariableBox, !(isVariablesView));
 		
-    	FirebugContext.getPanel( "ColdFireExtension" ).displayCurrentView();
-    },	
-	addVariable: function(context, variable){
-		
-		var variableLine = getVariableLine(context);
-        var varString = variable ? variable : variableLine.value;
+		FirebugContext.getPanel( "coldfusion" ).displayCurrentView();
+	},	
+	
+	addVariable: function(context, variable){		
+		var variableLine = this.getVarLine(context);
+		var varString = variable ? variable : variableLine.value;
 		this.clearVarLine(context);
 		if (varString.length > 0)
-			ColdFire.addVariable(varString);
-		
-		this.changeCurrentView("Variables");
-		
+			ColdFire.addVariable(varString);		
+		this.changeCurrentView("Variables");		
 	},	
+	
 	removeVariable: function(index) {
 		ColdFire.removeVariable(index);
 		if (this.coldfireView == "Variables")		
 			this.changeCurrentView("Variables");
 	},	
+	
 	clearVariables: function() {
 		ColdFire.clearVariables();
 		if (this.coldfireView == "Variables")		
 			this.changeCurrentView("Variables");
 	},
+	
 	clearVarLine: function(context) {		
-		var variableLine = getVariableLine(context);
-        variableLine.value = "";
+		var variableLine = this.getVarLine(context);
+		variableLine.value = "";
+	},
+	
+	getVarLine: function(context) {
+		return context.chrome.$("fbColdFireVariableLine");
+	},	
+	
+	// nsIObserver interface method
+	observe: function(subject, topic, data) {		
+		if (topic == 'http-on-modify-request') {
+			
+			subject.QueryInterface(Components.interfaces.nsIHttpChannel);
+			subject.setRequestHeader("User-Agent",
+					subject.getRequestHeader("User-Agent") + " " + "ColdFire/" + ColdFire.version,
+					true);
+			
+			try{
+				var variables = FirebugContext.getPanel( "coldfusion" ).variables;
+				if(variables.length)
+					subject.setRequestHeader("x-coldfire-variables", 
+						JSON.stringify(variables),
+						true);
+			} catch (e) {
+				logger.logMessage(e);
+			}
+					
+		}		 
+	},
+	
+	// nsISupports interface method
+	QueryInterface: function(iid) {
+		if (!iid.equals(Components.interfaces.nsIObserver) && !iid.equals(Components.interfaces.nsISupports)) {
+			throw Components.results.NS_ERROR_NO_INTERFACE;
+		}
+		return this;		
 	}
 	
+	
 }); 
-
-function getVariableLine(context)
-{
-    return context.chrome.$("fbColdFireVariableLine");
-}
-
-
-function monitorColdFireProgress( context ) 
-{
-	if( !context.coldfireProgress ) 
-	{
-	    var listener = context.coldfireProgress = new coldfireProgress(context);
-	    context.browser.addProgressListener(listener, NOTIFY_ALL);
-	}
-}
-function unmonitorColdfireProgress( context )
-{
-	if ( context.coldfireProgress ) 
-	{
-    	if (context.browser.docShell)
-    		context.browser.removeProgressListener( context.coldfireProgress, NOTIFY_ALL );
-   		delete context.coldfireProgress;
-    }
-}
-function coldfireProgress(context)
-{    
-    this.context = context;
-
-    var queue = null;
-    var panel = null;
-    this.post = function (data) {
-    	if(panel){
-    		panel.generateRows(data);
-    		queue = [];
-    	}
-    	else{
-    		queue = [];
-    		queue.push(data);
-    	}
-    };
-    
-    this.activate = function(activePanel)
-    {
-       	this.panel = panel = activePanel;
-       	if(panel){
-       		this.flush();
-       	}
-    };
-    
-    this.clear = function(){
-    	queue = [];
-    };
-    
-    this.flush = function() {
-    	for(var i = 0; i < queue.length; i+= 2) {
-			panel.generateRows(queue[i]);
-    	}
-    	queue = [];
-    };
-    
-    this.clear();
-    
-}
-coldfireProgress.prototype =
-{
-    panel: null,
-    QueryInterface: function( aIID )
-    {
-    	if ( aIID.equals( Components.interfaces.nsIWebProgressListener ) || 
-    	aIID.equals( Components.interfaces.nsISupportsWeakReference ) ||
-    	aIID.equals( Components.interfaces.nsISupports ) )
-    		return this;
-    	throw Components.results.NS_NOINTERFACE;
-    },
-    onStateChange: function( aProgress, aRequest, aFlag, aStatus )
-    {
-    	if( aFlag & STATE_STOP && aFlag & STATE_IS_REQUEST )
-    	{
-    		if(aRequest.getResponseHeader){
-    			try
-    			{
-					
-					var coldfireHeaders = 0;
-					
-					var generalHeader = "";
-					var queriesHeader = "";
-					var traceHeader = "";
-					var templatesHeader = "";
-					var ctemplatesHeader = "";
-					var cfcsHeader = "";
-					var timerHeader = "";
-					var variablesHeader = "";
-					//get all general headers
-					var i = 1;
-					try
-					{
-						while( true )
-						{
-							generalHeader += aRequest.getResponseHeader( "x-coldfire-general-" + i );
-							coldfireHeaders++;
-							i++;
-						}
-					}		
-					catch(e){}			
-					//get all query headers
-					var i = 1;
-					try
-					{
-						while( true )
-						{
-							queriesHeader += aRequest.getResponseHeader( "x-coldfire-queries-" + i );
-							coldfireHeaders++;
-							i++;
-						}
-					}
-					catch(e){}
-					//get all trace headers
-					i = 1;
-					try
-					{
-						while( true )
-						{
-							traceHeader += aRequest.getResponseHeader( "x-coldfire-trace-" + i );
-							coldfireHeaders++;
-							i++;
-						}
-					}
-					catch(e){}
-					//get all templates headers
-					i = 1;
-					try
-					{
-						while( true )
-						{
-							templatesHeader += aRequest.getResponseHeader( "x-coldfire-templates-" + i );
-							coldfireHeaders++;
-							i++;
-						}
-					}
-					catch(e){}
-					//get all ctemplates headers
-					var i = 1;
-					try
-					{
-						while( true )
-						{
-							ctemplatesHeader += aRequest.getResponseHeader( "x-coldfire-ctemplates-" + i );
-							coldfireHeaders++;
-							i++;
-						}
-					}
-					catch(e){}
-					//get all cfc headers
-					var i = 1;
-					try
-					{
-						while( true )
-						{
-							cfcsHeader += aRequest.getResponseHeader( "x-coldfire-cfcs-" + i );
-							coldfireHeaders++;
-							i++;
-						}
-					}
-					catch(e){}
-					//get all timer headers
-					var i = 1;
-					try
-					{
-						while( true )
-						{
-							timerHeader += aRequest.getResponseHeader( "x-coldfire-timer-" + i );
-							coldfireHeaders++;
-							i++;
-						}
-					}
-					catch(e){}
-					//get all variable headers
-					var i = 1;
-					try
-					{
-						while( true )
-						{
-							variablesHeader += aRequest.getResponseHeader( "x-coldfire-variables-" + i );
-							coldfireHeaders++;
-							i++;
-						}						
-					}					
-					catch(e){}
-					
-					coldfire_logMessage(coldfireHeaders);
-					
-					if (coldfireHeaders > 0) {
-					
-						if (generalHeader == "")
-							generalHeader = "{}";
-						if (queriesHeader == "")
-							queriesHeader = "{}";
-						if (traceHeader == "")
-							traceHeader = "{}";
-						if (templatesHeader == "")
-							templatesHeader = "{}";
-						if (ctemplatesHeader == "")
-							ctemplatesHeader = "{}";
-						if (cfcsHeader == "")
-							cfcsHeader = "{}";
-						if (timerHeader == "")
-							timerHeader = "{}";
-						if (variablesHeader == "")
-							variablesHeader = "{}";					
-											
-						try{
-							cfObj = {
-								generalObj: eval( "(" + generalHeader + ")" ),
-								queriesObj: eval( "(" + queriesHeader + ")" ),
-								traceObj: eval( "(" + traceHeader + ")" ),
-								templatesObj:  eval( "(" + templatesHeader + ")" ),
-								ctemplatesObj: eval( "(" + ctemplatesHeader + ")" ),
-								cfcsObj: eval( "(" + cfcsHeader + ")" ),
-								timerObj: eval( "(" + timerHeader + ")"),
-								variablesObj: eval( "(" + variablesHeader + ")")
-							};
-							this.post(cfObj); 
-						}catch(e){}
-		   			
-					}
-		   		} 
-		   		catch(e){}
-		   	}
-	   	}
-	   	return 0;
-	},
-	onLocationChange: function(){return 0;},
-	onProgressChange: function() {return 0;},
-	onStatusChange: function() {return 0;},
-	onSecurityChange: function() {return 0;},
-	onLinkIconAvailable: function() {return 0;}
-};
 
 // add two new domplate tags to handle our stylesheet and script
 
 function defineTags()
 {
-    for (var i = 0; i < arguments.length; ++i)
-    {
-        var tagName = arguments[i];
-        var fn = new Function("var newTag = new DomplateTag('"+tagName+"'); return newTag.merge(arguments);");
+	for (var i = 0; i < arguments.length; ++i)
+	{
+		var tagName = arguments[i];
+		var fn = new Function("var newTag = new DomplateTag('"+tagName+"'); return newTag.merge(arguments);");
 
-        var fnName = tagName.toUpperCase();
-        top[fnName] = fn;
-    }
+		var fnName = tagName.toUpperCase();
+		top[fnName] = fn;
+	}
 }
 
 defineTags("link", "script");
 
 
-function ColdFireExtensionPanel() {} 
-ColdFireExtensionPanel.prototype = domplate(Firebug.Panel, 
+function ColdFirePanel() {} 
+ColdFirePanel.prototype = domplate(Firebug.Panel, 
 {  
 	// domplate tags
 	
@@ -425,24 +274,32 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		SCRIPT({type: "text/javascript", id: "coldfirePanelScript"}),		
 	
 	tableTag:
-        TABLE({width: "100%", cellpadding: 2, cellspacing: 0},
-            THEAD(),
+		TABLE({width: "100%", cellpadding: 2, cellspacing: 0},
+			THEAD(),
 			TBODY()
-        ),
+		),
 		
 	generalHeaderRow:
 		TR(
-			TH({class: "headerCell", width: "25%"}),
-            TH({class: "headerCell", width: "75%"})
+			TD({class: "labelCell", width: "25%"}, $CFSTR('Requests')),
+			TD({class: "valueCell", width: "75%"},
+				FORM(
+					SELECT({name: "reqSelect", id: "reqSelect", onchange: "$onChangeReq",  _domPanel: "$domPanel"},
+						FOR("file", "$domPanel.queue",
+							OPTION({value: "$file.href"}, "$file.href")
+						)	
+					)
+				)
+			)
 		),
 		
 	generalRowTag:
 		FOR("row", "$rows",
-            TR(
-                TD({class: "valueCell", width: "25%"},"$row.LABEL|safeCFSTR"),
+			TR(
+				TD({class: "labelCell", width: "25%"},"$row.LABEL|safeCFSTR"),
 				TD({class: "valueCell", width: "75%"},"$row.VALUE")                    
-            )
-        ),
+			)
+		),
 		
 	etHeaderRow:
 		TR({class: "headerRow"},
@@ -455,14 +312,14 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		
 	etRowTag:
 		FOR("row", "$rows",
-            TR({class: "$row.AVGTIME|isSlow"},
-                TD({class: "valueCell", width: "20%"},"$row.TYPE"),
+			TR({class: "$row.AVGTIME|isSlow"},
+				TD({class: "valueCell", width: "20%"},"$row.TYPE"),
 				TD({class: "valueCell", width: "35%"},"$row.TEMPLATE"),
 				TD({class: "valueCell", width: "25%"},"$row.METHOD"),
 				TD({class: "valueCell", width: "10%", align: "right"},"$row.TOTALINSTANCES"),
 				TD({class: "valueCell", width: "10%", align: "right"},"$row.AVGTIME|formatTime")                    
-            )
-        ),
+			)
+		),
 		
 	etTotalRow:
 		TR(
@@ -483,16 +340,16 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		
 	queryRowTag:
 		FOR("row", "$rows",
-            TR({class: "queryRow $row.ET|isSlow"},
-                TD({width: "10%"},"$row.QUERYNAME"),
+			TR({class: "queryRow $row.ET|isSlow"},
+				TD({width: "10%"},"$row.QUERYNAME"),
 				TD({width: "10%"},"$row.DATASOURCE"),				
 				TD({width: "7%", align: "right"},"$row.ET|formatTime"),
 				TD({width: "7%", align: "right"},"$row.RECORDSRETURNED"),
 				TD({width: "7%", align: "center", nowrap: "true"}, "$row.CACHEDQUERY|formatCachedQuery"),
 				TD({width: "49%"}, "$row.TEMPLATE"),
 				TD({width: "10%", align:"right"}, "$row.TIMESTAMP|formatTimeStamp")                    
-            )			
-        ),
+			)			
+		),
 		
 	querySqlTag:
 		TR(
@@ -508,12 +365,12 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		
 	traceRowTag:
 		FOR("row", "$rows",
-            TR({class: "$row.PRIORITY|getTraceClass"},
-                TD({class: "valueCell", width: "10%"},"$row.PRIORITY|formatPriority|safeCFSTR"),
+			TR({class: "$row.PRIORITY|getTraceClass"},
+				TD({class: "valueCell", width: "10%"},"$row.PRIORITY|formatPriority|safeCFSTR"),
 				TD({class: "valueCell", width: "10%", align: "right"},"$row.DELTA|formatTime"),
 				TD({class: "valueCell", width: "80"},"$row.MESSAGE")                    
-            )
-        ),
+			)
+		),
 		
 	timerHeaderRow:
 		TR({class: "headerRow"},
@@ -523,11 +380,11 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 	
 	timerRowTag:
 		FOR("row", "$rows",
-            TR(
-                TD({class: "valueCell", width: "90%"},"$row.MESSAGE"),
+			TR(
+				TD({class: "valueCell", width: "90%"},"$row.MESSAGE"),
 				TD({class: "valueCell", width: "10%", align: "right"},"$row.DURATION|formatTime")
-            )
-        ),
+			)
+		),
 		
 	varHeaderRow:
 		TR({class: "headerRow"},
@@ -537,37 +394,43 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 	
 	varRowTag:
 		FOR("row", "$rows",
-            TR({class: "variableRow", level: 0},
-                TD({class: "valueCell", width: "20%", valign: "top"},"$row"),
+			TR({class: "variableRow", level: 0},
+				TD({class: "valueCell", width: "20%", valign: "top"},"$row"),
 				TD({class: "valueCell varValue", width: "80%", valign: "top"})
-            )
-        ),
+			)
+		),
 	
-	// Convenience for domplates	
+	// convenience for domplates
+		
 	safeCFSTR: function(name)
-    {
-        try{
+	{
+		try{
 			return $CFSTR(name);			
 		} catch (e) {
 			return name;
 		}		
-    },	
+	},	
+	
 	isSlow: function(time)
 	{
 		return (parseInt(time) > 250)? "slow": "";
 	},
+	
 	formatCachedQuery: function(cached)
 	{
 		return (cached == "1")?$CFSTR("Yes"):$CFSTR("No");
 	},	
+	
 	formatTime: function(time)
 	{
 		return time + " ms";
 	},	
+	
 	formatTimeStamp: function(time)
 	{
 		return time.replace(/.*([0-9]{2}:[0-9]{2}:[0-9]{2}).*/,"$1");
 	},
+	
 	getTraceClass: function(priority)
 	{
 		var tmp = "";
@@ -585,6 +448,7 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		}	
 		return tmp;
 	},	
+	
 	formatPriority: function(priority)
 	{
 		var tmp = priority;
@@ -605,33 +469,86 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		}
 		return tmp;
 	},
-	// panel	
-	name: $CFSTR("ColdFireExtension"), 
-    title: $CFSTR("ColdFusion"), 
-    searchable: false, 
-    editable: false,
-    generalRows: new Array(),
-    etRows: new Array(),
+	
+	// extends panel	
+	
+	name: "coldfusion", 
+	searchable: false, 
+	editable: false,
+	title: $CFSTR("ColdFusion"), 
+	
+	initialize: function(context, doc)
+	{
+		logger.logMessage("ColdFirePanel.init");
+		this.onMouseOver = bind(this.onMouseOver, this);
+		this.onMouseOut = bind(this.onMouseOut, this);		
+		this.setUpDoc(doc);	
+		this.queue = [];
+		this.variables = [];
+			
+		Firebug.Panel.initialize.apply(this, arguments);		
+	},	 
+		
+	destroy: function(state)
+	{
+		state.variables = this.variables;
+
+		Firebug.Panel.destroy.apply(this, arguments);
+	},	
+		
+	reattach: function(doc)
+	{
+		this.setUpDoc(doc);	
+			
+		Firebug.Panel.reattach.apply(this, arguments);	
+	}, 	
+	
+	initializeNode: function(oldPanelNode)
+	{
+		this.panelNode.addEventListener("mouseover", this.onMouseOver, false);
+		this.panelNode.addEventListener("mouseout", this.onMouseOut, false);
+	},
+	
+	destroyNode: function()
+	{
+		this.panelNode.removeEventListener("mouseover", this.onMouseOver, false);
+		this.panelNode.removeEventListener("mouseout", this.onMouseOut, false);
+	},	
+	
+	show: function(state)
+	{
+		if (state)
+			this.variables = state.variables;
+	},
+		
+	getOptionsMenuItems: function()
+	{
+		return [
+			this.cfMenuOption("ParseQueryParams","parseParams"),
+			"-",
+			{label: $CFSTR("ClearVariables"), nol10n: true, command: bindFixed(this.deleteVariables, this) }      
+		];
+	},	
+	
+	// coldfire
+	
+	generalRows: new Array(),
+	etRows: new Array(),
 	queryRows: new Array(),
 	traceRows: new Array(),
 	timerRows: new Array(),
 	totalET: null,
-	sortDirection: "ASC",
-	sortBy: "",
 	formatter: new ColdFireFormatter(),
-	dumper: new ColdFireDump(),
-	initialize: function(context, doc)
+	dumper: new ColdFireDump(),	
+	file: null,
+	
+	clear: function()
     {
-        this.onMouseOver = bind(this.onMouseOver, this);
-        this.onMouseOut = bind(this.onMouseOut, this);		
-		this.setUpDoc(doc);		
-		Firebug.Panel.initialize.apply(this, arguments);		
-    },	   
-    reattach: function(doc)
-    {
-       	this.setUpDoc(doc);		
-		Firebug.Panel.reattach.apply(this, arguments);	
-    }, 	
+        logger.logMessage("ColdFirePanel.clear");
+		this.queue = [];
+		this.variables = [];       
+    },
+	
 	setUpDoc: function(doc){
 		var head = doc.getElementsByTagName("head")[0];
 		// add stylesheet
@@ -643,26 +560,92 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 			var script = this.scriptTag.append({},head);
 			script.innerHTML = 'function tRow(s) {t = s.parentNode.lastChild;tTarget(t, tSource(s)) ;}function tTable(s) {var switchToState = tSource(s) ;var table = s.parentNode.parentNode;for (var i = 1; i < table.childNodes.length; i++) {t = table.childNodes[i] ;if (t.style) {tTarget(t, switchToState);}}}function tSource(s) {if (s.style.fontStyle == "italic" || s.style.fontStyle == null) {s.style.fontStyle = "normal";s.title = "click to collapse";return "open";} else {s.style.fontStyle = "italic";s.title = "click to expand";return "closed" ;}}function tTarget (t, switchToState) {if (switchToState == "open") {t.style.display = "";} else {t.style.display = "none";}}';		
 		};			
-	},		
-	initializeNode: function(oldPanelNode)
-    {
-        this.panelNode.addEventListener("mouseover", this.onMouseOver, false);
-        this.panelNode.addEventListener("mouseout", this.onMouseOut, false);
-    },
-	destroyNode: function()
-    {
-        this.panelNode.removeEventListener("mouseover", this.onMouseOver, false);
-        this.panelNode.removeEventListener("mouseout", this.onMouseOut, false);
-    },	
-	getOptionsMenuItems: function()
-	{
-        return [
-            this.cfMenuOption("ParseQueryParams","parseParams"),
-			"-",
-            {label: $CFSTR("ClearVariables"), nol10n: true, command: bindFixed(this.deleteVariables, this) }      
-        ];
-    },	
-    generateRows: function( theObj )
+	},	
+	
+	stringifyHeaders: function(headerArray){
+		/*
+		var sortFn = function(a,b){
+			
+			var re = /x-coldfire-.*-([0-9]*)/;
+			var apos = a.name.replace(re,$1);
+			var bpos = b.name.replace(re,$1);
+			
+			if (apos < bpos) return -1;
+			if (apos > bpos) return 1;
+			if (apos == bpos) return 0;
+		}
+		*/
+		if (headerArray.length){
+			//array.sort(sortFn);
+			return headerArray.join("");
+		} else {
+			return "{}";	
+		}
+	},	
+	
+	showFile: function(index) {
+		
+		logger.logMessage("showFile:" + index);
+		logger.logMessage("queue.length:" + this.queue.length);
+		
+		var file = this.queue[index];
+				
+		if(file) {
+			
+			logger.logMessage("showFile: found file at index " + index);
+			
+			
+			if(!file.cfObj){	
+			
+				logger.logMessage("showFile: No cfObj on file.");			
+				
+				var headers = {
+					general: [],
+					queries: [],
+					trace: [],
+					templates: [],
+					ctemplates: [],
+					cfcs: [],
+					timer: [],
+					variables: []
+				}
+				
+				var re = /x-coldfire-([a-z]*)-([0-9]*)/;
+				
+				for (var i = 0; i < file.responseHeaders.length; i++){
+					var cfheader = re.exec(file.responseHeaders[i].name);
+					if (cfheader){
+						logger.logMessage("headername: " + file.responseHeaders[i].name);
+						headers[cfheader[1]][parseInt(cfheader[2]) - 1] = file.responseHeaders[i].value;
+					}					
+				}
+				
+				logger.logMessage(this.stringifyHeaders(headers.general));
+				
+				var cfObj = {
+					generalObj: eval( "(" + this.stringifyHeaders(headers.general) + ")" ),
+					queriesObj: eval( "(" + this.stringifyHeaders(headers.queries) + ")" ),
+					traceObj: eval( "(" + this.stringifyHeaders(headers.trace) + ")" ),
+					templatesObj:  eval( "(" + this.stringifyHeaders(headers.templates) + ")" ),
+					ctemplatesObj: eval( "(" + this.stringifyHeaders(headers.ctemplates) + ")" ),
+					cfcsObj: eval( "(" + this.stringifyHeaders(headers.cfcs) + ")" ),
+					timerObj: eval( "(" + this.stringifyHeaders(headers.timer) + ")"),
+					variablesObj: eval( "(" + this.stringifyHeaders(headers.variables) + ")")
+				};
+				
+				file.cfObj = cfObj;
+				
+			}
+			
+			this.file = file;		
+			this.generateRows(file.cfObj);	
+			
+		
+		}	
+		
+	},
+	
+	generateRows: function( theObj )
 	{
 		
 		this.generalRows = new Array();
@@ -710,38 +693,38 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		try{
 		//et rows	  
 		for(var i = 0; i < theObj.templatesObj.DATA.TOTALTIME.length; i++){
-		   	var temp = { 
-		   		TYPE: "Template",
+			var temp = { 
+				TYPE: "Template",
 				TOTALTIME: theObj.templatesObj.DATA.TOTALTIME[i],
-		    	AVGTIME: theObj.templatesObj.DATA.AVGTIME[i],
-	   			TEMPLATE: theObj.templatesObj.DATA.TEMPLATE[i],
-	   		 	TOTALINSTANCES: theObj.templatesObj.DATA.TOTALINSTANCES[i],
+				AVGTIME: theObj.templatesObj.DATA.AVGTIME[i],
+				TEMPLATE: theObj.templatesObj.DATA.TEMPLATE[i],
+				TOTALINSTANCES: theObj.templatesObj.DATA.TOTALINSTANCES[i],
 				METHOD: ""
-	    	};
-	    	this.etRows.push(temp);
-	    }
-	    for(var i = 0; i < theObj.ctemplatesObj.DATA.TOTALTIME.length; i++){
-		   	var temp = { 
-		   		TYPE: "Child Template / Tag",
+			};
+			this.etRows.push(temp);
+		}
+		for(var i = 0; i < theObj.ctemplatesObj.DATA.TOTALTIME.length; i++){
+			var temp = { 
+				TYPE: "Child Template / Tag",
 				TOTALTIME: theObj.ctemplatesObj.DATA.TOTALTIME[i],
-		    	AVGTIME: theObj.ctemplatesObj.DATA.AVGTIME[i],
-	   			TEMPLATE: theObj.ctemplatesObj.DATA.TEMPLATE[i],
-	   		 	TOTALINSTANCES: theObj.ctemplatesObj.DATA.TOTALINSTANCES[i],
+				AVGTIME: theObj.ctemplatesObj.DATA.AVGTIME[i],
+				TEMPLATE: theObj.ctemplatesObj.DATA.TEMPLATE[i],
+				TOTALINSTANCES: theObj.ctemplatesObj.DATA.TOTALINSTANCES[i],
 				METHOD: ""
-	    	};
-	    	this.etRows.push(temp);
-	    }
+			};
+			this.etRows.push(temp);
+		}
 		for(var i = 0; i < theObj.cfcsObj.DATA.TOTALTIME.length; i++){
-		   	var temp = { 
-		   		TYPE: "CFC",
+			var temp = { 
+				TYPE: "CFC",
 				TOTALTIME: theObj.cfcsObj.DATA.TOTALTIME[i],
-		    	AVGTIME: theObj.cfcsObj.DATA.AVGTIME[i],
-	   			TEMPLATE: theObj.cfcsObj.DATA.CFC[i],
-	   		 	TOTALINSTANCES: theObj.cfcsObj.DATA.TOTALINSTANCES[i],
+				AVGTIME: theObj.cfcsObj.DATA.AVGTIME[i],
+				TEMPLATE: theObj.cfcsObj.DATA.CFC[i],
+				TOTALINSTANCES: theObj.cfcsObj.DATA.TOTALINSTANCES[i],
 				METHOD: theObj.cfcsObj.DATA.METHOD[i]
-	    	};
-	    	this.etRows.push(temp);
-	    }
+			};
+			this.etRows.push(temp);
+		}
 		}catch(e){}
 		
 		try{
@@ -783,11 +766,11 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		}
 		}catch(e){}
 		
-	    this.displayCurrentView();
+		this.displayCurrentView();
 	},
 	displayCurrentView: function(){
 		this.panelNode.innerHTML = "";
-		switch( Firebug.ColdFireExtension.coldfireView ) {
+		switch( Firebug.ColdFireModule.coldfireView ) {
 			case "General":
 				this.renderGeneralTable();
 				break;
@@ -812,8 +795,13 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		
 		//create table		
 		this.table = this.tableTag.append({}, this.panelNode, this);
-		//create header		
-		var headerRow =  this.generalHeaderRow.insertRows({}, this.table.firstChild)[0];
+		//create header	
+		if (this.queue.length > 0) {
+			var headerRow = this.generalHeaderRow.insertRows({domPanel: this}, this.table.firstChild)[0];
+			//select current file
+			var select = this.document.getElementById('reqSelect');
+			select.selectedIndex = this.queue.indexOf(this.file);
+		}
 		//add general rows  
 		if(this.generalRows.length)
 			var row = this.generalRowTag.insertRows({rows: this.generalRows}, this.table.lastChild)[0];			
@@ -829,7 +817,7 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		if(this.totalET != null) 
 			var totalRow = this.etTotalRow.insertRows({totalTime: this.totalET}, row)[0];
 	},
-    renderDBTable: function() {				
+	renderDBTable: function() {				
 		//create table		
 		this.table = this.tableTag.append({}, this.panelNode, this);
 		//create header		
@@ -880,7 +868,7 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		//create header		
 		var headerRow =  this.varHeaderRow.insertRows({}, this.table.firstChild)[0];
 		//add variable rows
-		var vars = ColdFire.getVariables();	
+		var vars = this.variables;	
 		if (vars.length)			
 			var row = this.varRowTag.insertRows({rows: vars}, this.table.lastChild)[0];		
 		// now we need to go build the var string
@@ -897,31 +885,31 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 		}				
 	},
 	showToolbox: function(row) {
-        var toolbox = this.getToolbox();
-        if (row)
-        {
-            if (hasClass(row, "editing"))
-                return;
-            
-            toolbox.varRow = row;
+		var toolbox = this.getToolbox();
+		if (row)
+		{
+			if (hasClass(row, "editing"))
+				return;
+			
+			toolbox.varRow = row;
 
-            var offset = getClientOffset(row);
-            toolbox.style.top = offset.y + "px";
-            this.panelNode.appendChild(toolbox);
-        }
-        else
-        {
-            delete toolbox.varRow;
-            if (toolbox.parentNode)
-                toolbox.parentNode.removeChild(toolbox);
-        }
-    },
+			var offset = getClientOffset(row);
+			toolbox.style.top = offset.y + "px";
+			this.panelNode.appendChild(toolbox);
+		}
+		else
+		{
+			delete toolbox.varRow;
+			if (toolbox.parentNode)
+				toolbox.parentNode.removeChild(toolbox);
+		}
+	},
 	getToolbox: function() {
-        if (!this.toolbox)
-            this.toolbox = ToolboxPlate.tag.replace({domPanel: this}, this.document);
+		if (!this.toolbox)
+			this.toolbox = ToolboxPlate.tag.replace({domPanel: this}, this.document);
 
-        return this.toolbox;
-    },
+		return this.toolbox;
+	},
 	onMouseOver: function(event) {	
 		
 		var variableRow = getAncestorByClass(event.target, "variableRow");
@@ -930,11 +918,16 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 	},
 	onMouseOut: function(event) {				
 		if (isAncestor(event.relatedTarget, this.getToolbox()))
-    		return;
+			return;
 
 		var variableRow = getAncestorByClass(event.relatedTarget, "variableRow");
 		if (!variableRow) 
 			this.showToolbox(null);			
+	},
+	onChangeReq: function(event){
+		logger.logMessage("onChangeReq: " + event.target.selectedIndex);
+		var select = event.target;
+		select.domPanel.showFile(select.selectedIndex);
 	},
 	getVariableRowIndex : function(row) {
 		var index = -1;
@@ -942,28 +935,107 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 			++index; 
 		return index; 
 	},
+	addVariable: function(variable){
+		
+		var variableLine = this.context.chrome.$("fbColdFireVariableLine");
+		var varString = variable ? variable : variableLine.value;
+		variableLine.value = "";
+		
+		logger.logMessage("addVariable " + varString);
+		
+		
+		if (varString.length > 0) 
+		{
+			logger.logMessage("addVariable " + varString);
+			
+			var temp = {
+				LABEL: varString,
+				TYPE: "",
+				VALUE: ""				
+			};
+			
+			if(!this.variablesRows)
+				this.variablesRows = new Array();
+			
+			logger.logMessage("addVariable this.variablesRows.length " + this.variablesRows.length);
+			
+			this.variablesRows.push(temp);	
+			
+			logger.logMessage("addVariable add variable row");
+					
+			this.variables.push(varString);
+			
+			logger.logMessage("addVariable add to panel");
+		}
+		Firebug.ColdFireModule.changeCurrentView("Variables");
+		
+	},	
 	deleteVariable : function(row) {
 		var rowIndex = this.getVariableRowIndex(row);
 		if (rowIndex > -1) {
 			if (this.variablesRows && this.variablesRows.length > rowIndex)
 				this.variablesRows.splice(rowIndex,1);
-			Firebug.ColdFireExtension.removeVariable(rowIndex);    
+			this.variables.splice(rowIndex,1);   
 		}
+		Firebug.ColdFireModule.changeCurrentView("Variables");
 	},
 	deleteVariables : function() {
 		if (this.variablesRows)
 			this.variablesRows.length = 0;
-		Firebug.ColdFireExtension.clearVariables();		
+		this.variables.length = 0; 
+		Firebug.ColdFireModule.changeCurrentView("Variables");		
+	},
+	clearVarLine: function() {		
+		var variableLine = this.context.chrome.$("fbColdFireVariableLine");
+		variableLine.value = "";
 	},
 	cfMenuOption: function (label, option) {
 		return {
-            	label: $CFSTR(label), 
-            	type: "checkbox", 
-            	nol10n: true,
-            	checked: ColdFire[option],
-        		command: bindFixed(ColdFire.updatePref, ColdFire, option, !ColdFire[option])
-        		};		
-	}
+				label: $CFSTR(label), 
+				type: "checkbox", 
+				nol10n: true,
+				checked: ColdFire[option],
+				command: bindFixed(ColdFire.updatePref, ColdFire, option, !ColdFire[option])
+				};		
+	},
+	
+	
+	// handle files from netMonitor
+	
+	queue: [],
+	
+	updateFile: function(file)
+	{
+		
+		var index = this.queue.indexOf(file);
+				
+		if ((index == -1) && (this.hasColdFireHeader(file))) {
+			
+			index = this.queue.push(file) - 1;					
+			
+			logger.logMessage("indexes: " + index + ":" + this.queue.indexOf(file));
+						
+			this.showFile(index);
+		}		
+	},
+	
+	hasColdFireHeader: function(file){
+		if (!file.responseHeaders) {
+			logger.logMessage("No response headers.");
+			return false;
+		}
+			
+			
+		for (var i = 0; i < file.responseHeaders.length; i++){
+			if (file.responseHeaders[i].name.match(/x-coldfire/))
+				return true;			
+		}
+		
+		return false;
+		
+	},
+	
+	
 	
 	/*
 	tRows: function (s) {
@@ -1002,14 +1074,14 @@ ColdFireExtensionPanel.prototype = domplate(Firebug.Panel,
 	
 }); 
 
-Firebug.registerModule( Firebug.ColdFireExtension ); 
-Firebug.registerPanel( ColdFireExtensionPanel );
+Firebug.registerModule( Firebug.ColdFireModule ); 
+Firebug.registerPanel( ColdFirePanel );
 
 }});
 
 function $CFSTR(name)
 {
-    return document.getElementById("strings_coldfire").getString(name);
+	return document.getElementById("strings_coldfire").getString(name);
 }
 
 function getElementsByClass(searchClass,node,tag) 
@@ -1031,12 +1103,20 @@ function getElementsByClass(searchClass,node,tag)
 	return classElements;
 }
 
-/* A logger */
-var gConsoleService = Components.classes['@mozilla.org/consoleservice;1'].getService(Components.interfaces.nsIConsoleService);
+/*
+ * LoggingUtil
+ */
 
-function coldfire_logMessage(aMessage) 
-{
-  gConsoleService.logStringMessage('ColdFire: ' + aMessage);
+function LoggingUtil() {
+	this.coldFire = top.ColdFire;
+	this.consoleService = Components.classes['@mozilla.org/consoleservice;1'].getService(Components.interfaces.nsIConsoleService);	
+}
+
+LoggingUtil.prototype = {
+	logMessage: function(msg){
+		if (this.coldFire.getPref("logMsgs"))
+			this.consoleService.logStringMessage('ColdFire: ' + msg);
+	}
 }
 
 

@@ -7,11 +7,15 @@
 <binding id="variableLine" extends="chrome://global/content/bindings/textbox.xml#textarea">
     <handlers>
     	<handler event="keypress" keycode="VK_RETURN" modifiers="" preventdefault="true"><![CDATA[
-	        Firebug.ColdFireExtension.addVariable(FirebugContext);
+	        var panel = FirebugContext ? FirebugContext.getPanel('coldfusion') : null;
+			if (panel)			
+				panel.addVariable();
         ]]></handler>
 
     	<handler event="keypress" keycode="VK_ESCAPE" preventdefault="true"><![CDATA[
-	        Firebug.ColdFireExtension.clearVarLine(FirebugContext);
+	        var panel = FirebugContext ? FirebugContext.getPanel('coldfusion') : null;
+			if (panel)				
+				panel.clearVariableLine();
         ]]></handler>
     </handlers>
 </binding>
