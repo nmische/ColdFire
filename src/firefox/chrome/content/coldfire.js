@@ -43,7 +43,9 @@ const cfPrefDomain = "extensions.coldfire";
 const cfPrefNames =
 [
     //coldfire
-    "parseParams"
+    "parseParams",
+	"logMsgs",
+	"maxQueueRequests"
 ];
 
 var cfOptionUpdateMap = {};

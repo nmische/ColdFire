@@ -5,10 +5,10 @@
 <!DOCTYPE overlay SYSTEM "chrome://coldfireextension/locale/coldfire.dtd">
 
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
+
 	<stringbundleset id="stringbundleset"> 
 		<stringbundle id="strings_coldfire" src="chrome://coldfireextension/locale/coldfire.properties"/> 
 	</stringbundleset> 
-
 
 	<toolbox id="fbToolbox">
 		<toolbar id="fbToolbar" align="center">
@@ -62,16 +62,16 @@
 		</toolbar> 
 	</toolbox>
 	
-<vbox id="fbContentBox">
-	<hbox id="fbColdFireVariableBox"> 
-        <label 
-        	id="fbColdFireVariablePrompt" 
-        	value="&coldfire.AddVariable;:"/>
-       	<textbox 
-       		id="fbColdFireVariableLine" 
-       		multiline="false" 
-       		flex="1"/>
-    </hbox>
-</vbox>
+	<vbox id="fbContentBox">
+		<hbox id="fbColdFireVariableBox"> 
+	        <label 
+	        	id="fbColdFireVariablePrompt" 
+	        	value="&coldfire.AddVariable;:"/>
+	       	<textbox 
+	       		id="fbColdFireVariableLine" 
+	       		multiline="false" 
+	       		flex="1"/>
+	    </hbox>
+	</vbox>
 	
 </overlay> 
