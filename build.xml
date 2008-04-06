@@ -236,16 +236,7 @@
     </target>
 	-->
 	
-	<target name="build-xpi-components" depends="build-chrome-jar" description="create the xpi components contents including the XPCOM interface">
-		<mkdir dir="${build.ff.dir}/components" />
-  
-		<copy todir="${build.ff.dir}/components">
-			<fileset dir="${src.ff.dir}/components" excludes="**/*.idl" />
-		</copy>		
-		
-	</target>
-
-	<target name="build-xpi-defaults" depends="build-xpi-components" description="create the xpi defaults contents">
+	<target name="build-xpi-defaults" depends="build-chrome-jar" description="create the xpi defaults contents">
 		<mkdir dir="${build.ff.dir}/defaults" />		
 
 		<copy todir="${build.ff.dir}/defaults">
