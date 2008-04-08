@@ -45,7 +45,8 @@ const cfPrefNames =
     //coldfire
     "parseParams",
 	"logMsgs",
-	"maxQueueRequests"
+	"maxQueueRequests",
+	"showLastRequest"
 ];
 
 var cfOptionUpdateMap = {};

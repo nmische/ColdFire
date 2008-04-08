@@ -520,6 +520,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 	{
 		return [
 			this.cfMenuOption("ParseQueryParams","parseParams"),
+			this.cfMenuOption("ShowLastRequest","showLastRequest"),
 			"-",
 			{label: $CFSTR("ClearVariables"), nol10n: true, command: bindFixed(this.deleteVariables, this) }      
 		];
@@ -623,7 +624,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			}
 						
 			this.file = file;		
-			this.generateRows(file.cfObj);				
+			this.generateRows(file.cfObj);							
 			this.displayCurrentView();
 		}	
 		
@@ -993,7 +994,11 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			
 			index = this.queue.push(file) - 1;					
 											
-			this.showFile(index);
+			if (ColdFire['showLastRequest'] || index == 0) {
+				this.showFile(index);
+			} else {
+				this.displayCurrentView();
+			}
 		}		
 	},
 	
