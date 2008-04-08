@@ -5,10 +5,10 @@
 <!DOCTYPE overlay SYSTEM "chrome://coldfireextension/locale/coldfire.dtd">
 
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
+
 	<stringbundleset id="stringbundleset"> 
 		<stringbundle id="strings_coldfire" src="chrome://coldfireextension/locale/coldfire.properties"/> 
 	</stringbundleset> 
-
 
 	<toolbox id="fbToolbox">
 		<toolbar id="fbToolbar" align="center">
@@ -21,57 +21,57 @@
 						type="radio" 
 						class="toolbar-text-button" 
 						group="firebugColdFireFilter" checked="true" 
-						oncommand="Firebug.ColdFireExtension.changeCurrentView('General')" /> 
+						oncommand="Firebug.ColdFireModule.changeCurrentView('General')" /> 
 					<toolbarbutton 
 						id="fbColdFireFilter-ET" 
 						label="&coldfire.ExecutionTimes;"
 						type="radio" 
 						class="toolbar-text-button" 
 						group="firebugColdFireFilter" 
-						oncommand="Firebug.ColdFireExtension.changeCurrentView('ET')"/> 
+						oncommand="Firebug.ColdFireModule.changeCurrentView('ET')"/> 
 					<toolbarbutton 
 						id="fbColdFireFilter-DB" 
 						label="&coldfire.DBQueries;"
 						type="radio" 
 						class="toolbar-text-button" 
 						group="firebugColdFireFilter" 
-						oncommand="Firebug.ColdFireExtension.changeCurrentView('DB')"/> 
+						oncommand="Firebug.ColdFireModule.changeCurrentView('DB')"/> 
 					<toolbarbutton 
 						id="fbColdFireFilter-Traces" 
 						label="&coldfire.Traces;"
 						type="radio" 
 						class="toolbar-text-button" 
 						group="firebugColdFireFilter" 
-						oncommand="Firebug.ColdFireExtension.changeCurrentView('Traces')"/> 
+						oncommand="Firebug.ColdFireModule.changeCurrentView('Traces')"/> 
 					<toolbarbutton 
 						id="fbColdFireFilter-Timer" 
 						label="&coldfire.Timer;"
 						type="radio" 
 						class="toolbar-text-button"
 						group="firebugColdFireFilter"
-						oncommand="Firebug.ColdFireExtension.changeCurrentView('Timer')"/> 
+						oncommand="Firebug.ColdFireModule.changeCurrentView('Timer')"/> 
 					<toolbarbutton 
 						id="fbColdFireFilter-Variables" 
 						label="&coldfire.Variables;"
 						type="radio" 
 						class="toolbar-text-button" 
 						group="firebugColdFireFilter" 
-						oncommand="Firebug.ColdFireExtension.changeCurrentView('Variables')"/> 
+						oncommand="Firebug.ColdFireModule.changeCurrentView('Variables')"/> 
 				</hbox> 
 			</hbox>     	
 		</toolbar> 
 	</toolbox>
 	
-<vbox id="fbContentBox">
-	<hbox id="fbColdFireVariableBox"> 
-        <label 
-        	id="fbColdFireVariablePrompt" 
-        	value="&coldfire.AddVariable;:"/>
-       	<textbox 
-       		id="fbColdFireVariableLine" 
-       		multiline="false" 
-       		flex="1"/>
-    </hbox>
-</vbox>
+	<vbox id="fbContentBox">
+		<hbox id="fbColdFireVariableBox"> 
+	        <label 
+	        	id="fbColdFireVariablePrompt" 
+	        	value="&coldfire.AddVariable;:"/>
+	       	<textbox 
+	       		id="fbColdFireVariableLine" 
+	       		multiline="false" 
+	       		flex="1"/>
+	    </hbox>
+	</vbox>
 	
 </overlay> 
