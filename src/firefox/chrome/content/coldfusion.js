@@ -37,11 +37,14 @@
 
 FBL.ns(function() { with (FBL) {
 	
-const STATE_START = Components.interfaces.nsIWebProgressListener.STATE_START;
-const STATE_STOP = Components.interfaces.nsIWebProgressListener.STATE_STOP;
-const STATE_IS_REQUEST = Components.interfaces.nsIWebProgressListener.STATE_IS_REQUEST;
-const NOTIFY_ALL = Components.interfaces.nsIWebProgress.NOTIFY_ALL;
-const nsIObserverService = CI("nsIObserverService");
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+	
+const STATE_START = Ci.nsIWebProgressListener.STATE_START;
+const STATE_STOP = Ci.nsIWebProgressListener.STATE_STOP;
+const STATE_IS_REQUEST = Ci.nsIWebProgressListener.STATE_IS_REQUEST;
+const NOTIFY_ALL = Ci.nsIWebProgress.NOTIFY_ALL;
+const nsIObserverService = Ci.nsIObserverService;
 const observerService = CCSV("@mozilla.org/observer-service;1", "nsIObserverService");
 const logger = new LoggingUtil();
 
@@ -67,16 +70,22 @@ var Chrome;
 Firebug.ColdFireModule = extend(Firebug.Module, 
 { 
 	
+	panelBar1: $("fbPanelBar1"),
+	enabled: false,
+	
 	// extends module
 	
 	initialize: function() 
-	{
-		
-		
+	{		
 		ColdFire = FirebugChrome.window.ColdFire;
 		ColdFire.initialize();
 		observerService.addObserver(this, "http-on-modify-request", false);
 	},
+	
+	initializeUI: function(detachArgs)
+    {
+        Firebug.NetMonitor.addListener(this);
+    },
 	
 	shutdown: function() 
 	{
@@ -87,33 +96,23 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 		{
 			Firebug.setPref( 'defaultPanelName','console' );
 		}
+		Firebug.NetMonitor.removeListener(this);
 	},	
 	
 	initContext: function( context ) 
 	{
 		
-		if (context.netProgress) 
-		{
-			context.netProgress.activatecf = function(panel){
-				this.cfpanel = panel;
-			}
-			context.netProgress.post = (function(old){
-				return function(handler, args){				
-					old.apply(this,arguments);								
-					if (this.cfpanel)
-					{
-						var file = handler.apply(this, args);
-						if (file)
-						{
-							this.cfpanel.updateFile(file);
-						}
-					}				
-				}
-			})(context.netProgress.post);		
-		}	 
 		
+		var tab = this.panelBar1.getTab("coldfusion");		
+		if (Firebug.NetMonitor.isEnabled(context)) {			
+			this.enabled = true;
+			tab.removeAttribute("disabled");			
+		} else {	
+			this.enabled = false;		
+			tab.setAttribute("disabled", "true");
+		} 	
 	},
-	
+		
 	reattachContext: function(context)
 	{
 		var chrome = context ? context.chrome : FirebugChrome;
@@ -122,31 +121,22 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 	
 	destroyContext: function( context ) 
 	{
-		
+		// do nothing now
 	},	
 		
 	showPanel: function( browser, panel ) 
-	{ 
+	{ 	
+		
+		//TODO: Move this logic into ColdFirePanel.show()
+		
 		Chrome = browser.chrome;		
 		
 		var isColdFireExtension = panel && panel.name == "coldfusion"; 
-		var ColdFireExtensionButtons = Chrome.$( "fbColdFireExtensionButtons" ); 
-		collapse( ColdFireExtensionButtons, !isColdFireExtension ); 
-		
 		var isVariablesView = this.coldfireView == "Variables";
 		var ColdFireVariableBox = Chrome.$( "fbColdFireVariableBox" ); 
-		collapse(ColdFireVariableBox, !(isColdFireExtension && isVariablesView));
+		collapse(ColdFireVariableBox, !(isColdFireExtension && isVariablesView));		
 		
-		if( panel && panel.context.netProgress )
-		{
-			if( panel.name == "coldfusion" )
-				panel.context.netProgress.activatecf( panel );
-			else
-				panel.context.netProgress.activatecf( null );
-		}
-		
-		
-		if (panel && panel.name == "coldfusion")
+		if (panel && panel.name == "coldfusion" && this.enabled)
 			this.changeCurrentView(this.coldfireView);
 		
 	},
@@ -172,6 +162,7 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 	},	
 			
 	changeCurrentView: function( view ) {
+				
 		this.coldfireView = view;
 				
 		var isVariablesView = this.coldfireView == "Variables";
@@ -181,11 +172,18 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 		FirebugContext.getPanel( "coldfusion" ).displayCurrentView();
 	},	
 	
+	// NetMonitor listener interface method
+	
+	onLoad: function(context, file) {
+		var panel = context.getPanel("coldfusion");
+		panel.updateFile(file);		
+	},
+	
 	// nsIObserver interface method
 	observe: function(subject, topic, data) {		
 		if (topic == 'http-on-modify-request') {
 			
-			subject.QueryInterface(Components.interfaces.nsIHttpChannel);
+			subject.QueryInterface(Ci.nsIHttpChannel);
 			subject.setRequestHeader("User-Agent",
 					subject.getRequestHeader("User-Agent") + " " + "ColdFire/" + ColdFire.version,
 					true);
@@ -205,7 +203,7 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 	
 	// nsISupports interface method
 	QueryInterface: function(iid) {
-		if (!iid.equals(Components.interfaces.nsIObserver) && !iid.equals(Components.interfaces.nsISupports)) {
+		if (!iid.equals(Ci.nsIObserver) && !iid.equals(Ci.nsISupports)) {
 			throw Components.results.NS_ERROR_NO_INTERFACE;
 		}
 		return this;		
@@ -512,10 +510,24 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 	
 	show: function(state)
 	{
+		
+		this.showToolbarButtons("fbColdFireExtensionButtons", true);
+		
+		var shouldShow = this.shouldShow();
+ 		this.showToolbarButtons("fbColdFireExtensionButtonsFilter", shouldShow);
+		if (!shouldShow)
+			return;		
+		
 		if (state)
 			this.variables = state.variables;
 	},
 		
+		
+	hide: function()
+	{
+		this.showToolbarButtons("fbColdFireExtensionButtons", false);	
+	},
+	
 	getOptionsMenuItems: function()
 	{
 		return [
@@ -525,6 +537,18 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			{label: $CFSTR("ClearVariables"), nol10n: true, command: bindFixed(this.deleteVariables, this) }      
 		];
 	},
+	
+	// see net panel
+	
+	shouldShow: function()
+    {
+        if (Firebug.NetMonitor.isEnabled(this.context))
+            return true;
+
+        Firebug.ModuleManagerPage.show(this, Firebug.NetMonitor);
+
+        return false;
+    },
 	
 	// coldfire	
 	
@@ -545,6 +569,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
     },
 	
 	setUpDoc: function(doc){
+		
 		var head = doc.getElementsByTagName("head")[0];
 		// add stylesheet
 		if (!doc.getElementById('coldfirePanelCSS')) {			
@@ -554,7 +579,8 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		if (!doc.getElementById('coldfirePanelScript')) {				
 			var script = this.scriptTag.append({},head);
 			script.innerHTML = 'function tRow(s) {t = s.parentNode.lastChild;tTarget(t, tSource(s)) ;}function tTable(s) {var switchToState = tSource(s) ;var table = s.parentNode.parentNode;for (var i = 1; i < table.childNodes.length; i++) {t = table.childNodes[i] ;if (t.style) {tTarget(t, switchToState);}}}function tSource(s) {if (s.style.fontStyle == "italic" || s.style.fontStyle == null) {s.style.fontStyle = "normal";s.title = "click to collapse";return "open";} else {s.style.fontStyle = "italic";s.title = "click to expand";return "closed" ;}}function tTarget (t, switchToState) {if (switchToState == "open") {t.style.display = "";} else {t.style.display = "none";}}';		
-		};			
+		};		
+		
 	},	
 	
 	stringifyHeaders: function(headerArray){
@@ -749,7 +775,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 	},
 	
 	displayCurrentView: function(){
-		this.panelNode.innerHTML = "";
+		this.panelNode.innerHTML = "";		
 		switch( Firebug.ColdFireModule.coldfireView ) {
 			case "General":
 				this.renderGeneralTable();
@@ -781,6 +807,12 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			//select current file
 			var select = this.document.getElementById('reqSelect');
 			select.selectedIndex = this.queue.indexOf(this.file);
+			//this is to prevent the popupshowing event from populating the options menu with duplicates
+			select.addEventListener('popupshowing',function(event){
+				event.stopPropagation();
+				event.preventDefault();
+			},false);
+
 		}
 		//add general rows  
 		if(this.rowData.generalRows.length)
@@ -917,7 +949,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		var select = event.target;
 		select.domPanel.showFile(select.selectedIndex);
 	},
-	
+		
 	getVariableRowIndex : function(row) {
 		var index = -1;
 		for (; row && hasClass(row, "variableRow"); row = row.previousSibling)

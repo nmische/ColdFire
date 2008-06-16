@@ -1,3 +1,2 @@
-override chrome://firebug-os/skin/firebug.css jar:../../chrome/coldfire.jar!/skin/classic/mac/firebug.css
-override chrome://firebug-os/skin/panel.css jar:../../chrome/coldfire.jar!/skin/classic/mac/panel.css
-override chrome://firebug-os/skin/window.css jar:../../chrome/coldfire.jar!/skin/classic/mac/window.css
+override chrome://coldfireextension-os/skin/coldfire.css	chrome://coldfireextension/skin/mac/coldfire.css
+override chrome://coldfireextension-os/skin/panel.css		chrome://coldfireextension/skin/mac/panel.css

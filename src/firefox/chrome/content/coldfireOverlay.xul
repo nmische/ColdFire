@@ -6,61 +6,72 @@
 
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
 
+
+	
 	<stringbundleset id="stringbundleset"> 
 		<stringbundle id="strings_coldfire" src="chrome://coldfireextension/locale/coldfire.properties"/> 
 	</stringbundleset> 
-
-	<toolbox id="fbToolbox">
-		<toolbar id="fbToolbar" align="center">
-			<hbox id="fbToolbarInner" insertbefore="fbDetachButton" flex="1" align="center"> 
-				<hbox id="fbColdFireExtensionButtons" insertafter="fbNetButtons"> 
-					<toolbarseparator/> 
-					<toolbarbutton 
-						id="fbColdFireFilter-General" 
-						label="&coldfire.General;"
-						type="radio" 
-						class="toolbar-text-button" 
-						group="firebugColdFireFilter" checked="true" 
-						oncommand="Firebug.ColdFireModule.changeCurrentView('General')" /> 
-					<toolbarbutton 
-						id="fbColdFireFilter-ET" 
-						label="&coldfire.ExecutionTimes;"
-						type="radio" 
-						class="toolbar-text-button" 
-						group="firebugColdFireFilter" 
-						oncommand="Firebug.ColdFireModule.changeCurrentView('ET')"/> 
-					<toolbarbutton 
-						id="fbColdFireFilter-DB" 
-						label="&coldfire.DBQueries;"
-						type="radio" 
-						class="toolbar-text-button" 
-						group="firebugColdFireFilter" 
-						oncommand="Firebug.ColdFireModule.changeCurrentView('DB')"/> 
-					<toolbarbutton 
-						id="fbColdFireFilter-Traces" 
-						label="&coldfire.Traces;"
-						type="radio" 
-						class="toolbar-text-button" 
-						group="firebugColdFireFilter" 
-						oncommand="Firebug.ColdFireModule.changeCurrentView('Traces')"/> 
-					<toolbarbutton 
-						id="fbColdFireFilter-Timer" 
-						label="&coldfire.Timer;"
-						type="radio" 
-						class="toolbar-text-button"
-						group="firebugColdFireFilter"
-						oncommand="Firebug.ColdFireModule.changeCurrentView('Timer')"/> 
-					<toolbarbutton 
-						id="fbColdFireFilter-Variables" 
-						label="&coldfire.Variables;"
-						type="radio" 
-						class="toolbar-text-button" 
-						group="firebugColdFireFilter" 
-						oncommand="Firebug.ColdFireModule.changeCurrentView('Variables')"/> 
+	
+	
+	<toolbar id="fbToolbar" align="center">
+        <hbox id="fbToolbarInner" insertbefore="fbDetachButton" flex="1" align="center">
+			
+			
+			
+				<hbox id="fbColdFireExtensionButtons" insertafter="fbNetButtons" collapsed="true"> 
+			
+			
+					<hbox id="fbColdFireExtensionButtonsFilter" collapsed="true">           
+				
+						<toolbarseparator/> 
+						<toolbarbutton 
+							id="fbColdFireFilter-General" 
+							label="&coldfire.General;"
+							type="radio" 
+							class="toolbar-text-button" 
+							group="firebugColdFireFilter" checked="true" 
+							oncommand="Firebug.ColdFireModule.changeCurrentView('General')" /> 
+						<toolbarbutton 
+							id="fbColdFireFilter-ET" 
+							label="&coldfire.ExecutionTimes;"
+							type="radio" 
+							class="toolbar-text-button" 
+							group="firebugColdFireFilter" 
+							oncommand="Firebug.ColdFireModule.changeCurrentView('ET')"/> 
+						<toolbarbutton 
+							id="fbColdFireFilter-DB" 
+							label="&coldfire.DBQueries;"
+							type="radio" 
+							class="toolbar-text-button" 
+							group="firebugColdFireFilter" 
+							oncommand="Firebug.ColdFireModule.changeCurrentView('DB')"/> 
+						<toolbarbutton 
+							id="fbColdFireFilter-Traces" 
+							label="&coldfire.Traces;"
+							type="radio" 
+							class="toolbar-text-button" 
+							group="firebugColdFireFilter" 
+							oncommand="Firebug.ColdFireModule.changeCurrentView('Traces')"/> 
+						<toolbarbutton 
+							id="fbColdFireFilter-Timer" 
+							label="&coldfire.Timer;"
+							type="radio" 
+							class="toolbar-text-button"
+							group="firebugColdFireFilter"
+							oncommand="Firebug.ColdFireModule.changeCurrentView('Timer')"/> 
+						<toolbarbutton 
+							id="fbColdFireFilter-Variables" 
+							label="&coldfire.Variables;"
+							type="radio" 
+							class="toolbar-text-button" 
+							group="firebugColdFireFilter" 
+							oncommand="Firebug.ColdFireModule.changeCurrentView('Variables')"/> 
+							
+					</hbox>
 				</hbox> 
 			</hbox>     	
 		</toolbar> 
-	</toolbox>
+
 	
 	<vbox id="fbContentBox">
 		<hbox id="fbColdFireVariableBox"> 
@@ -73,5 +84,6 @@
 	       		flex="1"/>
 	    </hbox>
 	</vbox>
+	
 	
 </overlay> 
