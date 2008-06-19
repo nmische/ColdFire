@@ -100,9 +100,7 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 	},	
 	
 	initContext: function( context ) 
-	{
-		
-		
+	{		
 		var tab = this.panelBar1.getTab("coldfusion");		
 		if (Firebug.NetMonitor.isEnabled(context)) {			
 			this.enabled = true;
@@ -181,7 +179,7 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 	
 	// nsIObserver interface method
 	observe: function(subject, topic, data) {		
-		if (topic == 'http-on-modify-request') {
+		if (topic == 'http-on-modify-request' && this.enabled) {
 			
 			subject.QueryInterface(Ci.nsIHttpChannel);
 			subject.setRequestHeader("User-Agent",
