@@ -20,7 +20,37 @@ Adam Podolnick http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_w
 Nathan Mische https://www.amazon.com/gp/registry/wishlist/1PMU5WXR9RZNJ/ref=wl_web/
 
 ------------------------------------ LAST UPDATE ------------------------------------
-Last Updated: March 12, 2008 (@VERSION@)
+Last Updated: June 29, 2008 (@VERSION@)
+
+The first 1.2 release:
+ * added support for Firebug 1.2. 
+ * updated to use new Net Monitor listener interface.
+ * fixed issue with duplicate option menu items.
+
+------------------------------------ OLDER UPDATES ------------------------------------
+Last Updated: April 7, 2008 (1.1.51.59)
+
+The first 1.1 release:
+ * removed XPCOM object. 
+ * now uses Firebug's network monitor. 
+ * consolidated helper objects into one lib.js file.
+ * renamed source files to more closely match Firebug conventions.
+ * added request queue functionality.
+ * variables now stored per tab.
+
+
+Last Updated: March 12, 2008 (1.1.51.51)
+
+The first 1.1 release:
+ * added support for Firefox 3. 
+ * updated to use new version numbering 
+   (major_version.minor_version.cf_revision.ff_revision). 
+ * updated coldfire.cfm to check for cf_revision only.
+ * added template, cached, and timestamp columns to DB Queries tab.
+ * updated build file to generate version number based on SVN revisions.
+ 
+
+Last Updated: March 12, 2008 (1.1.51.51)
 
 The first 1.1 release:
  * added support for Firefox 3. 
@@ -30,7 +60,7 @@ The first 1.1 release:
  * added template, cached, and timestamp columns to DB Queries tab.
  * updated build file to generate version number based on SVN revisions.
 
------------------------------------- OLDER UPDATES ------------------------------------
+
 Last Updated: March 5, 2008 (1.004)
 
 Updated build file to use branch and local property files. Updates to coldfire-

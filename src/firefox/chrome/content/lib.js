@@ -753,4 +753,4 @@ function getElementsByClass(searchClass,node,tag)
 
 this.getElementsByClass = getElementsByClass;
 
-}).apply(FirebugLib);
+}).apply(FBL);
