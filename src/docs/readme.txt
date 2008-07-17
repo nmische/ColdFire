@@ -19,15 +19,21 @@ Raymond Camden http://www.amazon.com/o/registry/2TCL1D08EZEYE
 Adam Podolnick http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_web
 Nathan Mische https://www.amazon.com/gp/registry/wishlist/1PMU5WXR9RZNJ/ref=wl_web/
 
------------------------------------- LAST UPDATE ------------------------------------
-Last Updated: June 29, 2008 (@VERSION@)
+------------------------------------- LAST UPDATE ------------------------------------
+Last Updated: July 16, 2008 (1.2.51.70)
+
+Update install.rdf to make compatible with FF 3.0.*
+
+
+------------------------------------ OLDER UPDATES ------------------------------------
+Last Updated: June 29, 2008 (1.2.51.65)
 
 The first 1.2 release:
  * added support for Firebug 1.2. 
  * updated to use new Net Monitor listener interface.
  * fixed issue with duplicate option menu items.
 
------------------------------------- OLDER UPDATES ------------------------------------
+
 Last Updated: April 7, 2008 (1.1.51.59)
 
 The first 1.1 release:
