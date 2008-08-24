@@ -550,7 +550,7 @@ Handles server side debugging for ColdFire
 	<cfset var last = 0>
 	
 	<cfquery dbType="query" name="result" debug="false">
-	select message, endtime, priority
+	select message, endtime, priority, category, result
 	from data
 	where type = 'Trace'
 	</cfquery>
@@ -985,10 +985,42 @@ Handles server side debugging for ColdFire
 	<cfset var columnlist = "" />
 	<cfset var dataKey = "" />
 	<cfset var column = "" />
+	
+	<!--- ARRAY --->
+	<cfif IsArray(_data) AND NOT IsBinary(_data)>
+		<cfset jsonString = "" />
+		<cfloop from="1" to="#ArrayLen(_data)#" index="i">
+			<cfset tempVal = coldfire_udf_encode( _data[i], arguments.queryFormat, arguments.queryKeyCase ) />
+			<cfset jsonString = ListAppend(jsonString, tempVal, ",") />
+		</cfloop>		
+		<cfreturn "[" & jsonString & "]" />
+		
+	<!--- BINARY --->
+	<cfelseif IsBinary(_data)>
+		<cfset jsonString = ArrayNew(1)/>		
+		<cfloop from="1" to="#Min(ArrayLen(_data),1000)#" index="i">
+			<cfset ArrayAppend(jsonString,_data[i]) />
+		</cfloop>		
+		<cfreturn "{""__cftype__"":""binary"",""data"":""" & ArrayToList(jsonString,"") & """,""length"":" & ArrayLen(_data) & "}" />
 
 	<!--- BOOLEAN --->
-	<cfif IsBoolean(_data) AND NOT IsNumeric(_data) AND NOT ListFindNoCase("Yes,No", _data)>
-		<cfreturn LCase(ToString(_data)) />
+	<cfelseif IsBoolean(_data) AND NOT IsNumeric(_data)>
+		<cfreturn ReplaceList(YesNoFormat(_data),"Yes,No","true,false") />
+		
+	<!--- CUSTOM FUNCTION --->
+	<cfelseif IsCustomFunction(_data)>
+		<cfset md = GetMetaData(_data) />
+		<cfif CompareNoCase(Left(md.name,Len(ignoreFunctionPrefix)),ignoreFunctionPrefix) eq 0>
+			<cfreturn "coldfire_ignore_value" />
+		<cfelse>		
+			<cfset jsonString = ArrayNew(1) />
+			<cfset arKeys = StructKeyArray(md) />
+			<cfloop from="1" to="#ArrayLen(arKeys)#" index="i">
+				<cfset tempVal = coldfire_udf_encode( md[ arKeys[i] ], arguments.queryFormat, arguments.queryKeyCase ) />
+				<cfset ArrayAppend(jsonString, '"' & arKeys[i] & '":' & tempVal) />
+			</cfloop>
+			<cfreturn "{""__cftype__"":""customfunction""," & ArrayToList(jsonString,",") & "}" />
+		</cfif>	
 		
 	<!--- NUMBER --->
 	<cfelseif NOT stringNumbers AND IsNumeric(_data) AND NOT REFind("^0+[^\.]",_data)>
@@ -996,50 +1028,111 @@ Handles server side debugging for ColdFire
 	
 	<!--- DATE --->
 	<cfelseif IsDate(_data) AND arguments.formatDates>
-		<cfreturn '"#DateFormat(_data, "medium")# #TimeFormat(_data, "medium")#"' />
+		<cfreturn '"#DateFormat(_data, "mmmm, dd yyyy")# #TimeFormat(_data, "HH:mm:ss")#"' />
+		
+	<!--- WDDX --->
+	<cfelseif IsWDDX(_data)>
+		<cfwddx action="wddx2cfml" input="#_data#" output="tempVal" />
+		<cfreturn "{""__cftype__"":""wddx"",""data"":" & coldfire_udf_encode( tempVal, arguments.queryFormat, arguments.queryKeyCase ) & "}" />
 		
 	<!--- STRING --->
 	<cfelseif IsSimpleValue(_data)>
 		<cfreturn '"' & Replace(JSStringFormat(_data), "/", "\/", "ALL") & '"' />
 	
-	<!--- ARRAY --->
-	<cfelseif IsArray(_data)>
-		<cfset jsonString = "" />
-		<cfloop from="1" to="#ArrayLen(_data)#" index="i">
-			<cfset tempVal = coldfire_udf_encode( _data[i], arguments.queryFormat, arguments.queryKeyCase ) />
-			<cfset jsonString = ListAppend(jsonString, tempVal, ",") />
-		</cfloop>		
-			
-		<cfreturn "[" & jsonString & "]" />		
 		
 	<!--- OBJECT --->
 	<cfelseif IsObject(_data)>	
 		<cfset md = GetMetaData(_data) />	
-		<cfset jsonString = "" />
 		<cfset arKeys = StructKeyArray(md) />		
-		<!--- If the metadata has no array keys it is a complex object --->
+		
 		<cfif ArrayLen(arKeys) eq 0>
-			<cfreturn '"' & "unknown-obj" & '"' />
-		</cfif>		
-		<cfloop from="1" to="#ArrayLen(arKeys)#" index="i">
-			<cfset tempVal = coldfire_udf_encode( md[ arKeys[i] ], arguments.queryFormat, arguments.queryKeyCase ) />
-			<cfset jsonString = ListAppend(jsonString, '"' & arKeys[i] & '":' & tempVal, ",") />
-		</cfloop>
-		<cfreturn "{" & jsonString & "}" />
+			<!--- java object --->
+			<cftry>
+				<cfset jsonString = ArrayNew(1) />
+				
+				<!--- get the class name --->
+				
+				<cfset ArrayAppend(jsonString,'"CLASSNAME":"' & _data.getClass().getName() & '"') />
+				
+				<!--- get object method data, this could probabaly use some work --->
+				
+				<cfset methods = _data.getClass().getMethods()>
+				<cfset methodStruct = StructNew() />
+				<cfset methodArray = ArrayNew(1) />
+				<cfloop from="1" to="#ArrayLen(methods)#" index="i">	
+					<cfset methodString = methods[i].getName() & "(" />
+					<cfset params = methods[i].getParameterTypes()>
+					<cfset delim = ""/>
+					<cfloop from="1" to="#ArrayLen(params)#" index="x">
+						<cfset methodString = methodString & delim & " " & params[x].getCanonicalName() />
+						<cfset delim = "," />
+					</cfloop>
+					<cfset methodString = methodString & ")" />	
+					<cfset methodStruct[methods[i].getName()] = StructNew() />
+					<cfset methodStruct[methods[i].getName()].method = methodString />	
+					<cfset methodStruct[methods[i].getName()].returntype = methods[i].getReturnType().getCanonicalName() />
+				</cfloop>				
+				<cfset sortedKeys = StructSort(methodStruct,"textnocase","asc","method") />				
+				
+				<cfloop from="1" to="#ArrayLen(sortedKeys)#" index="i">
+					<cfset ArrayAppend(methodArray,methodStruct[sortedKeys[i]]) />
+				</cfloop>
+
+				<cfset tempVal = coldfire_udf_encode( methodArray, arguments.queryFormat, arguments.queryKeyCase ) />
+				
+				<cfset ArrayAppend(jsonString,'"METHODS":' & tempVal) />
+				
+				<!--- get object field data, not getting values --->
+				<cfset fields = _data.getClass().getFields()>
+				<cfset fieldStruct = StructNew() />
+				<cfset fieldArray = ArrayNew(1) />				
+				<cfloop from="1" to="#ArrayLen(fields)#" index="i">	
+					<cfset fieldStruct[fields[i].getName()] = StructNew() />
+					<cfset fieldStruct[fields[i].getName()].field = fields[i].getType().getName() & " " & fields[i].getName() />	
+					<cfset fieldStruct[fields[i].getName()].value = fields[i].getType().getName() />
+				</cfloop>				
+				<cfset sortedKeys = StructSort(fieldStruct,"textnocase","asc","field") />
+				
+				<cfloop from="1" to="#ArrayLen(sortedKeys)#" index="i">
+					<cfset ArrayAppend(fieldArray,fieldStruct[sortedKeys[i]]) />
+				</cfloop>
+				
+				<cfset tempVal = coldfire_udf_encode( fieldArray, arguments.queryFormat, arguments.queryKeyCase ) />
+				
+				<cfset ArrayAppend(jsonString,'"FIELDS":' & tempVal) />
+				
+				
+				<cfreturn "{""__cftype__"":""java""," & ArrayToList(jsonString,",") & "}" />				
+			
+				<cfcatch type="any">
+					<cfreturn "{""__cftype__"":""unknown""}" />	
+				</cfcatch>
+			</cftry>			
+		<cfelse>
+			<!--- component --->		
+			<cfset jsonString = ArrayNew(1) />
+			<cfloop from="1" to="#ArrayLen(arKeys)#" index="i">			
+				<cfif ListFind("NAME,FUNCTIONS",arKeys[i])>
+					<cfset tempVal = coldfire_udf_encode( md[ arKeys[i] ], arguments.queryFormat, arguments.queryKeyCase ) />
+					<cfset ArrayAppend(jsonString, '"' & arKeys[i] & '":' & tempVal) />
+				</cfif>
+			</cfloop>
+			<cfreturn "{""__cftype__"":""component""," & ArrayToList(jsonString,",") & "}" />
+		</cfif>
 	
 	<!--- STRUCT --->
 	<cfelseif IsStruct(_data)>
-		<cfset jsonString = "" />
+		<cfset jsonString = ArrayNew(1) />
 		<cfset arKeys = StructKeyArray(_data) />
 		<cfloop from="1" to="#ArrayLen(arKeys)#" index="i">			
 			<cfif ListFindNoCase(ignoreStructKeys, arKeys[i]) eq 0>
 				<cfset tempVal = coldfire_udf_encode( _data[ arKeys[i] ], arguments.queryFormat, arguments.queryKeyCase ) />
 				<cfif tempVal neq "coldfire_ignore_value">
-					<cfset jsonString = ListAppend(jsonString, '"' & arKeys[i] & '":' & tempVal, ",") />
+					<cfset ArrayAppend(jsonString, '"' & arKeys[i] & '":' & tempVal) />
 				</cfif>
 			</cfif>			
 		</cfloop>				
-		<cfreturn "{" & jsonString & "}" />		
+		<cfreturn "{""__cftype__"":""struct""," & ArrayToList(jsonString,",") & "}" />		
 	
 	<!--- QUERY --->
 	<cfelseif IsQuery(_data)>
@@ -1119,34 +1212,11 @@ Handles server side debugging for ColdFire
 		<!--- Wrap all query data into an object --->
 		<cfreturn "{" & jsonString & "}" />
 		
-	<!--- FUNCTION --->
-	<cfelseif IsCustomFunction(_data)>
-		<cfset md = GetMetaData(_data) />
-		<cfif CompareNoCase(Left(md.name,Len(ignoreFunctionPrefix)),ignoreFunctionPrefix) eq 0>
-			<cfreturn "coldfire_ignore_value" />
-		<cfelse>
-			<!--- build a stub JavaScript function 			
-			<cfset jsonString = 'function( ' />
-			<cfset delim = "">
-			<cfloop from="1" to="#ArrayLen(md.parameters)#" index="i">
-				<cfset jsonString = jsonString & delim & ' ' & md.parameters[i].name />
-				<cfset delim = "," />
-			</cfloop>				
-			<cfset jsonString = jsonString & ' ){}' />			
-			<cfreturn jsonString />
-			--->
-			<cfset jsonString = "" />
-			<cfset arKeys = StructKeyArray(md) />
-			<cfloop from="1" to="#ArrayLen(arKeys)#" index="i">
-				<cfset tempVal = coldfire_udf_encode( md[ arKeys[i] ], arguments.queryFormat, arguments.queryKeyCase ) />
-				<cfset jsonString = ListAppend(jsonString, '"' & arKeys[i] & '":' & tempVal, ",") />
-			</cfloop>
-			<cfreturn "{" & jsonString & "}" />
-		</cfif>	
+	
 	
 	<!--- UNKNOWN OBJECT TYPE --->
 	<cfelse>
-		<cfreturn '"' & "unknown-obj" & '"' />
+		<cfreturn "{""__cftype__"":""unknown""}" />	
 	</cfif>
 </cffunction>
 
