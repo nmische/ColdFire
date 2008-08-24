@@ -352,7 +352,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		TR({class: "headerRow"},
 			TH({class: "headerCell", width: "10%"}, $CFSTR('Type')),
 			TH({class: "headerCell", width: "10%"},  $CFSTR('Delta')),
-			TH({class: "headerCell", width: "80%"},  $CFSTR('Message'))	
+			TH({class: "headerCell", width: "80%"},  $CFSTR('MessageResult'))	
 		),
 		
 	traceRowTag:
@@ -360,7 +360,8 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			TR({class: "$row.PRIORITY|getTraceClass"},
 				TD({class: "valueCell", width: "10%"},"$row.PRIORITY|formatPriority|safeCFSTR"),
 				TD({class: "valueCell", width: "10%", align: "right"},"$row.DELTA|formatTime"),
-				TD({class: "valueCell", width: "80"},"$row.MESSAGE")                    
+				TD({class: "valueCell", width: "20%", align: "right"},"$row.CATEGORY"),
+				TD({class: "valueCell", width: "60"},"$row.MESSAGE")                    
 			)
 		),
 		
@@ -738,8 +739,9 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			var trace = {
 				DELTA: theObj.traceObj.DATA.DELTA[i],
 				ENDTIME: theObj.traceObj.DATA.ENDTIME[i],
-				MESSAGE: theObj.traceObj.DATA.MESSAGE[i],
-				PRIORITY: theObj.traceObj.DATA.PRIORITY[i]
+				MESSAGE: theObj.traceObj.DATA.MESSAGE[i] + (theObj.traceObj.DATA.RESULT[i] != '') ? ' [' + theObj.traceObj.DATA.RESULT[i] + ']': '',
+				PRIORITY: theObj.traceObj.DATA.PRIORITY[i],
+				CATEGORY: theObj.traceObj.DATA.CATEGORY[i],
 			};
 			this.rowData.traceRows.push(trace);
 		}
