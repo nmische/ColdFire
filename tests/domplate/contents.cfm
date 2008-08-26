@@ -24,7 +24,7 @@
 	<li><a href="##" onclick="loadTests('string')">String</a></li>
 	<li><a href="##" onclick="loadTests('struct')">Struct</a></li>
 	<li><a href="##" onclick="loadTests('wddx')">WDDX</a></li>
-	<li><a href="xml.cfm" target="test">XML</a></li>
+	<li><a href="##" onclick="loadTests('xml')">XML</a></li>
 </ul>
 </body>
 </html>

@@ -1014,12 +1014,13 @@ Handles server side debugging for ColdFire
 			<cfreturn "coldfire_ignore_value" />
 		<cfelse>		
 			<cfset jsonString = ArrayNew(1) />
+			<cfset ArrayAppend(jsonString,"""__cftype__"":""customfunction""")>
 			<cfset arKeys = StructKeyArray(md) />
 			<cfloop from="1" to="#ArrayLen(arKeys)#" index="i">
 				<cfset tempVal = coldfire_udf_encode( md[ arKeys[i] ], arguments.queryFormat, arguments.queryKeyCase ) />
 				<cfset ArrayAppend(jsonString, '"' & arKeys[i] & '":' & tempVal) />
 			</cfloop>
-			<cfreturn "{""__cftype__"":""customfunction""," & ArrayToList(jsonString,",") & "}" />
+			<cfreturn "{" & ArrayToList(jsonString,",") & "}" />
 		</cfif>	
 		
 	<!--- NUMBER --->
@@ -1048,6 +1049,7 @@ Handles server side debugging for ColdFire
 			<!--- java object --->
 			<cftry>
 				<cfset jsonString = ArrayNew(1) />
+				<cfset ArrayAppend(jsonString,"""__cftype__"":""java""") />
 				
 				<!--- get the class name --->
 				
@@ -1101,7 +1103,7 @@ Handles server side debugging for ColdFire
 				<cfset ArrayAppend(jsonString,'"FIELDS":' & tempVal) />
 				
 				
-				<cfreturn "{""__cftype__"":""java""," & ArrayToList(jsonString,",") & "}" />				
+				<cfreturn "{" & ArrayToList(jsonString,",") & "}" />				
 			
 				<cfcatch type="any">
 					<cfreturn "{""__cftype__"":""unknown""}" />	
@@ -1110,18 +1112,20 @@ Handles server side debugging for ColdFire
 		<cfelse>
 			<!--- component --->		
 			<cfset jsonString = ArrayNew(1) />
+			<cfset ArrayAppend(jsonString,"""__cftype__"":""component""") />
 			<cfloop from="1" to="#ArrayLen(arKeys)#" index="i">			
 				<cfif ListFind("NAME,FUNCTIONS",arKeys[i])>
 					<cfset tempVal = coldfire_udf_encode( md[ arKeys[i] ], arguments.queryFormat, arguments.queryKeyCase ) />
 					<cfset ArrayAppend(jsonString, '"' & arKeys[i] & '":' & tempVal) />
 				</cfif>
 			</cfloop>
-			<cfreturn "{""__cftype__"":""component""," & ArrayToList(jsonString,",") & "}" />
+			<cfreturn "{" & ArrayToList(jsonString,",") & "}" />
 		</cfif>
 	
 	<!--- STRUCT --->
 	<cfelseif IsStruct(_data)>
 		<cfset jsonString = ArrayNew(1) />
+		<cfset ArrayAppend(jsonString,"""__cftype__"":""struct""") />
 		<cfset arKeys = StructKeyArray(_data) />
 		<cfloop from="1" to="#ArrayLen(arKeys)#" index="i">			
 			<cfif ListFindNoCase(ignoreStructKeys, arKeys[i]) eq 0>
@@ -1131,7 +1135,7 @@ Handles server side debugging for ColdFire
 				</cfif>
 			</cfif>			
 		</cfloop>				
-		<cfreturn "{""__cftype__"":""struct""," & ArrayToList(jsonString,",") & "}" />		
+		<cfreturn "{" & ArrayToList(jsonString,",") & "}" />		
 	
 	<!--- QUERY --->
 	<cfelseif IsQuery(_data)>
@@ -1215,7 +1219,8 @@ Handles server side debugging for ColdFire
 	<!--- XML DOC --->
 	<cfelseif IsXMLDoc(_data)>
 		<cfset jsonString = ArrayNew(1) />
-		<cfset arKeys = StructKeyArray(_data) />
+		<cfset ArrayAppend(jsonString,"""__cftype__"":""xmldoc""") />
+		<cfset arKeys = ListToArray("XmlComment,XmlRoot") />
 		<cfloop from="1" to="#ArrayLen(arKeys)#" index="i">			
 			<cfif ListFindNoCase(ignoreStructKeys, arKeys[i]) eq 0>
 				<cfset tempVal = coldfire_udf_encode( _data[ arKeys[i] ], arguments.queryFormat, arguments.queryKeyCase ) />
@@ -1224,12 +1229,13 @@ Handles server side debugging for ColdFire
 				</cfif>
 			</cfif>			
 		</cfloop>				
-		<cfreturn "{""__cftype__"":""xmldoc""," & ArrayToList(jsonString,",") & "}" />
+		<cfreturn "{" & ArrayToList(jsonString,",") & "}" />
 	
 	<!--- XML ELEMENT --->
 	<cfelseif IsXmlElem(_data)>
 		<cfset jsonString = ArrayNew(1) />
-		<cfset arKeys = StructKeyArray(_data) />
+		<cfset ArrayAppend(jsonString,"""__cftype__"":""xmlelem""") />
+		<cfset arKeys = ListToArray("XmlName,XmlNsPrefix,XmlNsURI,XmlText,XmlComment,XmlAttributes,XmlChildren") />
 		<cfloop from="1" to="#ArrayLen(arKeys)#" index="i">			
 			<cfif ListFindNoCase(ignoreStructKeys, arKeys[i]) eq 0>
 				<cfset tempVal = coldfire_udf_encode( _data[ arKeys[i] ], arguments.queryFormat, arguments.queryKeyCase ) />
@@ -1238,7 +1244,22 @@ Handles server side debugging for ColdFire
 				</cfif>
 			</cfif>			
 		</cfloop>				
-		<cfreturn "{""__cftype__"":""xmlelem""," & ArrayToList(jsonString,",") & "}" />
+		<cfreturn "{" & ArrayToList(jsonString,",") & "}" />
+		
+	<!--- XML NODE --->
+	<cfelseif IsXmlNode(_data)>
+		<cfset jsonString = ArrayNew(1) />
+		<cfset ArrayAppend(jsonString,"""__cftype__"":""xmlnode""") />
+		<cfset arKeys = ListToArray("XmlName,XmlType,XmlValue") />
+		<cfloop from="1" to="#ArrayLen(arKeys)#" index="i">			
+			<cfif ListFindNoCase(ignoreStructKeys, arKeys[i]) eq 0>
+				<cfset tempVal = coldfire_udf_encode( _data[ arKeys[i] ], arguments.queryFormat, arguments.queryKeyCase ) />
+				<cfif tempVal neq "coldfire_ignore_value">
+					<cfset ArrayAppend(jsonString, '"' & arKeys[i] & '":' & tempVal) />
+				</cfif>
+			</cfif>			
+		</cfloop>				
+		<cfreturn "{" & ArrayToList(jsonString,",") & "}" />
 	
 	<!--- UNKNOWN OBJECT TYPE --->
 	<cfelse>
