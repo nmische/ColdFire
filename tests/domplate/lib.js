@@ -322,7 +322,7 @@ with (FirebugLib) {
 		
 		formatString: function(value){
 			return "unknown object type:" + value.toString();
-		}
+		},
 		
 		queryColSpan: function(value) {
 			return value.length + 1;
