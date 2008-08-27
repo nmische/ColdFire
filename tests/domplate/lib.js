@@ -18,7 +18,9 @@ with (FirebugLib) {
 
 	defineTags("code","i");	
 	
-	ColdFireFormatter = domplate({
+	function ColdFireFormatter() {};
+	
+	ColdFireFormatter.prototype = domplate({
 		
 		varTable:
 			TABLE({border: 1},				
@@ -245,6 +247,48 @@ with (FirebugLib) {
 					)
 				)				
 			),
+			
+		xmlDocTable:
+			TABLE({class:'cfdump_xml'},
+				TR(
+					TH({class:'xml',colspan:2,onclick:'$cfdump_toggleTable',style:'cursor:pointer;',title:'click to collapse'},'xml document')
+				),
+				FOR('x','$value',
+					TR(
+						TD({class:'xml',onclick:'$cfdump_toggleRow',style:'cursor:pointer;',title:'click to collapse'},'$x.name'),
+						TD(
+							TAG('$x.val|format',{value:'$x.val|parseParts'})
+						)							
+					)
+				)			
+			),
+			
+		xmlElemTable:
+			TABLE({class:'cfdump_xml'},
+				TR(
+					TH({class:'xml',colspan:2,onclick:'$cfdump_toggleTable',style:'cursor:pointer;',title:'click to collapse'},'xml element')
+				),
+				FOR('x','$value',
+					TR(
+						TD({class:'xml',onclick:'$cfdump_toggleRow',style:'cursor:pointer;',title:'click to collapse'},'$x.name'),
+						TD(
+							TAG('$x.val|format',{value:'$x.val|parseParts'})
+						)							
+					)
+				)			
+			),
+		
+		xmlNodeTable:
+			TABLE({class:'cfdump_xml'},
+				FOR('x','$value',
+					TR(
+						TD({class:'xml',onclick:'$cfdump_toggleRow',style:'cursor:pointer;',title:'click to collapse'},'$x.name'),
+						TD(
+							TAG('$x.val|format',{value:'$x.val|parseParts'})
+						)							
+					)
+				)			
+			),
 					
 		simpleDiv:
 			DIV('$value'),
@@ -349,6 +393,12 @@ with (FirebugLib) {
 					return this.structTable;
 				case "wddx":
 					return this.wddxTable;
+				case "xmldoc":
+					return this.xmlDocTable;
+				case "xmlelem":
+					return this.xmlElemTable;
+				case "xmlnode":
+					return this.xmlNodeTable;
 				case "unknown":
 					return this.unknownDiv;				
 			}					
@@ -401,6 +451,9 @@ with (FirebugLib) {
 					return {RECORDCOUNT: value.recordcount, COLUMNS: columns, DATA: parts};
 					
 				case "struct":
+				case "xmldoc":
+				case "xmlelem":
+				case "xmlnode":
 					for (var i in value) {
 						if (i != "__cftype__") {
 							part = {name: i, val: value[i] };
@@ -413,7 +466,10 @@ with (FirebugLib) {
 					return value.data;
 					
 				case "unknown":
-					return value;			
+					return value;	
+					
+				default:
+					return value;		
 				
 			}
 		},
@@ -535,7 +591,10 @@ with (FirebugLib) {
 			return this.escapeHTML(tmpVal);		
 		}
 		
+		
 	});
 
+	this.ColdFireFormatter = new ColdFireFormatter();
+	
 }).apply(FirebugLib);	
 }

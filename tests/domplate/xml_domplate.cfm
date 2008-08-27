@@ -1,3 +1,5 @@
+
+<cfsetting showdebugoutput="false">
 <cfinclude template="../../src/coldfusion/coldfire.cfm"/>
 <cfxml variable="testVar">
 <users>
@@ -34,8 +36,8 @@
 				var testVar2 = #testJSON2#;
 				var testVar3 = #testJSON3#;			
 				ColdFireFormatter.dump.append({value:testVar}, $("test"));
-				//ColdFireFormatter.dump.append({value:testVar2}, $("test2"));
-				//ColdFireFormatter.dump.append({value:testVar3}, $("test3"));
+				ColdFireFormatter.dump.append({value:testVar2}, $("test2"));
+				ColdFireFormatter.dump.append({value:testVar3}, $("test3"));
 			}
 		
 		};
