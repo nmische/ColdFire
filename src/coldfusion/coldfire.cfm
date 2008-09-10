@@ -950,7 +950,7 @@ Handles server side debugging for ColdFire
 		<cfreturn "{""__cftype__"":""binary"",""data"":""" & ArrayToList(jsonString,"") & """,""length"":" & ArrayLen(_data) & "}" />
 
 	<!--- BOOLEAN --->
-	<cfelseif IsBoolean(_data) AND NOT IsNumeric(_data) AND NOT NOT ListFindNoCase("Yes,No,True,False", _data)>
+	<cfelseif IsBoolean(_data) AND NOT IsNumeric(_data) AND NOT ListFindNoCase("Yes,No", _data)>
 		<cfreturn LCase(ToString(_data)) />
 		
 	<!--- CUSTOM FUNCTION --->
