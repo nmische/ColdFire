@@ -472,7 +472,6 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 	
 	initialize: function(context, doc)
 	{
-		logger.logMessage('initialize');
 		this.onMouseOver = bind(this.onMouseOver, this);
 		this.onMouseOut = bind(this.onMouseOut, this);		
 		this.setUpDoc(doc);	
@@ -559,7 +558,6 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 	
 	clear: function()
     {
-		logger.logMessage('clear');
 		this.file = null;
 		this.queue = [];
 		this.totalET = null;
@@ -610,8 +608,6 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 						
 			if(!file.cfObj){	
 				
-				logger.logMessage(file.href);
-						
 				var headers = {
 					general: [],
 					queries: [],
@@ -628,7 +624,6 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 				for (var i = 0; i < file.responseHeaders.length; i++){
 					var cfheader = re.exec(file.responseHeaders[i].name);
 					if (cfheader){
-						logger.logMessage("headername: " + file.responseHeaders[i].name);
 						headers[cfheader[1]][parseInt(cfheader[2]) - 1] = file.responseHeaders[i].value;
 					}					
 				}
