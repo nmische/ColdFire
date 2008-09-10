@@ -760,7 +760,6 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		{
 			var variable = {
 				LABEL: theObj.variablesObj.DATA.LABEL[i],
-				TYPE: theObj.variablesObj.DATA.TYPE[i],
 				VALUE: theObj.variablesObj.DATA.VALUE[i]				
 			};
 			this.rowData.variablesRows.push(variable);

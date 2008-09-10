@@ -583,7 +583,7 @@ Handles server side debugging for ColdFire
 	
 	<cfargument name="variableNames" type="array" required="true">
 	
-	<cfset var result = queryNew("label,type,value")>
+	<cfset var result = queryNew("label,value")>
 	<cfset var x = 1>
 	
 	<cfloop index="x" from="1" to="#arrayLen(arguments.variableNames)#">
@@ -594,13 +594,10 @@ Handles server side debugging for ColdFire
 		<cfset QuerySetCell(result,"label",arguments.variableNames[x])>
 		
 		<cfif isDefined(variableNames[x])>								
-			<!--- figure out the type --->
-			<cfset QuerySetCell(result,"type",coldfire_udf_getVarType(evaluate(variableNames[x])))>
 			<!--- get the value --->
 			<cfset QuerySetCell(result,"value",coldfire_udf_encode(evaluate(variableNames[x])))>			
 		<cfelse>
 			<!--- set default type and label --->
-			<cfset QuerySetCell(result,"type","")>
 			<cfset QuerySetCell(result,"value","undefined")>			
 		</cfif>
 		
@@ -727,57 +724,6 @@ Handles server side debugging for ColdFire
 	
 	<cfreturn ret>
 
-</cffunction>
-
-
-
-
-<cffunction 
-	name="coldfire_udf_getVarType" 
-	returntype="string" 
-	output="No"
-	hint="Returns the variable type">
-		
-	<cfargument name="data" type="any" required="true" />
-		
-	<cfset var _data = arguments.data />
-
-	<!--- BOOLEAN --->
-	<cfif IsBoolean(_data)>
-		<cfreturn "BOOLEAN" />
-		
-	<!--- NUMBER --->
-	<cfelseif IsNumeric(_data)>
-		<cfreturn "NUMERIC" />
-	
-	<!--- STRING --->
-	<cfelseif IsSimpleValue(_data)>
-		<cfreturn "SIMPLEVALUE" />
-	
-	<!--- ARRAY --->
-	<cfelseif IsArray(_data)>
-		<cfreturn "ARRAY" />
-		
-	<!--- OBJECT --->
-	<cfelseif IsStruct(_data)>
-		<cfreturn "OBJECT" />
-	
-	<!--- STRUCT --->
-	<cfelseif IsStruct(_data)>
-		<cfreturn "STRUCT" />
-	
-	<!--- QUERY --->
-	<cfelseif IsQuery(_data)>
-		<cfreturn "QUERY">
-		
-	<!--- CUSTOMFUNCTION --->
-	<cfelseif IsCustomFunction(_data)>
-		<cfreturn "CUSTOMFUNCTION">
-		
-	<!--- UNKNOWN TYPE --->
-	<cfelse>
-		<cfreturn "UNKNOWN-OBJ" />
-	</cfif>
 </cffunction>
 
 
@@ -1004,8 +950,8 @@ Handles server side debugging for ColdFire
 		<cfreturn "{""__cftype__"":""binary"",""data"":""" & ArrayToList(jsonString,"") & """,""length"":" & ArrayLen(_data) & "}" />
 
 	<!--- BOOLEAN --->
-	<cfelseif IsBoolean(_data) AND NOT IsNumeric(_data)>
-		<cfreturn ReplaceList(YesNoFormat(_data),"Yes,No","true,false") />
+	<cfelseif IsBoolean(_data) AND NOT IsNumeric(_data) AND NOT NOT ListFindNoCase("Yes,No,True,False", _data)>
+		<cfreturn LCase(ToString(_data)) />
 		
 	<!--- CUSTOM FUNCTION --->
 	<cfelseif IsCustomFunction(_data)>
