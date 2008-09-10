@@ -22,84 +22,80 @@ with (FirebugLib) {
 	
 	ColdFireFormatter.prototype = domplate({
 		
-		varTable:
-			TABLE({border: 1},				
-				FOR('variable','$vars',
-					TR(
-						TD('$variable.name'),
-						TD(
-							TAG('$variable.value|format',{value:'$variable.value|parseParts'})
-						)					
-					)
-				)						
-			),
-				
 		dump:
 			TAG('$value|format',{value:'$value|parseParts'}),
 				
 		arrayTable:
 			TABLE({class:'cfdump_array'},
-				TR(
-					TH({class:'array',colspan:2,onclick:'$cfdump_toggleTable',style:'cursor:pointer;',title:'click to collapse'},'array')
-				),				
-				FOR('x','$value',
+				TBODY(
 					TR(
-						TD({class:'array',onclick:'$cfdump_toggleRow',style:'cursor:pointer;',title:'click to collapse'},'$x.name'),
-						TD(
-							TAG('$x.val|format',{value:'$x.val|parseParts'})
-						)							
+						TH({class:'array',colspan:2,onclick:'$cfdumpToggleTable',style:'cursor:pointer;',title:'click to collapse'},'array')
+					),				
+					FOR('x','$value',
+						TR(
+							TD({class:'array',onclick:'$cfdumpToggleRow',style:'cursor:pointer;',title:'click to collapse'},'$x.name'),
+							TD(
+								TAG('$x.val|format',{value:'$x.val|parseParts'})
+							)							
+						)
 					)
 				)						
 			),
 					
 		binaryTable:
 			TABLE({class:'cfdump_binary'},
-				TR(
-					TH({class:'binary',colspan:2,onclick:'$cfdump_toggleTable',style:'cursor:pointer;',title:'click to collapse'},'binary')
-				),
-				TR(
-					TD({class:'binary'},
-						CODE('$value.data')
+				TBODY(
+					TR(
+						TH({class:'binary',colspan:2,onclick:'$cfdumpToggleTable',style:'cursor:pointer;',title:'click to collapse'},'binary')
+					),
+					TR(
+						TD({class:'binary'},
+							CODE('$value.data')
+						)
 					)
-				)				
+				)			
 			),
 				
 		customfunctionTable:
 			TABLE({class:'cfdump_udf', width:'100%'},
-				TR(
-					TH({class:'udf',colspan:2,onclick:'$cfdump_toggleTable',style:'cursor:pointer;',title:'click to collapse'},'function $value.NAME')
-				),
-				TR(
-					TD(
-						TABLE({class:'cfdump_udfbody'},
-							TAG('$value|formatUDFArguments',{value:'$value'}),
-							TR(
-								TD({width:"30%"},I('ReturnType:')),
-								TD('$value|formatUDFReturnType')								
-							),
-							TR(
-								TD(I('Roles:')),
-								TD('$value|formatUDFRoles')								
-							),
-							TR(
-								TD(I('Access:')),
-								TD('$value|formatUDFAccess')								
-							),
-							TR(
-								TD(I('Output:')),
-								TD('$value|formatUDFOutput')								
-							),
-							TR(
-								TD(I('DisplayName:')),
-								TD('$value|formatUDFDisplayName')								
-							),
-							TR(
-								TD(I('Hint:')),
-								TD('$value|formatUDFHint')								
-							),
-							TR(
-								TD(I('Description:')),
-								TD('$value|formatUDFDescription')								
+				TBODY(
+					TR(
+						TH({class:'udf',colspan:2,onclick:'$cfdumpToggleTable',style:'cursor:pointer;',title:'click to collapse'},'function $value.NAME')
+					),
+					TR(
+						TD(
+							TABLE({class:'cfdump_udfbody'},
+								TBODY(
+									TAG('$value|formatUDFArguments',{value:'$value'}),
+									TR(
+										TD({width:"30%"},I('ReturnType:')),
+										TD('$value|formatUDFReturnType')								
+									),
+									TR(
+										TD(I('Roles:')),
+										TD('$value|formatUDFRoles')								
+									),
+									TR(
+										TD(I('Access:')),
+										TD('$value|formatUDFAccess')								
+									),
+									TR(
+										TD(I('Output:')),
+										TD('$value|formatUDFOutput')								
+									),
+									TR(
+										TD(I('DisplayName:')),
+										TD('$value|formatUDFDisplayName')								
+									),
+									TR(
+										TD(I('Hint:')),
+										TD('$value|formatUDFHint')								
+									),
+									TR(
+										TD(I('Description:')),
+										TD('$value|formatUDFDescription')								
+								)
+								)
 							)
 						)
 					)
@@ -111,20 +107,22 @@ with (FirebugLib) {
 				TD({colspan:2},
 					I('Arguments:'),
 					TABLE({class:'cfdump_udfarguments'},
-						TR(
-							TH('Name'),
-							TH('Required'),
-							TH('Type'),
-							TH('Default')											
-						),
-						FOR('param','$value.PARAMETERS',
+						TBODY(
 							TR(
-								TD('$param|formatParamName'),
-								TD('$param|formatParamRequired'),
-								TD('$param|formatParamType'),
-								TD('$param|formatParamDefault')
-							)											
-						)										
+								TH('Name'),
+								TH('Required'),
+								TH('Type'),
+								TH('Default')											
+							),
+							FOR('param','$value.PARAMETERS',
+								TR(
+									TD('$param|formatParamName'),
+									TD('$param|formatParamRequired'),
+									TD('$param|formatParamType'),
+									TD('$param|formatParamDefault')
+								)											
+							)	
+						)									
 					)									
 				)
 			),
@@ -137,157 +135,179 @@ with (FirebugLib) {
 			
 		componentTable:
 			TABLE({class: 'cfdump_cfc'},
-				TR(
-					TH({class:'cfc',colspan:2,onclick:'$cfdump_toggleTable',style:'cursor:pointer;',title:'click to collapse'},'component $value.NAME')
-				),
-				TR(				
-					TD({class:'cfc',onclick:'$cfdump_toggleRow',style:'cursor:pointer;background-color:#FF99AA;font-style:normal;',title:'click to collapse'},'METHODS'),
-					TD({style:'display:block',valign:'top'},
-						TABLE({class:'cfdump_cfc'},
-							FOR('func','$value.FUNCTIONS',
-								TR({valign:'top'},
-									TD({class:'cfc',onclick:'$cfdump_toggleRow',style:'cursor:pointer;background-color:#FF99AA;font-style:normal;',title:'click to collapse'},'$func.NAME'),
-									TD(TAG('$this.customfunctionTable',{value:'$func'}))								
-								)							
-							)						
+				TBODY(
+					TR(
+						TH({class:'cfc',colspan:2,onclick:'$cfdumpToggleTable',style:'cursor:pointer;',title:'click to collapse'},'component $value.NAME')
+					),
+					TR(				
+						TD({class:'cfc',onclick:'$cfdumpToggleRow',style:'cursor:pointer;background-color:#FF99AA;font-style:normal;',title:'click to collapse'},'METHODS'),
+						TD({style:'display:block',valign:'top'},
+							TABLE({class:'cfdump_cfc'},
+								TBODY(
+									FOR('func','$value.FUNCTIONS',
+										TR({valign:'top'},
+											TD({class:'cfc',onclick:'$cfdumpToggleRow',style:'cursor:pointer;background-color:#FF99AA;font-style:normal;',title:'click to collapse'},'$func.NAME'),
+											TD(TAG('$this.customfunctionTable',{value:'$func'}))								
+										)							
+									)	
+								)					
+							)					
 						)					
-					)					
+					)
 				)
 			),
 			
 		objectTable:
 			TABLE({class: 'cfdump_object'},
-				TR(
-					TH({class:'object',colspan:2,onclick:'$cfdump_toggleTable',style:'cursor:pointer;',title:'click to collapse'},'object of $value.CLASSNAME')
-				),
-				TR(				
-					TD({class:'object',onclick:'$cfdump_toggleRow',style:'cursor:pointer;',title:'click to collapse'},'Class Name'),
-					TD('$value.CLASSNAME')					
-				),
-				TR(				
-					TD({class:'object',onclick:'$cfdump_toggleRow',style:'cursor:pointer;',title:'click to collapse'},'Methods'),
-					TD(
-						TABLE({class:'cfdump_object'},
-							TR(
-								TH({class:'object',onclick:'$cfdump_toggleTable',style:'cursor:pointer;',title:'click to collapse'},'Method'),
-								TH({class:'object',onclick:'$cfdump_toggleTable',style:'cursor:pointer;',title:'click to collapse'},'Return Type')
-							),
-							FOR('meth','$value.METHODS',
-								TR({valign:'top'},
-									TD({class:'object',onclick:'$cfdump_toggleRow',style:'cursor:pointer;',title:'click to collapse'},'$meth.METHOD'),
-									TD('$meth.RETURNTYPE')								
-								)							
-							)						
-						)					
-					)
-				),
-				TR(				
-					TD({class:'object',onclick:'$cfdump_toggleRow',style:'cursor:pointer;',title:'click to collapse'},'Fields'),
-					TD(
-						TABLE({class:'cfdump_object'},
-							TR(
-								TH({class:'object',onclick:'$cfdump_toggleTable',style:'cursor:pointer;',title:'click to collapse'},'Field'),
-								TH({class:'object',onclick:'$cfdump_toggleTable',style:'cursor:pointer;',title:'click to collapse'},'Value')
-							),
-							FOR('field','$value.FIELDS',
-								TR({valign:'top'},
-									TD({class:'object',onclick:'$cfdump_toggleRow',style:'cursor:pointer;',title:'click to collapse'},'$field.FIELD'),
-									TD('$field.VALUE')								
-								)							
-							)						
-						)					
+				TBODY(
+					TR(
+						TH({class:'object',colspan:2,onclick:'$cfdumpToggleTable',style:'cursor:pointer;',title:'click to collapse'},'object of $value.CLASSNAME')
+					),
+					TR(				
+						TD({class:'object',onclick:'$cfdumpToggleRow',style:'cursor:pointer;',title:'click to collapse'},'Class Name'),
+						TD('$value.CLASSNAME')					
+					),
+					TR(				
+						TD({class:'object',onclick:'$cfdumpToggleRow',style:'cursor:pointer;',title:'click to collapse'},'Methods'),
+						TD(
+							TABLE({class:'cfdump_object'},
+								TBODY(
+									TR(
+										TH({class:'object',onclick:'$cfdumpToggleTable',style:'cursor:pointer;',title:'click to collapse'},'Method'),
+										TH({class:'object',onclick:'$cfdumpToggleTable',style:'cursor:pointer;',title:'click to collapse'},'Return Type')
+									),
+									FOR('meth','$value.METHODS',
+										TR({valign:'top'},
+											TD({class:'object',onclick:'$cfdumpToggleRow',style:'cursor:pointer;',title:'click to collapse'},'$meth.METHOD'),
+											TD('$meth.RETURNTYPE')								
+										)							
+									)
+								)					
+							)					
+						)
+					),
+					TR(				
+						TD({class:'object',onclick:'$cfdumpToggleRow',style:'cursor:pointer;',title:'click to collapse'},'Fields'),
+						TD(
+							TABLE({class:'cfdump_object'},
+								TBODY(
+									TR(
+										TH({class:'object',onclick:'$cfdumpToggleTable',style:'cursor:pointer;',title:'click to collapse'},'Field'),
+										TH({class:'object',onclick:'$cfdumpToggleTable',style:'cursor:pointer;',title:'click to collapse'},'Value')
+									),
+									FOR('field','$value.FIELDS',
+										TR({valign:'top'},
+											TD({class:'object',onclick:'$cfdumpToggleRow',style:'cursor:pointer;',title:'click to collapse'},'$field.FIELD'),
+											TD('$field.VALUE')								
+										)							
+									)	
+								)					
+							)					
+						)
 					)
 				)
 			),
 			
 		queryTable:
 			TABLE({class: 'cfdump_query'},
-				TR(
-					TH({class:'query',colspan:'$value.COLUMNS|queryColSpan',onclick:'$cfdump_toggleTable',style:'cursor:pointer;',title:'click to collapse'},'query')
-				),
-				TR({bgcolor:'eeaaaa'},
-					TD({class:'query',onclick:'$cfdump_toggleRow',style:'cursor:pointer;',title:'click to collapse'}),
-					FOR('column','$value.COLUMNS',						
-						TD({class:'query'},'$column')
-					)				
-				),
-				FOR('row','$value.DATA',
+				TBODY(
 					TR(
-						TD({class:'query',onclick:'$cfdump_toggleRow',style:'cursor:pointer;',title:'click to collapse'},'$row.index'),
-						FOR('col','$row.DATA',						
-							TD('$col')
-						)					
-					)				
+						TH({class:'query',colspan:'$value.COLUMNS|queryColSpan',onclick:'$cfdumpToggleTable',style:'cursor:pointer;',title:'click to collapse'},'query')
+					),
+					TR({bgcolor:'eeaaaa'},
+						TD({class:'query',onclick:'$cfdumpToggleRowQry',style:'cursor:pointer;',title:'click to collapse'},'&nbsp;'),
+						FOR('column','$value.COLUMNS',						
+							TD({class:'query'},'$column')
+						)				
+					),
+					FOR('row','$value.DATA',
+						TR(
+							TD({class:'query',onclick:'$cfdumpToggleRowQry',style:'cursor:pointer;',title:'click to collapse'},'$row.index'),
+							FOR('col','$row.DATA',						
+								TD('$col')
+							)					
+						)				
+					)
 				)
 			),			
 					
 		structTable:
 			TABLE({class:'cfdump_struct'},
-				TR(
-					TH({class:'struct',colspan:2,onclick:'$cfdump_toggleTable',style:'cursor:pointer;',title:'click to collapse'},'struct')
-				),				
-				FOR('x','$value',
+				TBODY(
 					TR(
-						TD({class:'struct',onclick:'$cfdump_toggleRow',style:'cursor:pointer;',title:'click to collapse'},'$x.name'),
-						TD(
-							TAG('$x.val|format',{value:'$x.val|parseParts'})
-						)							
-					)
-				)						
+						TH({class:'struct',colspan:2,onclick:'$cfdumpToggleTable',style:'cursor:pointer;',title:'click to collapse'},'struct')
+					),				
+					FOR('x','$value',
+						TR(
+							TD({class:'struct',onclick:'$cfdumpToggleRow',style:'cursor:pointer;',title:'click to collapse'},'$x.name'),
+							TD(
+								TAG('$x.val|format',{value:'$x.val|parseParts'})
+							)							
+						)
+					)	
+				)					
 			),
 			
 		wddxTable:
 			TABLE({class:'cfdump_wddx'},
-				TR(
-					TH({class:'wddx',colspan:2,onclick:'$cfdump_toggleTable',style:'cursor:pointer;',title:'click to collapse'},'wddx encoded')
-				),
-				TR(
-					TD({valign:'top'},
-						TAG('$value|format',{value:'$value|parseParts'})			
+				TBODY(
+					TR(
+						TH({class:'wddx',colspan:2,onclick:'$cfdumpToggleTable',style:'cursor:pointer;',title:'click to collapse'},'wddx encoded')
+					),
+					TR(
+						TD({valign:'top'},
+							TAG('$value|format',{value:'$value|parseParts'})			
+						)
 					)
-				)				
+				)			
 			),
 			
 		xmlDocTable:
 			TABLE({class:'cfdump_xml'},
-				TR(
-					TH({class:'xml',colspan:2,onclick:'$cfdump_toggleTable',style:'cursor:pointer;',title:'click to collapse'},'xml document')
-				),
-				FOR('x','$value',
+				TBODY(
 					TR(
-						TD({class:'xml',onclick:'$cfdump_toggleRow',style:'cursor:pointer;',title:'click to collapse'},'$x.name'),
-						TD(
-							TAG('$x.val|format',{value:'$x.val|parseParts'})
-						)							
+						TH({class:'xml',colspan:2,onclick:'$cfdumpToggleTable',style:'cursor:pointer;',title:'click to collapse'},'xml document')
+					),
+					FOR('x','$value',
+						TR(
+							TD({class:'xml',onclick:'$cfdumpToggleRow',style:'cursor:pointer;',title:'click to collapse'},'$x.name'),
+							TD(
+								TAG('$x.val|format',{value:'$x.val|parseParts'})
+							)							
+						)
 					)
-				)			
+				)		
 			),
 			
 		xmlElemTable:
 			TABLE({class:'cfdump_xml'},
-				TR(
-					TH({class:'xml',colspan:2,onclick:'$cfdump_toggleTable',style:'cursor:pointer;',title:'click to collapse'},'xml element')
-				),
-				FOR('x','$value',
+				TBODY(
 					TR(
-						TD({class:'xml',onclick:'$cfdump_toggleRow',style:'cursor:pointer;',title:'click to collapse'},'$x.name'),
-						TD(
-							TAG('$x.val|format',{value:'$x.val|parseParts'})
-						)							
+						TH({class:'xml',colspan:2,onclick:'$cfdumpToggleTable',style:'cursor:pointer;',title:'click to collapse'},'xml element')
+					),
+					FOR('x','$value',
+						TR(
+							TD({class:'xml',onclick:'$cfdumpToggleRow',style:'cursor:pointer;',title:'click to collapse'},'$x.name'),
+							TD(
+								TAG('$x.val|format',{value:'$x.val|parseParts'})
+							)							
+						)
 					)
-				)			
+				)		
 			),
 		
 		xmlNodeTable:
 			TABLE({class:'cfdump_xml'},
-				FOR('x','$value',
-					TR(
-						TD({class:'xml',onclick:'$cfdump_toggleRow',style:'cursor:pointer;',title:'click to collapse'},'$x.name'),
-						TD(
-							TAG('$x.val|format',{value:'$x.val|parseParts'})
-						)							
+				TBODY(
+					FOR('x','$value',
+						TR(
+							TD({class:'xml',onclick:'$cfdumpToggleRow',style:'cursor:pointer;',title:'click to collapse'},'$x.name'),
+							TD(
+								TAG('$x.val|format',{value:'$x.val|parseParts'})
+							)							
+						)
 					)
-				)			
+				)		
 			),
 					
 		simpleDiv:
@@ -490,14 +510,85 @@ with (FirebugLib) {
 			
 		},
 		
-		cfdump_toggleTable: function(event){
-			window.cfdump_toggleTable(event.currentTarget.firstChild);
+		cfdumpToggleTable: function(event){
+			var source = event.currentTarget;			
+			
+			var switchToState = this.cfdumpToggleSource( source ) ;
+			var table = source.parentNode.parentNode;			
+			
+			for ( var i = 1; i < table.childNodes.length; i++ ) {
+				target = table.childNodes[i] ;
+				if(target.style) {
+					this.cfdumpToggleTarget( target, switchToState ) ;
+				}
+			}
+			
 		},
 		
-		cfdump_toggleRow: function(event){				
-			window.cfdump_toggleRow(event.currentTarget.firstChild);
+		cfdumpToggleRow: function(event){				
+			var source = event.currentTarget;
+			var element = null;
+			var vLen = source.parentNode.childNodes.length;
+			for(var i=vLen-1;i>0;i--){
+				if(source.parentNode.childNodes[i].nodeType == 1){
+					element = source.parentNode.childNodes[i];
+					break;
+				}
+			}
+			if(element == null)
+				target = source.parentNode.lastChild;
+			else
+				target = element;
+					
+			this.cfdumpToggleTarget( target, this.cfdumpToggleSource( source ) ) ;
 		},
 		
+		cfdumpToggleSource: function( source ){
+			if ( source.style.fontStyle == 'italic' || source.style.fontStyle == null) {
+				source.style.fontStyle = 'normal' ;
+				source.title = 'click to collapse' ;
+				return 'open' ;
+			} else {
+				source.style.fontStyle = 'italic' ;
+				source.title = 'click to expand' ;
+				return 'closed' ;
+			}
+		},
+
+		cfdumpToggleTarget: function( target, switchToState ){
+			if ( switchToState == 'open' )	target.style.display = '' ;
+			else target.style.display = 'none' ;
+		},
+		
+		cfdumpToggleRowQry: function(event) {
+			var source = event.currentTarget;
+			var expand = (source.title == "click to collapse") ? "closed" : "open";
+			var target = null;
+			var vLen = source.parentNode.childNodes.length;
+			for(var i=vLen-1;i>=1;i--){
+				if(source.parentNode.childNodes[i].nodeType == 1){
+					target = source.parentNode.childNodes[i];
+					this.cfdumpToggleTarget( target, expand );
+					this.cfdumpToggleSourceQry( source, expand );
+				}
+			}
+			if(target == null){
+				//target is the last cell
+				target = source.parentNode.lastChild;
+				this.cfdumpToggleTarget( target, this.cfdumpToggleSource( source ) ) ;
+			}			
+		},	
+		
+		cfdumpToggleSourceQry: function(source, expand) {
+			if(expand == "closed"){
+				source.title = "click to expand";
+				source.style.fontStyle = "italic";
+			}
+			else{
+				source.title = "click to collapse";
+				source.style.fontStyle = "normal";
+			}
+		},	
 		
 		/* this code for query formatting needs to be updated to use the domplate */
 		

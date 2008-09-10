@@ -15,7 +15,6 @@
 	<script src="debug.js" type="text/javascript"></script>
 	<script src="domplate.js" type="text/javascript"></script>
 	<script src="lib.js" type="text/javascript"></script>
-	<script src="dump.js" type="text/javascript"></script >
 	
 	<script>	
 	
