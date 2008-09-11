@@ -351,8 +351,9 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 	traceHeaderRow:
 		TR({class: "headerRow"},
 			TH({class: "headerCell", width: "10%"}, $CFSTR('Type')),
-			TH({class: "headerCell", width: "10%"},  $CFSTR('Delta')),
-			TH({class: "headerCell", width: "80%"},  $CFSTR('MessageResult'))	
+			TH({class: "headerCell", width: "10%"}, $CFSTR('Delta')),
+			TH({class: "headerCell", width: "10%"}, $CFSTR('Category')),
+			TH({class: "headerCell", width: "70%"}, $CFSTR('MessageResult'))	
 		),
 		
 	traceRowTag:
@@ -360,8 +361,8 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			TR({class: "$row.PRIORITY|getTraceClass"},
 				TD({class: "valueCell", width: "10%"},"$row.PRIORITY|formatPriority|safeCFSTR"),
 				TD({class: "valueCell", width: "10%", align: "right"},"$row.DELTA|formatTime"),
-				TD({class: "valueCell", width: "20%", align: "right"},"$row.CATEGORY"),
-				TD({class: "valueCell", width: "60"},"$row.MESSAGE")                    
+				TD({class: "valueCell", width: "10%"},"$row.CATEGORY"),
+				TD({class: "valueCell", width: "70%"},"$row|formatMessage")                    
 			)
 		),
 		
@@ -461,6 +462,15 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 				break;
 		}
 		return tmp;
+	},
+	
+	formatMessage: function(row)
+	{
+		var msg = row.MESSAGE;
+		if (row.RESULT != ''){
+			msg += '[' + row.RESULT + ']';
+		}
+		return msg;
 	},
 	
 	// extends panel	
@@ -734,7 +744,8 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			var trace = {
 				DELTA: theObj.traceObj.DATA.DELTA[i],
 				ENDTIME: theObj.traceObj.DATA.ENDTIME[i],
-				MESSAGE: theObj.traceObj.DATA.MESSAGE[i] + (theObj.traceObj.DATA.RESULT[i] != '') ? ' [' + theObj.traceObj.DATA.RESULT[i] + ']': '',
+				MESSAGE: theObj.traceObj.DATA.MESSAGE[i],
+				RESULT: theObj.traceObj.DATA.RESULT[i],
 				PRIORITY: theObj.traceObj.DATA.PRIORITY[i],
 				CATEGORY: theObj.traceObj.DATA.CATEGORY[i],
 			};
