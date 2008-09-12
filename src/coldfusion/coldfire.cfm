@@ -39,6 +39,14 @@ Handles server side debugging for ColdFire
 		<!--- Return Error --->
 		<cfset coldfire_udf_error(debugMode=false,maxHeader=8000,msg="This version of the ColdFire extension, #REReplace(GetHttpRequestData().headers['User-Agent'],'.*ColdFire/(\d*[\.\d*]+).*','\1')#, is incompatible with the server's version of the ColdFire debug template, @CF_REVISION@.")>
 	</cfif>	
+
+<!--- Set to true if you would like to fall back to classic.cfm --->
+<cfelseif false>
+	<cfinclude template="classic.cfm" />
+
+<!--- Set to true if you would like to fall back to dockable.cfm --->
+<cfelseif false>
+	<cfinclude template="dockable.cfm" />
 	
 </cfif>
 
