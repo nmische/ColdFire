@@ -135,3 +135,21 @@ table.cfdump_wddx,
 		background-color: #eeeeee;
 		color: #000000;
 	}
+	
+
+	
+	table.cfdump_xml table.cfdump_array {
+		background-color: #ffffff;
+	}
+	table.cfdump_xml table.cfdump_array th.array {
+		display: none;
+	}
+	table.cfdump_xml table.cfdump_array td.array {
+		display: none;
+	}
+	table.cfdump_xml table.cfdump_array > tbody > tr > td {
+		padding:0px
+	}
+	table.cfdump_xml table.cfdump_array > tbody > tr > th {
+		padding:0px
+	}
