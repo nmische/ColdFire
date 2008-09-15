@@ -20,12 +20,19 @@ Adam Podolnick http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_w
 Nathan Mische https://www.amazon.com/gp/registry/wishlist/1PMU5WXR9RZNJ/ref=wl_web/
 
 ------------------------------------- LAST UPDATE ------------------------------------
+Last Updated: Sept 11, 2008 (@VERSION@)
+
+* added option to fallback to classic or dockable debugging templates.
+* updated variable tab variable formatting to use Firebug domplate.
+* add variable trace support as well as trace category.
+
+
+------------------------------------ OLDER UPDATES ------------------------------------
 Last Updated: July 16, 2008 (1.2.51.70)
 
 Update install.rdf to make compatible with FF 3.0.*
 
 
------------------------------------- OLDER UPDATES ------------------------------------
 Last Updated: June 29, 2008 (1.2.51.65)
 
 The first 1.2 release:
