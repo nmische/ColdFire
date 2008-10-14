@@ -1,8 +1,8 @@
 <cfquery name="getOthers" datasource="coldfiretest" cachedwithin="#CreateTimeSpan(0,0,5,0)#">
 	SELECT	*
 	FROM	Users
-	WHERE	UserTypeID = <cfqueryparam value="2" cfsqltype="cf_sql_integer" />
-		AND UserCode = <cfqueryparam value="OTH" cfsqltype="cf_sql_char" maxlength="3" null="no"/>
+	WHERE	UserTypeID = <cfqueryparam value="2" cfsqltype="CF_SQL_INTEGER" />
+		AND UserCode = <cfqueryparam value="OTH" cfsqltype="CF_SQL_CHAR" null="NO"/>
 </cfquery>
 
 <html>
