@@ -371,7 +371,7 @@ Handles server side debugging for ColdFire
 				<cfset attr = coldfire_queries.attributes[coldfire_queries.currentRow][x]>
 				<cfset parameters[x] = ArrayNew(1)>
 				<cfif StructKeyExists(attr,"sqltype")>
-					<cfset parameters[x][1] = ListFind(cfsqltypes,attr.sqltype)>
+					<cfset parameters[x][1] = ListFindNoCase(cfsqltypes,attr.sqltype)>
 				<cfelse>
 					<cfset parameters[x][1] = "">
 				</cfif>			
@@ -446,7 +446,7 @@ Handles server side debugging for ColdFire
 					<cfset parameters[x][1] = "">
 				</cfif>	
 				<cfif StructKeyExists(attr,"sqltype")>
-					<cfset parameters[x][2] = ListFind(cfsqltypes,attr.sqltype)>
+					<cfset parameters[x][2] = ListFindNoCase(cfsqltypes,attr.sqltype)>
 				<cfelse>
 					<cfset parameters[x][2] = "">
 				</cfif>			
@@ -601,12 +601,12 @@ Handles server side debugging for ColdFire
 		<!--- set the label --->
 		<cfset QuerySetCell(result,"label",arguments.variableNames[x])>
 		
-		<cfif isDefined(variableNames[x])>								
+		<cfif IsDefined(variableNames[x])>								
 			<!--- get the value --->
 			<cfset QuerySetCell(result,"value",coldfire_udf_encode(evaluate(variableNames[x])))>			
 		<cfelse>
 			<!--- set default type and label --->
-			<cfset QuerySetCell(result,"value","undefined")>			
+			<cfset QuerySetCell(result,"value",coldfire_udf_encode("undefined"))>			
 		</cfif>
 		
 	</cfloop>

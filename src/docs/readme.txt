@@ -20,14 +20,21 @@ Adam Podolnick http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_w
 Nathan Mische https://www.amazon.com/gp/registry/wishlist/1PMU5WXR9RZNJ/ref=wl_web/
 
 ------------------------------------- LAST UPDATE ------------------------------------
-Last Updated: Sept 11, 2008 (@VERSION@)
+Last Updated: Oct 12, 2008 (@VERSION@)
+
+* updated coldfire.cfm to properly encode cfsqltype (issue 38).
+* changed extension to escape all single quotes in test queryparams (issue 39).
+* updated coldfire.cfm to properly encode undefined variable values (issue 40).
+
+
+------------------------------------ OLDER UPDATES ------------------------------------
+Last Updated: Sept 11, 2008 (1.2.89.89)
 
 * added option to fallback to classic or dockable debugging templates.
 * updated variable tab variable formatting to use Firebug domplate.
 * add variable trace support as well as trace category.
 
 
------------------------------------- OLDER UPDATES ------------------------------------
 Last Updated: July 16, 2008 (1.2.51.70)
 
 Update install.rdf to make compatible with FF 3.0.*
@@ -61,17 +68,6 @@ The first 1.1 release:
  * updated coldfire.cfm to check for cf_revision only.
  * added template, cached, and timestamp columns to DB Queries tab.
  * updated build file to generate version number based on SVN revisions.
- 
-
-Last Updated: March 12, 2008 (1.1.51.51)
-
-The first 1.1 release:
- * added support for Firefox 3. 
- * updated to use new version numbering 
-   (major_version.minor_version.cf_revision.ff_revision). 
- * updated coldfire.cfm to check for cf_revision only.
- * added template, cached, and timestamp columns to DB Queries tab.
- * updated build file to generate version number based on SVN revisions.
 
 
 Last Updated: March 5, 2008 (1.004)
@@ -87,9 +83,11 @@ Updated extension to escape HTML. Core coldfirePanel now uses Firebug's DOMPlate
 templating engine. Minor change to coldfire.cfm to return general info as 
 a query object.
 
+
 Last Updated: Jan 2, 2008 (1.002)
 
 Fixes to coldfire_udf_encode UDF in coldfire.cfm based on latest CFJSON. 
+
 
 Last Updated: Sept 26, 2007 (1.001)
 
@@ -100,6 +98,7 @@ Last Updated: Sept 25, 2007 (1.0)
 
 Additional updated to both Firefox extension and coldfire.cfm to support displaying
 complex variable values. 
+
 
 Last Updated: July 25, 2007 (0.0.802)
 
@@ -127,6 +126,7 @@ return debug information.
 
 If you use another extension that changes your UA, please disable it when using ColdFire.
 
+
 Last Updated: June 20, 2007 (0.0.5)
 
 This is a big update, 99% of it done by Nathan Mische (nmische@gmail.com)
@@ -148,8 +148,10 @@ ColdFireFormatter object (en-US only, but it's a start)
 
 I made one small change to his updates, which is to fix an issue where SQL with line breaks formatted a bit oddly.
 
+
 Last Updated: April 4, 2007 (0.0.401)
 I lost a fix that was done a while ago. It fixes replacement of bound parameters in the query.
+
 
 Last Updated: April 4, 2007 (0.0.4)
 udfs renamed to avoid duplicate udf error
@@ -157,9 +159,11 @@ cftimer support added
 duplicate qEvents to prevent problems with changes to data
 coldfire.xpi updated to handle these changes
 
+
 Last Updated: March 21, 2007 (0.0.3)
 coldfire.cfm splits large strings and uses multiple headers
 coldfire.xpi updated to handle these changes
+
 
 Last Updated: March 18, 2007 (0.02)
 coldfire.cfm uses JSON now.
@@ -176,6 +180,7 @@ Note new version #. This matches what you see in Firefox as well. We will be 0.X
 formal release.
 
 coldfire.xpi was updated to reflect new version #.
+
 
 Last Updated: March 13, 2007 (RC1)
 Initial release.
