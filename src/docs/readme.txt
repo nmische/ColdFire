@@ -20,7 +20,7 @@ Adam Podolnick http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_w
 Nathan Mische https://www.amazon.com/gp/registry/wishlist/1PMU5WXR9RZNJ/ref=wl_web/
 
 ------------------------------------- LAST UPDATE ------------------------------------
-Last Updated: Oct 12, 2008 (@VERSION@)
+Last Updated: Oct 21, 2008 (@VERSION@)
 
 * updated coldfusion.js to fix cfsqltype formatting issue (issue 41). This patch was
   submitted by Shane Bradley.
