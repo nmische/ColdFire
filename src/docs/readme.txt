@@ -22,12 +22,19 @@ Nathan Mische https://www.amazon.com/gp/registry/wishlist/1PMU5WXR9RZNJ/ref=wl_w
 ------------------------------------- LAST UPDATE ------------------------------------
 Last Updated: Oct 12, 2008 (@VERSION@)
 
+* updated coldfusion.js to fix cfsqltype formatting issue (issue 41). This patch was
+  submitted by Shane Bradley.
+
+
+------------------------------------ OLDER UPDATES ------------------------------------
+
+Last Updated: Oct 12, 2008 (1.2.95.95)
+
 * updated coldfire.cfm to properly encode cfsqltype (issue 38).
 * changed extension to escape all single quotes in test queryparams (issue 39).
 * updated coldfire.cfm to properly encode undefined variable values (issue 40).
 
 
------------------------------------- OLDER UPDATES ------------------------------------
 Last Updated: Sept 11, 2008 (1.2.89.89)
 
 * added option to fallback to classic or dockable debugging templates.
