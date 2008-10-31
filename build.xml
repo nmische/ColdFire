@@ -147,7 +147,7 @@
     </target>
 
 	<target name="copy-to-cfserver" depends="version" description="copies coldfusion debug template to server">
-        <copy file="${src.cf.dir}/coldfire.cfm" tofile="${cfserver.debug.dir}/coldfire.cfm" overwrite="true">
+        <copy file="${src.cf.dir}/debug/coldfire.cfm" tofile="${cfserver.debug.dir}/coldfire.cfm" overwrite="true">
                <filterchain>
                        <replacetokens>
                             <token key="CF_REVISION" value="${coldfusion.revision}"/>
@@ -175,7 +175,7 @@
 
 	<target name="build-coldfusion" depends="set-up-build" description="prepares coldfusion debug template for distribution">
 		<mkdir dir="${build.cf.dir}" />
-		<copy file="${src.cf.dir}/coldfire.cfm" tofile="${build.cf.dir}/coldfire.cfm" overwrite="true">
+		<copy file="${src.cf.dir}/debug/coldfire.cfm" tofile="${build.cf.dir}/debug/coldfire.cfm" overwrite="true">
                <filterchain>
                        <replacetokens>
                             <token key="CF_REVISION" value="${coldfusion.revision}"/>

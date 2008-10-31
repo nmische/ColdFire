@@ -8,6 +8,7 @@
 <ul>
 	<li><a href="ajax/spryAutosuggest.cfm">AJAX Autosuggest</a></li>
 	<li><a href="ajax/cfdiv.cfm">AJAX CFDiv</a></li>
+	<li><a href="appcfc/index.cfm">Application CFC</a></li>
 	<li><a href="css/index.cfm">CSS</a></li>
 	<li><a href="flashforms/index.cfm">Flash Forms</a></li>
 	<li><a href="frames/frameset.cfm">Frames</a></li>

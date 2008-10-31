@@ -601,11 +601,17 @@ Handles server side debugging for ColdFire
 		<!--- set the label --->
 		<cfset QuerySetCell(result,"label",arguments.variableNames[x])>
 		
-		<cfif IsDefined(variableNames[x])>								
+		<cfif CompareNoCase(variableNames[x],"variables") neq 0 and IsDefined(variableNames[x])>								
 			<!--- get the value --->
 			<cfset QuerySetCell(result,"value",coldfire_udf_encode(evaluate(variableNames[x])))>			
+		<cfelseif StructKeyExists(request,"__coldFireVariableValues__") and StructKeyExists(request.__coldFireVariableValues__,variableNames[x])>
+			<!--- check to see if we were using application.cfm --->
+			<cfset QuerySetCell(result,"value",coldfire_udf_encode(evaluate("request.__coldFireVariableValues__." & variableNames[x])))>
+		<cfelseif CompareNoCase(variableNames[x],"variables") eq 0>
+			<!--- get the value --->
+			<cfset QuerySetCell(result,"value",coldfire_udf_encode(evaluate(variableNames[x])))>	
 		<cfelse>
-			<!--- set default type and label --->
+			<!--- set default value --->
 			<cfset QuerySetCell(result,"value",coldfire_udf_encode("undefined"))>			
 		</cfif>
 		
@@ -929,7 +935,7 @@ Handles server side debugging for ColdFire
 	<cfset var colPos = 1 />
 	<cfset var i = 1 />
 	
-	<cfset var ignoreStructKeys = "_CF_HTMLASSEMBLER">
+	<cfset var ignoreStructKeys = "_CF_HTMLASSEMBLER,__COLDFIREVARIABLEVALUES__">
 	<cfset var ignoreFunctionPrefix = "coldfire_udf">
 	
 	<cfset var _data = arguments.data />
