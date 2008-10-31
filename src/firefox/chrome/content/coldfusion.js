@@ -731,7 +731,7 @@ const FormatterPlate = domplate(
 			tmpVal = (value.indexOf("{") == 0) ? value : "'" + value + "'";
 		} else if (type < 23) {
 			// handle text types
-			tmpVal = "'" + value.replace(/'/, "''") + "'";
+			tmpVal = "'" + value.toString().replace(/'/g, "''") + "'";
 		}		
 		return this.__escape__(tmpVal);		
 	},
