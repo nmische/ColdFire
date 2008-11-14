@@ -1,4 +1,4 @@
-<cfcomponent extends="coldfire.src.coldfusion.appcfc.CF8Application">
+<cfcomponent extends="coldfire.src.coldfusion.appcfc.cf8.Application">
 	
 	<cfset this.name = "ColdFireExample" />
 	<cfset this.clientManagement = "true" />
