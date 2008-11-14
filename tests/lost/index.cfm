@@ -166,6 +166,7 @@
 <cftrace category="LOST" var="flightNumber" />
 <cftrace category="LOST" var="stations" />
 <cftrace var="multilineVar" />
+<cftrace var="undefinedVar" />
 
 
 
