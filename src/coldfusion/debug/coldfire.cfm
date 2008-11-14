@@ -18,7 +18,8 @@
 					Even more work to support variables (nmische@gmail.com 9/21/2007)
 					Fixes to coldfire_udf_encode based on CFJSON (nmische@gmail.com 1/2/2008)
 					Change coldfire_udf_getGeneral to return query object (nmische@gmail.com 2/2/2008)
-					Added check for cf_revision, added coldfire_udf_error (nmische@gmail.com) 3/12/2008)
+					Added check for cf_revision, added coldfire_udf_error (nmische@gmail.com 3/12/2008)
+					Removed restriction on cflocation, added ignore keys for trace support (nmische@gmail.com 11/14/2008)
 					
 					
 Handles server side debugging for ColdFire
@@ -28,8 +29,7 @@ Handles server side debugging for ColdFire
 <!--- Check that ColdFire is enabled --->
 <cfif IsDebugMode()
 	and StructKeyExists(GetHttpRequestData().headers,"User-Agent")
-	and FindNoCase("ColdFire",GetHttpRequestData().headers["User-Agent"]) gt 0
-	and not GetPageContext().GetResponse().containsHeader("location")>
+	and FindNoCase("ColdFire",GetHttpRequestData().headers["User-Agent"]) gt 0>
 	
 	<!--- Do we have the correct version of the extension for this debug template --->
 	<cfif REFind("ColdFire/\d*\.\d*\.@CF_REVISION@\.\d*",GetHttpRequestData().headers["User-Agent"]) gt 0>
@@ -935,7 +935,7 @@ Handles server side debugging for ColdFire
 	<cfset var colPos = 1 />
 	<cfset var i = 1 />
 	
-	<cfset var ignoreStructKeys = "_CF_HTMLASSEMBLER,__COLDFIREVARIABLEVALUES__">
+	<cfset var ignoreStructKeys = "_CF_HTMLASSEMBLER,__COLDFIREVARIABLEVALUES__,__COLDFIRETRACEVALUES__,__COLDFIRETRACESTARTTIME__">
 	<cfset var ignoreFunctionPrefix = "coldfire_udf">
 	
 	<cfset var _data = arguments.data />

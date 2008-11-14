@@ -14,6 +14,8 @@
 	<li><a href="frames/frameset.cfm">Frames</a></li>
 	<li><a href="dumptests/index.cfm">Dump Tests</a></li>
 	<li><a href="domplate/index.cfm">Domplate</a></li>
+	<li><a href="cflocaiton/index.cfm">CFLocation</a></li>
+	<li><a href="trace/index.cfm">CFTrace</a></li>
 	<li><a href="lost/index.cfm" style="color: ##fff">LOST</a></li>
 </ul>
 </body>

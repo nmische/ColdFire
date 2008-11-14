@@ -1038,10 +1038,19 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 	traceRowTag:
 		FOR("row", "$rows",
 			TR({class: "$row.PRIORITY|getTraceClass"},
-				TD({class: "valueCell", width: "10%"},"$row.PRIORITY|formatPriority|safeCFSTR"),
-				TD({class: "valueCell", width: "10%", align: "right"},"$row.DELTA|formatTime"),
-				TD({class: "valueCell", width: "10%"},"$row.CATEGORY"),
-				TD({class: "valueCell", width: "70%"},"$row|formatMessage")                    
+				TD({class: "valueCell", valign:"top", width: "10%"},"$row.PRIORITY|formatPriority|safeCFSTR"),
+				TD({class: "valueCell", valign:"top", width: "10%", align: "right"},"$row.DELTA|formatTime"),
+				TD({class: "valueCell", valign:"top", width: "10%"},"$row.CATEGORY"),
+				TD({class: "valueCell", valign:"top", width: "70%"},
+					TABLE({cellpadding:0, cellspacing:0},
+						TBODY(							
+							TR({valign:"top"},
+								TD({valign:"top"},"$row.MESSAGE"),
+								TD({valign:"top",class:"traceValue"})								
+							)							
+						)					
+					)
+				)                    
 			)
 		),
 		
@@ -1545,6 +1554,14 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		//add trace rows
 		if (this.rowData.traceRows.length)
 			var row = this.traceRowTag.insertRows({rows: this.rowData.traceRows}, this.table.lastChild)[0];			
+		//now we need to format the result
+		var traceCell = null;	
+		for( var i = 0; i < this.rowData.traceRows.length; i++ ){			
+			if (this.rowData.traceRows && this.rowData.traceRows[i] && this.rowData.traceRows[i].RESULT) {
+				traceCell = getElementsByClass("traceValue", this.table, "td")[i];
+				FormatterPlate.dump.append( {value: eval('(' + this.rowData.traceRows[i].RESULT + ')')}, traceCell);
+			}			
+		}	
 	},
 	
 	renderTimerTable: function() {
@@ -1566,14 +1583,14 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		var vars = this.variables;	
 		if (vars.length)			
 			var row = this.varRowTag.insertRows({rows: vars}, this.table.lastChild)[0];		
-		// now we need to go build the var string
+		// now we need to format the variable
 		var varCell = null;	
 		for( var i = 0; i < vars.length; i++ ){			
 			if (this.rowData.variablesRows && this.rowData.variablesRows[i] && this.rowData.variablesRows[i].VALUE) {
 				varCell = getElementsByClass("varValue", this.table, "td")[i];
 				FormatterPlate.dump.append( {value: eval('(' + this.rowData.variablesRows[i].VALUE + ')')}, varCell);
 			}			
-		}				
+		}	
 	},
 	
 	showToolbox: function(row) {
