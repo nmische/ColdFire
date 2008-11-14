@@ -365,7 +365,7 @@ const FormatterPlate = domplate(
 		),
 				
 	simpleDiv:
-		DIV('$value'),
+		DIV(PRE('$value')),
 				
 	unknownDiv:
 		DIV('$value|formatString'),
