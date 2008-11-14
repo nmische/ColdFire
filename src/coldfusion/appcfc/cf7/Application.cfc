@@ -1,7 +1,7 @@
 <cfcomponent displayname="ColdFire Base Application CFC">
 	
 	<cffunction name="onRequestEnd" returntype="void">		
-		<cfif IsDefined("onRequest")>
+		<cfif IsDefined("onRequest") and IsDebugMode()>
 			<cfset copyColdFireVariables() />
 		</cfif>		
 	</cffunction>

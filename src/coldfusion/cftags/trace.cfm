@@ -4,7 +4,9 @@
 	<cfparam name="attributes.abort" type="boolean" default="false">
 
 	<!--- if we are using coldfire and tracing a variable, use enhanced coldfire tracing --->
-	<cfif StructKeyExists(attributes,"var")
+	<cfif 
+		IsDebugMode()
+		and StructKeyExists(attributes,"var")
 		and not attributes.inline
 		and not attributes.abort
 		and StructKeyExists(GetHttpRequestData().headers,"User-Agent")
