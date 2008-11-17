@@ -893,6 +893,15 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 			} catch (e) {
 				logger.logMessage(e);
 			}
+			
+			try{
+				if(ColdFire['enhanceTrace'])
+					subject.setRequestHeader("x-coldfire-enhance-trace", 
+						"true",
+						true);
+			} catch (e) {
+				logger.logMessage(e);
+			}
 					
 		}		 
 	},
@@ -998,6 +1007,25 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			TD({class: "valueCell bold", width: "10%", align: "right"}, "$totalTime|formatTime")		
 		),
 		
+	
+	/*
+	etDBSummaryRow:
+		TR(
+			TD(
+				DIV({class: "etDB"}),
+				DIV({class: "etTotal"})			
+			)
+		),	
+		
+	etCFCSummaryRow:
+		TR(
+			TD(
+				DIV({class: "etCFC"}),
+				DIV({class: "etTotal"})
+			)
+		),
+	*/	
+		
 	queryHeaderRow:
 		TR({class: "headerRow"},
 			TH({class: "headerCell", width: "10%"}, $CFSTR('QueryName')),
@@ -1036,6 +1064,16 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		),
 		
 	traceRowTag:
+		FOR("row", "$rows",
+			TR({class: "$row.PRIORITY|getTraceClass"},
+				TD({class: "valueCell", valign:"top", width: "10%"},"$row.PRIORITY|formatPriority|safeCFSTR"),
+				TD({class: "valueCell", valign:"top", width: "10%", align: "right"},"$row.DELTA|formatTime"),
+				TD({class: "valueCell", valign:"top", width: "10%"},"$row.CATEGORY"),
+				TD({class: "valueCell", valign:"top", width: "70%"},"$row|formatMessage")         
+			)
+		),
+		
+	traceRowEnhancedTag:
 		FOR("row", "$rows",
 			TR({class: "$row.PRIORITY|getTraceClass"},
 				TD({class: "valueCell", valign:"top", width: "10%"},"$row.PRIORITY|formatPriority|safeCFSTR"),
@@ -1229,6 +1267,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		return [
 			this.cfMenuOption("ParseQueryParams","parseParams"),
 			this.cfMenuOption("ShowLastRequest","showLastRequest"),
+			this.cfMenuOption("EnhanceTrace","enhanceTrace"),
 			"-",
 			{label: $CFSTR("ClearVariables"), nol10n: true, command: bindFixed(this.deleteVariables, this) }      
 		];
@@ -1552,16 +1591,26 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		//create header		
 		var headerRow =  this.traceHeaderRow.insertRows({}, this.table.firstChild)[0];
 		//add trace rows
-		if (this.rowData.traceRows.length)
-			var row = this.traceRowTag.insertRows({rows: this.rowData.traceRows}, this.table.lastChild)[0];			
-		//now we need to format the result
-		var traceCell = null;	
-		for( var i = 0; i < this.rowData.traceRows.length; i++ ){			
-			if (this.rowData.traceRows && this.rowData.traceRows[i] && this.rowData.traceRows[i].RESULT) {
-				traceCell = getElementsByClass("traceValue", this.table, "td")[i];
-				FormatterPlate.dump.append( {value: eval('(' + this.rowData.traceRows[i].RESULT + ')')}, traceCell);
+		if (this.rowData.traceRows.length) {
+			if (ColdFire['enhanceTrace']) {
+				var row = this.traceRowEnhancedTag.insertRows({rows: this.rowData.traceRows}, this.table.lastChild)[0];
+			} else {
+				var row = this.traceRowTag.insertRows({rows: this.rowData.traceRows}, this.table.lastChild)[0];
 			}			
-		}	
+		}
+						
+		//now we need to format the result if we are doing an enhanced trace
+		if (ColdFire['enhanceTrace']) {
+			var traceCell = null;
+			for (var i = 0; i < this.rowData.traceRows.length; i++) {
+				if (this.rowData.traceRows && this.rowData.traceRows[i] && this.rowData.traceRows[i].RESULT) {
+					traceCell = getElementsByClass("traceValue", this.table, "td")[i];
+					FormatterPlate.dump.append({
+						value: eval('(' + this.rowData.traceRows[i].RESULT + ')')
+					}, traceCell);
+				}
+			}
+		}
 	},
 	
 	renderTimerTable: function() {

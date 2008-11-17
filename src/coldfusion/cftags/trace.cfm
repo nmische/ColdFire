@@ -10,7 +10,8 @@
 		and not attributes.inline
 		and not attributes.abort
 		and StructKeyExists(GetHttpRequestData().headers,"User-Agent")
-		and FindNoCase("ColdFire",GetHttpRequestData().headers["User-Agent"]) gt 0>
+		and FindNoCase("ColdFire",GetHttpRequestData().headers["User-Agent"]) gt 0
+		and StructKeyExists(GetHttpRequestData().headers,"x-coldfire-enhance-trace")>
 					
 		<cfif not StructKeyExists(request,"__coldFireTraceValues__")>			
 			<cfset factory = CreateObject("java","coldfusion.server.ServiceFactory")>
