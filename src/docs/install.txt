@@ -1,0 +1,187 @@
+ColdFire Installtion Notes
+
+1.   Welcome
+2.   License and Credits
+3.   Contributors
+4.   Installation
+4.1. Firefox and Firebug
+4.2. ColdFire
+4.3. Optional Installations
+5.   Where ColdFire Does Not Work
+6.   Special Instructions for JBoss
+
+
+1. Welcome
+-----------------------------------------------------------------------
+
+Welcome to ColdFire, a ColdFusion debugger/Firebug extension meant to
+allow for nicer handling of debug information. For the latest releases
+and technical support, please go to the official ColdFire site:
+
+http://coldfire.riaforge.org
+
+If you like this project, please consider supporting the creators at
+their Amazon wishlists:
+
+Raymond Camden
+http://www.amazon.com/o/registry/2TCL1D08EZEYE
+
+Nathan Mische
+http://www.amazon.com/gp/registry/wishlist/1PMU5WXR9RZNJ/ref=wl_web/
+
+Adam Podolnick
+http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_web
+
+
+2. License and Credits
+-----------------------------------------------------------------------
+
+Copyright 2008 Raymond Camden/Adam Podolnick/Nathan Mische
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may
+not use this file except in compliance with the License. You may obtain
+a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+
+3. Contributors
+-----------------------------------------------------------------------
+
+Many people helped us create ColdFire. This list is not complete, so
+please know that this was a group effort and your feedback is always
+appreciated.
+
+-Thank you to Thomas Messier for the use of his JSON code.
+-Thank you to Sean Corfield for writing the JBoss documentation.
+-Thank you to Net Grow Web Design for the use of their JavaScript dump
+ method in earlier releases.
+
+
+4. Installation
+-----------------------------------------------------------------------
+
+4.1. Firefox and Firebug
+
+ColdFire is an extension to the Firebug Firefox extension. This means
+you must have both the Firefox web browser
+(http://www.mozilla.org/firefox) as well as the Firebug extension
+(www.getfirebug.com) installed. There are different version of the
+Firefox web browser and Firebug extension available. This version of
+ColdFire has been designed to work with Firefox 3 and Firebug 1.2.
+
+4.2 ColdFire
+
+To install the ColdFire extension, extract the .zip installation package
+to a folder on your computer. Next go to the File/Open dialog in Firefox
+and select the coldfire_v1.2.XX.XX.xpi, located in the firefox folder of
+the extracted installation package, and open it. Be sure to restart
+Firefox when asked.
+
+Next you need to find your ColdFusion installation folder. Typically
+this will be C:/ColdFusion8. ColdFire was tested on ColdFusion 8, but
+should work in ColdFusion 6 & 7. Under your ColdFusion installation
+folder, find the wwwroot/WEB-INF/debug folder. Copy the coldfire.cfm
+template located in the /coldfusion/debug folder of the installtion 
+pacage to this folder.
+
+Go to your ColdFusion Administractor, enable debugging, and select
+coldfire.cfm from the drop down. Ensure your IP is listed or that there
+is no IP restriction in place.
+
+Once you have done that you should then be able to view ColdFusion debug
+information from within it's tab in the Firebug tool. Obviously you need
+to hit a ColdFusion page to see the debugging information.
+
+4.3 Optional Installations and Files
+
+While the coldfire.cfm debugging template provides most of the
+functionality of ColdFire, there are certain enhancements which requrie
+additional files.
+
+-Variable Output-
+
+ColdFire provides a variables tab which allows you to dump variables to
+the extenation. If you wish to use this feature with an application that
+uses the onRequest method of Application.cfc you must extend one of the
+Application.cfc components provided in this installation package. Note
+that if your application uses onRequestEnd you must call
+super.onRequestEnd() as part of your application's onRequestEnd method.
+Two Application.cfc components are provided in the coldfusion/appcfc
+folder of the installation package, one for ColdFusion MX 7 and one for
+ColdFusion 8.
+
+-Enhanced Tracing-
+
+NOTE: Enhanced tracing involves altering your ColdFuison installation.
+Proceed with caution and be sure to backup all modified files!
+
+Another optional feature of ColdFire is enhanced tracing. To enable this
+feature you must install a custom trace.cfm tag. To install this tag
+find the wwwroot/WEB-INF/cftags folder under you ColdFusion installation
+folder. In this folder there should be a template named trace.cfm. Make
+a backup of this file, then rename it to trace_adobe.cfm and copy the
+trace.cfm tag, found in the coldfusion/cftags folder of the installation
+package, to the cftags folder.
+
+
+5. Where ColdFire Does Not Work
+-----------------------------------------------------------------------
+
+ColdFire makes use of CFHEADER to supply debug information to the
+browser. Because of this there are certain places where ColdFire will
+not be able to work. First - if you use CFFLUSH anywhere on the page,
+ColdFire is unable to add header information to the request. Secondly -
+there are situations where certain tags will implicitly flush output.
+One example is CFTIMER/type="inline". Any use of this tag and attribute
+combination will result in ColdFire not returning any data.
+
+As noted in the previos section, the variables tab will not work for
+applications using the onRequest method of Application.cfc unless the
+Applicaiton.cfc extends one of the ColdFire Application components.
+
+
+6. Special Instructions for JBoss
+-----------------------------------------------------------------------
+
+JBoss has a default maximum HTTP header size of 4Kb in total. You can
+modify it by editing the following file:
+
+{jbossdir}/server/{servername}/deploy/jbossweb-tomcat55.sar/server.xml
+
+You need to add (or modify) the maxHttpHeaderSize to allow larger
+packets. Here's the top portion of a modified server.xml file (set to
+allow 64Kb total headers so it still won't allow giant swathes of
+execution time reports but it should cover most cases).
+
+<Server>
+
+<!-- 
+	Use a custom version of StandardService that allows the connectors
+	to be started independent of the normal lifecycle start to allow web
+	apps to be deployed before starting the connectors. 
+--> 
+
+<Service
+	name="jboss.web" 
+	className="org.jboss.web.tomcat.tc5.StandardService">
+
+<!-- A HTTP/1.1 Connector on port 8080 --> 
+<Connector 
+	port="8080"
+	address="${jboss.bind.address}" 
+	maxThreads="250" 
+	strategy="ms"
+	maxHttpHeaderSize="65536" 
+	emptySessionPath="true" 
+	enableLookups="false"
+	redirectPort="8443" 
+	acceptCount="100" 
+	connectionTimeout="20000"
+	disableUploadTimeout="true" />

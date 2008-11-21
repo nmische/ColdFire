@@ -20,6 +20,24 @@
 	font-weight: bold;
 }
 
+/* override firebug style */
+.headerCellBox {
+    padding-right: 10px;
+    border-left: none;
+    border-right: none;
+}
+
+/* summary */
+.etDB {
+	background: #BBBBBB;
+    border: none;
+}
+
+.etTotal {
+	background: #D6D6D6;
+    border: none;
+}
+
 /* trace */
 .traceWarning {
 	background-color:#FFFACD;
@@ -68,7 +86,6 @@
 }
 
 /* dump */
-
 table.cfdump_wddx,
 table.cfdump_xml,
 table.cfdump_struct,

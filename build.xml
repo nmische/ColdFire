@@ -110,6 +110,7 @@
         <!-- set these values -->
 		<property name="install.dir" value="OperatingSystemPathToTestPofile"/>
        	<property name="cfserver.debug.dir" value="OperatingSystemPathToColdFusionDebugTemplates" />
+		<property name="cfserver.cftags.dir" value="OperatingSystemPathToColdFusionCFTagsTemplates" />
 		<property name="profile.name" value="NameOfTestProfile" />
     </target>
 
@@ -134,6 +135,8 @@
 	<target name="expand-templates" depends="expand-install-template" description="fill in version info" />
 
 	<!-- targets for incremental builds -->
+	
+	
 
 	<target name="copy-to-extensions" depends="clean-reg" description="copies extension files to profle">
         <copy todir="${install.dir}/extensions/${extension.id}" >
@@ -145,15 +148,24 @@
            </filterchain>
         </copy>
     </target>
+	
+	<target name="check-trace" description="checks that a backup of trace.cfm exists as trace_adobe.cfm">
+		<available file="${cfserver.cftags.dir}/trace_adobe.cfm" property="trace_adobe.present" />
+	</target>
+	
+	<target name="backup-trace" description="checks that a backup of trace.cfm exists as trace_adobe.cfm" unless="trace_adobe.present">
+		<copy file="${cfserver.cftags.dir}/trace.cfm" tofile="${cfserver.cftags.dir}/trace_adobe.cfm" />
+	</target>
 
-	<target name="copy-to-cfserver" depends="version" description="copies coldfusion debug template to server">
-        <copy file="${src.cf.dir}/coldfire.cfm" tofile="${cfserver.debug.dir}/coldfire.cfm" overwrite="true">
+	<target name="copy-to-cfserver" depends="version,check-trace,backup-trace" description="copies coldfusion debug template to server">
+        <copy file="${src.cf.dir}/debug/coldfire.cfm" tofile="${cfserver.debug.dir}/coldfire.cfm" overwrite="true">
                <filterchain>
                        <replacetokens>
                             <token key="CF_REVISION" value="${coldfusion.revision}"/>
                        </replacetokens>
                </filterchain>
         </copy>
+		<copy file="${src.cf.dir}/cftags/trace.cfm" tofile="${cfserver.cftags.dir}/trace.cfm" overwrite="true" />
     </target>
 
 	<target name="incremental-ff" depends="version, expand-templates, copy-to-extensions" description="builds a development version of the firefox extension and copies to profile" />
@@ -175,13 +187,16 @@
 
 	<target name="build-coldfusion" depends="set-up-build" description="prepares coldfusion debug template for distribution">
 		<mkdir dir="${build.cf.dir}" />
-		<copy file="${src.cf.dir}/coldfire.cfm" tofile="${build.cf.dir}/coldfire.cfm" overwrite="true">
+		<copy file="${src.cf.dir}/debug/coldfire.cfm" tofile="${build.cf.dir}/debug/coldfire.cfm" overwrite="true">
                <filterchain>
                        <replacetokens>
                             <token key="CF_REVISION" value="${coldfusion.revision}"/>
                        </replacetokens>
                </filterchain>
         </copy>
+		<copy file="${src.cf.dir}/cftags/trace.cfm" tofile="${build.cf.dir}/cftags/trace.cfm" overwrite="true" />
+		<copy file="${src.cf.dir}/appcfc/cf7/Application.cfc" tofile="${build.cf.dir}/appcfc/cf7/Application.cfc" overwrite="true" />
+		<copy file="${src.cf.dir}/appcfc/cf8/Application.cfc" tofile="${build.cf.dir}/appcfc/cf8/Application.cfc" overwrite="true" />
 	</target>
 
 	<target name="build-chrome-jar" depends="build-coldfusion" description="create the xpi chrome contents including the chrome jar">
@@ -267,16 +282,18 @@
 
 	<target name="set-up-dist" depends="build-xpi" description="sets up dist directory">
 		<mkdir dir="${dist.dir}" />
+		<mkdir dir="${dist.dir}/coldfusion" />
+		<mkdir dir="${dist.dir}/firefox" />
 	</target>
 
 	<target name="make-xpi-dist" depends="set-up-dist" description="generate the xpi for distribution">
-		<zip destfile="${dist.dir}/${name}_v${version}.xpi">
+		<zip destfile="${dist.dir}/firefox/${name}_v${version}.xpi">
 			<zipfileset dir="${build.ff.dir}" includes="**" />
 		</zip>
 	</target>
 	
 	<target name="make-coldfuion-dist" depends="make-xpi-dist" description="copy the codfusion template for distribution">
-		<copy todir="${dist.dir}">
+		<copy todir="${dist.dir}/coldfusion">
 			<fileset dir="${build.cf.dir}" />
 		</copy>
 	</target>

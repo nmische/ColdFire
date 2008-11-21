@@ -341,4 +341,11 @@ function getElementsByClass(searchClass,node,tag)
 
 this.getElementsByClass = getElementsByClass;
 
+function safeParseFloat(val)
+{
+	return (isNaN(parseFloat(val))) ? 0 : parseFloat(val);
+}
+
+this.safeParseFloat = safeParseFloat;
+
 }).apply(FBL);

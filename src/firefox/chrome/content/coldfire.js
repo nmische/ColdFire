@@ -46,7 +46,8 @@ const cfPrefNames =
     "parseParams",
 	"logMsgs",
 	"maxQueueRequests",
-	"showLastRequest"
+	"showLastRequest",
+	"enhanceTrace"
 ];
 
 var cfOptionUpdateMap = {};
