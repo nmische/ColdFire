@@ -928,7 +928,12 @@ RowData.prototype =
 	traceRows: [],
 	timerRows: [],
 	variablesRows: [],
-	
+	totalET: 0,
+	dbET: 0,
+	templateET: 0,
+	ctemplateET: 0,
+	cfcET: 0,
+		
 	clear: function() {
 		this.generalRows = [];
 		this.etRows = [];
@@ -936,6 +941,11 @@ RowData.prototype =
 		this.traceRows = [];
 		this.timerRows = [];
 		this.variablesRows = [];
+		this.totalET = 0;
+		this.dbET = 0;
+		this.templateET = 0;
+		this.ctemplateET = 0;
+		this.cfcET = 0;
 	}
 	
 };
@@ -954,9 +964,10 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 				id: "coldfirePanelCSS" }),
 		
 	tableTag:
-		TABLE({width: "100%", cellpadding: 2, cellspacing: 0},
+		TABLE({class: "panelTable", width: "100%", cellpadding: 2, cellspacing: 0},
 			THEAD(),
-			TBODY()
+			TBODY({class: "panelTableBody"}),
+			TFOOT()
 		),
 		
 	generalHeaderRow:
@@ -982,12 +993,37 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		),
 		
 	etHeaderRow:
-		TR({class: "headerRow"},
-			TH({class: "headerCell", width: "20%"}, $CFSTR('Type')),
-			TH({class: "headerCell", width: "35%"}, $CFSTR('File')),
-			TH({class: "headerCell", width: "25%"}, $CFSTR('Method')),
-			TH({class: "headerCell", width: "10%"}, $CFSTR('TotalInstances')),
-			TH({class: "headerCell", width: "10%"}, $CFSTR('AvgExecTime'))		
+		TR({class: "headerRow", onclick: "$onHeaderClick"},
+			TH({class: "headerCell alphaValue", width: "20%"},
+				DIV({class: "headerCellBox"},
+					$CFSTR('Type')
+				)
+			),
+			TH({class: "headerCell alphaValue", width: "35%"},
+				DIV({class: "headerCellBox"},
+					$CFSTR('File')
+				)
+			),
+			TH({class: "headerCell alphaValue", width: "25%"},
+				DIV({class: "headerCellBox"},
+					$CFSTR('Method')
+				)
+			),
+			TH({class: "headerCell", width: "10%"},
+				DIV({class: "headerCellBox"},
+					$CFSTR('TotalInstances')
+				)
+			),
+			TH({class: "headerCell", width: "5%"},
+				DIV({class: "headerCellBox"},
+					$CFSTR('AvgTime')
+				)
+			),
+			TH({class: "headerCell", width: "5%"},
+				DIV({class: "headerCellBox"},
+					$CFSTR('TotalTime')
+				)
+			)
 		),
 		
 	etRowTag:
@@ -997,44 +1033,73 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 				TD({class: "valueCell", width: "35%"},"$row.TEMPLATE"),
 				TD({class: "valueCell", width: "25%"},"$row.METHOD"),
 				TD({class: "valueCell", width: "10%", align: "right"},"$row.TOTALINSTANCES"),
-				TD({class: "valueCell", width: "10%", align: "right"},"$row.AVGTIME|formatTime")                    
+				TD({class: "valueCell", width: "5%", align: "right"},"$row.AVGTIME|formatTime"),
+				TD({class: "valueCell", width: "5%", align: "right"},"$row.TOTALTIME|formatTime")                    
 			)
 		),
-		
+	
+	etOtherRow:
+		TR(
+			TD({class: "valueCell", width: "90%", colspan: 4}, $CFSTR('OtherTime')),
+			TD({class: "valueCell", width: "10%", align: "right", colspan: 2}, "$time|formatTime")		
+		),	
+	
 	etTotalRow:
 		TR(
 			TD({class: "valueCell bold", width: "90%", colspan: 4}, $CFSTR('TotalExecTime')),
-			TD({class: "valueCell bold", width: "10%", align: "right"}, "$totalTime|formatTime")		
-		),
-		
+			TD({class: "valueCell bold", width: "10%", align: "right", colspan: 2}, "$totalTime|formatTime")		
+		),	
 	
-	/*
-	etDBSummaryRow:
+	etDBRow:
 		TR(
-			TD(
-				DIV({class: "etDB"}),
-				DIV({class: "etTotal"})			
-			)
+			TD({class: "valueCell bold", width: "90%", colspan: 4}, $CFSTR('DBExecTime')),
+			TD({class: "valueCell bold", width: "10%", align: "right", colspan: 2}, "$times|formatDBTime")		
 		),	
 		
-	etCFCSummaryRow:
+	etCFCRow:
 		TR(
-			TD(
-				DIV({class: "etCFC"}),
-				DIV({class: "etTotal"})
-			)
-		),
-	*/	
+			TD({class: "valueCell bold", width: "90%", colspan: 4}, $CFSTR('CFCExecTime')),
+			TD({class: "valueCell bold", width: "10%", align: "right", colspan: 2}, "$times|formatCFCTime")		
+		),	
+		
 		
 	queryHeaderRow:
-		TR({class: "headerRow"},
-			TH({class: "headerCell", width: "10%"}, $CFSTR('QueryName')),
-			TH({class: "headerCell", width: "10%"}, $CFSTR('DataSource')),			
-			TH({class: "headerCell", width: "7%"},  $CFSTR('Time')),
-			TH({class: "headerCell", width: "7%"}, $CFSTR('Records')),
-			TH({class: "headerCell", width: "7%"}, $CFSTR('Cached')),
-			TH({class: "headerCell", width: "49%"}, $CFSTR('Template')),
-			TH({class: "headerCell", width: "10%"},  $CFSTR('Timestamp'))					
+		TR({class: "headerRow queryTable", onclick: "$onHeaderClick"},
+			TH({class: "headerCell alphaValue", width: "10%"},
+				DIV({class: "headerCellBox"},
+					$CFSTR('QueryName')
+				)
+			),
+			TH({class: "headerCell alphaValue", width: "10%"},
+				DIV({class: "headerCellBox"},
+					$CFSTR('DataSource')
+				)
+			),			
+			TH({class: "headerCell", width: "7%"},
+				DIV({class: "headerCellBox"},
+					$CFSTR('Time')
+				)
+			),
+			TH({class: "headerCell", width: "7%"},
+				DIV({class: "headerCellBox"},
+					$CFSTR('Records')
+				)
+			),
+			TH({class: "headerCell alphaValue", width: "7%"}, 
+				DIV({class: "headerCellBox"},
+					$CFSTR('Cached')
+				)
+			),
+			TH({class: "headerCell alphaValue", width: "49%"},
+				DIV({class: "headerCellBox"},
+					$CFSTR('Template')
+				)
+			),
+			TH({class: "headerCell", width: "10%"},
+				DIV({class: "headerCellBox"},
+					$CFSTR('Timestamp')
+				)
+			)					
 		),
 		
 	queryRowTag:
@@ -1056,11 +1121,27 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		),
 		
 	traceHeaderRow:
-		TR({class: "headerRow"},
-			TH({class: "headerCell", width: "10%"}, $CFSTR('Type')),
-			TH({class: "headerCell", width: "10%"}, $CFSTR('Delta')),
-			TH({class: "headerCell", width: "10%"}, $CFSTR('Category')),
-			TH({class: "headerCell", width: "70%"}, $CFSTR('MessageResult'))	
+		TR({class: "headerRow", onclick: "$onHeaderClick"},
+			TH({class: "headerCell alphaValue", width: "10%"},
+				DIV({class: "headerCellBox"},
+					$CFSTR('Type')
+				)
+			),
+			TH({class: "headerCell", width: "10%"},
+				DIV({class: "headerCellBox"},
+					$CFSTR('Delta')
+				)
+			),
+			TH({class: "headerCell alphaValue", width: "10%"}, 
+				DIV({class: "headerCellBox"},
+					$CFSTR('Category')
+				)
+			),
+			TH({class: "headerCell alphaValue", width: "70%"}, 
+				DIV({class: "headerCellBox"},
+					$CFSTR('MessageResult')
+				)
+			)	
 		),
 		
 	traceRowTag:
@@ -1093,9 +1174,17 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		),
 		
 	timerHeaderRow:
-		TR({class: "headerRow"},
-			TH({class: "headerCell", width: "90%"}, $CFSTR('Message')),
-			TH({class: "headerCell", width: "10%"},  $CFSTR('Duration'))
+		TR({class: "headerRow", onclick: "$onHeaderClick"},
+			TH({class: "headerCell alphaValue", width: "90%"},
+				DIV({class: "headerCellBox"},
+					$CFSTR('Message')
+				)
+			),
+			TH({class: "headerCell", width: "10%"},  
+				DIV({class: "headerCellBox"},
+					$CFSTR('Duration')
+				)
+			)
 		),
 	
 	timerRowTag:
@@ -1107,9 +1196,17 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		),
 		
 	varHeaderRow:
-		TR({class: "headerRow"},
-			TH({class: "headerCell", width: "20%"}, $CFSTR('Variable')),
-			TH({class: "headerCell", width: "80%"},  $CFSTR('Value'))
+		TR({class: "headerRow", onclick: "$onHeaderClick"},
+			TH({class: "headerCell alphaValue", width: "20%"},
+				DIV({class: "headerCellBox"},
+					$CFSTR('Variable')
+				)
+			),
+			TH({class: "headerCell alphaValue", width: "80%"},
+				DIV({class: "headerCellBox"},
+					$CFSTR('Value')
+				)
+			)
 		),
 	
 	varRowTag:
@@ -1198,6 +1295,18 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		}
 		return msg;
 	},
+			
+	formatDBTime: function(times)
+	{
+		var per = parseInt(times.dbET * 100 / times.totalET);
+		return times.dbET + "ms (" + per + "%)";
+	},
+	
+	formatCFCTime: function(times)
+	{	
+		var per = parseInt(times.cfcET * 100 / times.totalET);
+		return times.cfcET + "ms (" + per + "%)";
+	},	
 	
 	// extends panel	
 	
@@ -1289,7 +1398,6 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 	
 	file: null,
 	queue: [],
-	totalET: null,
 	variables: [],		
 	rowData: new RowData(),
 	
@@ -1297,7 +1405,6 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
     {
 		this.file = null;
 		this.queue = [];
-		this.totalET = null;
 		this.variables = [];  
 		this.rowData.clear();
     },
@@ -1390,7 +1497,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		//general rows
 		for( var i = 0; i < theObj.generalObj.DATA.LABEL.length; i++ ){
 			if(theObj.generalObj.DATA.LABEL[i] == 'TotalExecTime') {
-				this.totalET = theObj.generalObj.DATA.VALUE[i]
+				this.rowData.totalET = theObj.generalObj.DATA.VALUE[i]
 				continue;
 			}
 			var temp = {
@@ -1404,6 +1511,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		try{
 		//query rows		
 		for( var i = 0; i < theObj.queriesObj.DATA.DATASOURCE.length; i++ ){
+			this.rowData.dbET += theObj.queriesObj.DATA.ET[i];			
 			var query = {
 				DATASOURCE: theObj.queriesObj.DATA.DATASOURCE[i],
 				ET: theObj.queriesObj.DATA.ET[i],
@@ -1424,6 +1532,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		try{
 		//et rows	  
 		for(var i = 0; i < theObj.templatesObj.DATA.TOTALTIME.length; i++){
+			this.rowData.templateET += theObj.templatesObj.DATA.TOTALTIME[i];
 			var temp = { 
 				TYPE: "Template",
 				TOTALTIME: theObj.templatesObj.DATA.TOTALTIME[i],
@@ -1435,6 +1544,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			this.rowData.etRows.push(temp);
 		}
 		for(var i = 0; i < theObj.ctemplatesObj.DATA.TOTALTIME.length; i++){
+			this.rowData.ctemplateET += theObj.ctemplatesObj.DATA.TOTALTIME[i];
 			var temp = { 
 				TYPE: "Child Template / Tag",
 				TOTALTIME: theObj.ctemplatesObj.DATA.TOTALTIME[i],
@@ -1446,6 +1556,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			this.rowData.etRows.push(temp);
 		}
 		for(var i = 0; i < theObj.cfcsObj.DATA.TOTALTIME.length; i++){
+			this.rowData.cfcET += theObj.cfcsObj.DATA.TOTALTIME[i];
 			var temp = { 
 				TYPE: "CFC",
 				TOTALTIME: theObj.cfcsObj.DATA.TOTALTIME[i],
@@ -1542,7 +1653,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		}
 		//add general rows  
 		if(this.rowData.generalRows.length)
-			var row = this.generalRowTag.insertRows({rows: this.rowData.generalRows}, this.table.lastChild)[0];			
+			var row = this.generalRowTag.insertRows({rows: this.rowData.generalRows}, this.table.childNodes[1])[0];			
 	},
 	
 	renderETTable: function() {
@@ -1552,9 +1663,27 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		var headerRow =  this.etHeaderRow.insertRows({}, this.table.firstChild)[0];
 		//add et rows
 		if(this.rowData.etRows.length)
-			var row = this.etRowTag.insertRows({rows: this.rowData.etRows}, this.table.lastChild)[1];		
-		if(this.totalET != null) 
-			var totalRow = this.etTotalRow.insertRows({totalTime: this.totalET}, row)[0];
+			var row = this.etRowTag.insertRows({rows: this.rowData.etRows}, this.table.childNodes[1])[0];
+		//other time row
+		var otherRow = this.etOtherRow.insertRows({time: this.rowData.totalET - this.rowData.templateET - this.rowData.ctemplateET - this.rowData.cfcET}, this.table.lastChild)[0];
+		//total row
+		var totalRow = this.etTotalRow.insertRows({totalTime: this.rowData.totalET}, otherRow)[0];
+		//db row 
+		var dbRow = this.etDBRow.insertRows({
+			times: {
+				totalET: this.rowData.totalET,
+				dbET: this.rowData.dbET
+			}
+		}, totalRow)[0];
+		//cfc row
+		var cfcRow = this.etCFCRow.insertRows({
+			times:{
+				totalET: this.rowData.totalET, 
+				templateET: this.rowData.templateET, 
+				ctemplateET: this.rowData.ctemplateET, 
+				cfcET: this.rowData.cfcET
+			}
+		}, dbRow)[0];
 	},
 	
 	renderDBTable: function() {				
@@ -1566,7 +1695,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		var rowNum = 0;
 		//add db rows
 		if (this.rowData.queryRows.length) {
-			var row = this.queryRowTag.insertRows({rows: this.rowData.queryRows}, this.table.lastChild)[0];
+			var row = this.queryRowTag.insertRows({rows: this.rowData.queryRows}, this.table.childNodes[1])[0];
 			do {
 				newRow = this.querySqlTag.insertRows({row: this.rowData.queryRows[rowNum]},row)[0];
 				// build SQL string
@@ -1593,9 +1722,9 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		//add trace rows
 		if (this.rowData.traceRows.length) {
 			if (ColdFire['enhanceTrace']) {
-				var row = this.traceRowEnhancedTag.insertRows({rows: this.rowData.traceRows}, this.table.lastChild)[0];
+				var row = this.traceRowEnhancedTag.insertRows({rows: this.rowData.traceRows}, this.table.childNodes[1])[0];
 			} else {
-				var row = this.traceRowTag.insertRows({rows: this.rowData.traceRows}, this.table.lastChild)[0];
+				var row = this.traceRowTag.insertRows({rows: this.rowData.traceRows}, this.table.childNodes[1])[0];
 			}			
 		}
 						
@@ -1620,7 +1749,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		var headerRow =  this.timerHeaderRow.insertRows({}, this.table.firstChild)[0];
 		//add timer rows
 		if (this.rowData.timerRows.length)
-			var row = this.timerRowTag.insertRows({rows: this.rowData.timerRows}, this.table.lastChild)[0];		
+			var row = this.timerRowTag.insertRows({rows: this.rowData.timerRows}, this.table.childNodes[1])[0];		
 	},
 	
 	renderVariablesTable: function() {		
@@ -1631,7 +1760,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		//add variable rows
 		var vars = this.variables;	
 		if (vars.length)			
-			var row = this.varRowTag.insertRows({rows: vars}, this.table.lastChild)[0];		
+			var row = this.varRowTag.insertRows({rows: vars}, this.table.childNodes[1])[0];		
 		// now we need to format the variable
 		var varCell = null;	
 		for( var i = 0; i < vars.length; i++ ){			
@@ -1684,6 +1813,126 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		if (!variableRow) 
 			this.showToolbox(null);			
 	},
+	
+	onHeaderClick: function(event) {
+		var table = getAncestorByClass(event.target, "panelTable");
+        var header = getAncestorByClass(event.target, "headerCell");
+		var queryTable = getAncestorByClass(event.target, "queryTable");
+        if (!header)
+            return;
+
+        var numerical = !hasClass(header, "alphaValue");
+
+        var colIndex = 0;
+        for (header = header.previousSibling; header; header = header.previousSibling)
+            ++colIndex;
+
+		if (queryTable) {
+			this.sortQueries(table, colIndex, numerical);
+		} else {
+			this.sort(table, colIndex, numerical);
+		}
+        
+	},
+	
+	sort: function(table, colIndex, numerical)
+    {
+        var tbody = getChildByClass(table, "panelTableBody");
+
+        var values = [];
+        for (var row = tbody.childNodes[0]; row; row = row.nextSibling)
+        {
+            var cell = row.childNodes[colIndex];
+            var value = numerical ? parseFloat(cell.textContent) : cell.textContent;
+            values.push({row: row, value: value});
+        }
+
+        values.sort(function(a, b) { return a.value < b.value ? -1 : 1; });
+
+        var headerRow = table.firstChild.firstChild;
+        var headerSorted = getChildByClass(headerRow, "headerSorted");
+        removeClass(headerSorted, "headerSorted");
+
+        var header = headerRow.childNodes[colIndex];
+        setClass(header, "headerSorted");
+
+        if (!header.sorted || header.sorted == 1)
+        {
+            removeClass(header, "sortedDescending");
+            setClass(header, "sortedAscending");
+
+            header.sorted = -1;
+
+            for (var i = 0; i < values.length; ++i) {
+                values[i].row.setAttribute("odd", (i % 2));
+                tbody.appendChild(values[i].row);
+            }
+        }
+        else
+        {
+            removeClass(header, "sortedAscending");
+            setClass(header, "sortedDescending");
+
+            header.sorted = 1;
+
+            for (var i = values.length-1; i >= 0; --i) {
+                values[i].row.setAttribute("odd", (Math.abs(i-values.length-1) % 2));
+                tbody.appendChild(values[i].row);
+            }
+        }
+    },
+	
+	sortQueries: function(table, colIndex, numerical)
+    {
+        var tbody = getChildByClass(table, "panelTableBody");
+
+        var values = [];
+        for (var row = tbody.childNodes[0]; row; row = row.nextSibling.nextSibling)
+        {
+            var sqlRow = row.nextSibling;
+			var cell = row.childNodes[colIndex];
+            var value = numerical ? safeParseFloat(cell.textContent) : cell.textContent;
+            values.push({rows: [row, sqlRow], value: value});
+        }
+
+        values.sort(function(a, b) { return a.value < b.value ? -1 : 1; });
+
+        var headerRow = table.firstChild.firstChild;
+        var headerSorted = getChildByClass(headerRow, "headerSorted");
+        removeClass(headerSorted, "headerSorted");
+
+        var header = headerRow.childNodes[colIndex];
+        setClass(header, "headerSorted");
+
+        if (!header.sorted || header.sorted == 1)
+        {
+            removeClass(header, "sortedDescending");
+            setClass(header, "sortedAscending");
+
+            header.sorted = -1;
+
+            for (var i = 0; i < values.length; ++i) {
+                values[i].rows[0].setAttribute("odd", (i % 2));
+                tbody.appendChild(values[i].rows[0]);
+				values[i].rows[1].setAttribute("odd", (i % 2));
+                tbody.appendChild(values[i].rows[1]);
+            }
+        }
+        else
+        {
+            removeClass(header, "sortedAscending");
+            setClass(header, "sortedDescending");
+
+            header.sorted = 1;
+
+            for (var i = values.length-1; i >= 0; --i) {
+                values[i].rows[0].setAttribute("odd", (Math.abs(i-values.length-1) % 2));
+                tbody.appendChild(values[i].rows[0]);
+				values[i].rows[1].setAttribute("odd", (Math.abs(i-values.length-1) % 2));
+                tbody.appendChild(values[i].rows[1]);
+            }
+        }
+    },
 	
 	onChangeReq: function(event){
 		var select = event.target;
