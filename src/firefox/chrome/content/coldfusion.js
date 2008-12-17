@@ -1298,13 +1298,17 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			
 	formatDBTime: function(times)
 	{
-		var per = parseInt(times.dbET * 100 / times.totalET);
+		var per = 0;
+		if (times.totalET > 0)
+			per = parseInt(times.dbET * 100 / times.totalET);
 		return times.dbET + "ms (" + per + "%)";
 	},
 	
 	formatCFCTime: function(times)
 	{	
-		var per = parseInt(times.cfcET * 100 / times.totalET);
+		var per = 0;
+		if (times.totalET > 0)
+			per = parseInt(times.cfcET * 100 / times.totalET);
 		return times.cfcET + "ms (" + per + "%)";
 	},	
 	
@@ -1497,7 +1501,8 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		//general rows
 		for( var i = 0; i < theObj.generalObj.DATA.LABEL.length; i++ ){
 			if(theObj.generalObj.DATA.LABEL[i] == 'TotalExecTime') {
-				this.rowData.totalET = theObj.generalObj.DATA.VALUE[i]
+				if (!isNaN(parseInt(theObj.generalObj.DATA.VALUE[i])))
+					this.rowData.totalET = parseInt(theObj.generalObj.DATA.VALUE[i]);
 				continue;
 			}
 			var temp = {
@@ -1511,7 +1516,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		try{
 		//query rows		
 		for( var i = 0; i < theObj.queriesObj.DATA.DATASOURCE.length; i++ ){
-			this.rowData.dbET += theObj.queriesObj.DATA.ET[i];			
+			this.rowData.dbET += parseInt(theObj.queriesObj.DATA.ET[i]);			
 			var query = {
 				DATASOURCE: theObj.queriesObj.DATA.DATASOURCE[i],
 				ET: theObj.queriesObj.DATA.ET[i],
@@ -1532,7 +1537,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		try{
 		//et rows	  
 		for(var i = 0; i < theObj.templatesObj.DATA.TOTALTIME.length; i++){
-			this.rowData.templateET += theObj.templatesObj.DATA.TOTALTIME[i];
+			this.rowData.templateET += parseInt(theObj.templatesObj.DATA.TOTALTIME[i]);
 			var temp = { 
 				TYPE: "Template",
 				TOTALTIME: theObj.templatesObj.DATA.TOTALTIME[i],
@@ -1544,7 +1549,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			this.rowData.etRows.push(temp);
 		}
 		for(var i = 0; i < theObj.ctemplatesObj.DATA.TOTALTIME.length; i++){
-			this.rowData.ctemplateET += theObj.ctemplatesObj.DATA.TOTALTIME[i];
+			this.rowData.ctemplateET += parseInt(theObj.ctemplatesObj.DATA.TOTALTIME[i]);
 			var temp = { 
 				TYPE: "Child Template / Tag",
 				TOTALTIME: theObj.ctemplatesObj.DATA.TOTALTIME[i],
@@ -1556,7 +1561,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			this.rowData.etRows.push(temp);
 		}
 		for(var i = 0; i < theObj.cfcsObj.DATA.TOTALTIME.length; i++){
-			this.rowData.cfcET += theObj.cfcsObj.DATA.TOTALTIME[i];
+			this.rowData.cfcET += parseInt(theObj.cfcsObj.DATA.TOTALTIME[i]);
 			var temp = { 
 				TYPE: "CFC",
 				TOTALTIME: theObj.cfcsObj.DATA.TOTALTIME[i],
@@ -1608,6 +1613,11 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			this.rowData.variablesRows.push(variable);
 		}
 		}catch(e){ logger.logMessage(e) }
+		
+		//total exection time
+		if (this.rowData.totalET == 0) {
+			this.rowData.totalET = this.rowData.dbET + this.rowData.cfcET + this.rowData.templateET + this.rowData.ctemplateET;
+		}
 		
 	},
 	
