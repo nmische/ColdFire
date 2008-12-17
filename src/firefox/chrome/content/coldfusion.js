@@ -1672,28 +1672,35 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		//create header		
 		var headerRow =  this.etHeaderRow.insertRows({}, this.table.firstChild)[0];
 		//add et rows
-		if(this.rowData.etRows.length)
-			var row = this.etRowTag.insertRows({rows: this.rowData.etRows}, this.table.childNodes[1])[0];
-		//other time row
-		var otherRow = this.etOtherRow.insertRows({time: this.rowData.totalET - this.rowData.templateET - this.rowData.ctemplateET - this.rowData.cfcET}, this.table.lastChild)[0];
-		//total row
-		var totalRow = this.etTotalRow.insertRows({totalTime: this.rowData.totalET}, otherRow)[0];
-		//db row 
-		var dbRow = this.etDBRow.insertRows({
-			times: {
-				totalET: this.rowData.totalET,
-				dbET: this.rowData.dbET
-			}
-		}, totalRow)[0];
-		//cfc row
-		var cfcRow = this.etCFCRow.insertRows({
-			times:{
-				totalET: this.rowData.totalET, 
-				templateET: this.rowData.templateET, 
-				ctemplateET: this.rowData.ctemplateET, 
-				cfcET: this.rowData.cfcET
-			}
-		}, dbRow)[0];
+		if (this.rowData.etRows.length) {
+			var row = this.etRowTag.insertRows({
+				rows: this.rowData.etRows
+			}, this.table.childNodes[1])[0];
+			//other time row
+			var otherRow = this.etOtherRow.insertRows({
+				time: this.rowData.totalET - this.rowData.templateET - this.rowData.ctemplateET - this.rowData.cfcET
+			}, this.table.lastChild)[0];
+			//total row
+			var totalRow = this.etTotalRow.insertRows({
+				totalTime: this.rowData.totalET
+			}, otherRow)[0];
+			//db row 
+			var dbRow = this.etDBRow.insertRows({
+				times: {
+					totalET: this.rowData.totalET,
+					dbET: this.rowData.dbET
+				}
+			}, totalRow)[0];
+			//cfc row
+			var cfcRow = this.etCFCRow.insertRows({
+				times: {
+					totalET: this.rowData.totalET,
+					templateET: this.rowData.templateET,
+					ctemplateET: this.rowData.ctemplateET,
+					cfcET: this.rowData.cfcET
+				}
+			}, dbRow)[0];			
+		}
 	},
 	
 	renderDBTable: function() {				
