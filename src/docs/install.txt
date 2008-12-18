@@ -88,10 +88,10 @@ Next you need to find your ColdFusion installation folder. Typically
 this will be C:/ColdFusion8. ColdFire was tested on ColdFusion 8, but
 should work in ColdFusion 6 & 7. Under your ColdFusion installation
 folder, find the wwwroot/WEB-INF/debug folder. Copy the coldfire.cfm
-template located in the /coldfusion/debug folder of the installtion 
-pacage to this folder.
+template located in the /coldfusion/debug folder of the installation 
+package to this folder.
 
-Go to your ColdFusion Administractor, enable debugging, and select
+Go to your ColdFusion Administrator, enable debugging, and select
 coldfire.cfm from the drop down. Ensure your IP is listed or that there
 is no IP restriction in place.
 
@@ -102,13 +102,13 @@ to hit a ColdFusion page to see the debugging information.
 4.3 Optional Installations and Files
 
 While the coldfire.cfm debugging template provides most of the
-functionality of ColdFire, there are certain enhancements which requrie
+functionality of ColdFire, there are certain enhancements which require
 additional files.
 
 -Variable Output-
 
 ColdFire provides a variables tab which allows you to dump variables to
-the extenation. If you wish to use this feature with an application that
+the extension. If you wish to use this feature with an application that
 uses the onRequest method of Application.cfc you must extend one of the
 Application.cfc components provided in this installation package. Note
 that if your application uses onRequestEnd you must call
@@ -142,12 +142,15 @@ there are situations where certain tags will implicitly flush output.
 One example is CFTIMER/type="inline". Any use of this tag and attribute
 combination will result in ColdFire not returning any data.
 
-As noted in the previos section, the variables tab will not work for
+As noted in the previous section, the variables tab will not work for
 applications using the onRequest method of Application.cfc unless the
 Applicaiton.cfc extends one of the ColdFire Application components.
+Also, the variables tab can only output variables available in the
+requested template. This means that variables local to components,
+custom tags, or UDFs cannot be displayed using the variables tab.
 
 
-6. Special Instructions for JBoss
+6. Special Instructions for JBoss
 -----------------------------------------------------------------------
 
 JBoss has a default maximum HTTP header size of 4Kb in total. You can
