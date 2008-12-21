@@ -27,18 +27,21 @@ http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_web
 
 ------------------------------ LAST UPDATE ----------------------------- 
 
-Last Updated: Nov 21, 2008 (@VERSION@)
+Last Updated: Dec 21, 2008 (@VERSION@)
 
-* updated to allow for debugging of pages that use <cflocation>. 
-* added Application.cfc components to allow for variable tab usage on 
-  sites that use Application.onRequest(). 
-* added support for enhanced tracing.
-* added execution time tab summary rows.
-* updated most panel tabs to support column sorting.
+* fixed issues with execution times tab summary rows. (issues 42 and 44) 
+* fixed issue with variables tab. (issue 43) 
+* improved multiple tab support.
 
 
 ------------------------------ OLDER UPDATES ---------------------------
 
+Last Updated: Nov 16, 2008 (1.2.117.117)
+
+* updated to allow for debugging of pages that use <cflocation>. 
+* added Application.cfc components to allow for variable tab usage on 
+  sites that use Applicaiton.onRequest(). 
+* added support for enhanced tracing.
 Last Updated: Oct 21, 2008 (1.2.95.100)
 
 * updated coldfusion.js to fix cfsqltype formatting issue (issue 41).
