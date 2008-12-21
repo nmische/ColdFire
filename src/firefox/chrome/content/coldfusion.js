@@ -762,6 +762,7 @@ const FormatterPlate = domplate(
 	
 var ColdFire;
 var Chrome;
+var panelName = "coldfusion";
 
 // coldfire module
 
@@ -808,7 +809,7 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 			tab.setAttribute("disabled", "true");
 		} 	
 	},
-		
+			
 	reattachContext: function(context)
 	{
 		var chrome = context ? context.chrome : FirebugChrome;
@@ -819,6 +820,18 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 	{
 		// do nothing now
 	},	
+	
+	showContext: function(browser, context)
+    {
+		var panel = context.getPanel(panelName);		
+		if (context.cfFileIndex == undefined) {
+			panel.clear();
+			panel.showFile(0);
+		}
+		else {
+			panel.showFile(context.cfFileIndex);
+		}
+    },
 		
 	showPanel: function( browser, panel ) 
 	{ 	
@@ -840,17 +853,7 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 	// coldfire
 	
 	coldfireView: "General",
-	
-	clear: function(context)
-    {       
-	    var panel = context.getPanel("coldfusion", true);
-        if (panel)
-            panel.clear();
-
-        if (context.netProgress)
-            context.netProgress.clear();
-    },
-	
+		
 	syncFilterButtons: function(chrome)
 	{
 		var button = chrome.$("fbColdFireFilter-"+this.coldfireView);
@@ -975,14 +978,20 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			TD({class: "labelCell", width: "25%"}, $CFSTR('Requests')),
 			TD({class: "valueCell", width: "75%"},
 				FORM(
-					SELECT({name: "reqSelect", id: "reqSelect", onchange: "$onChangeReq",  _domPanel: "$domPanel"},
+					SELECT({name: "reqSelect", onchange: "$onChangeReq",  _domPanel: "$domPanel"},
 						FOR("file", "$domPanel.queue",
-							OPTION({value: "$file.href"}, "$file.href")
+							TAG('$file|getGeneralOption',{file:'$file'})
 						)	
 					)
 				)
 			)
 		),
+		
+	generalOptionSelected:
+		OPTION({value: "$file.href", selected: "true"}, "$file.href"),
+		
+	generalOption:
+		OPTION({value: "$file.href"}, "$file.href"),
 		
 	generalRowTag:
 		FOR("row", "$rows",
@@ -1217,6 +1226,17 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			)
 		),
 	
+	
+	getGeneralOption: function(file)
+	{
+		if (file.isSelected) {
+			return this.generalOptionSelected;
+		} else {
+			return this.generalOption;
+		}
+		
+	},
+	
 	// convenience for domplates
 		
 	safeCFSTR: function(name)
@@ -1314,24 +1334,26 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 	
 	// extends panel	
 	
-	name: "coldfusion", 
+	name: panelName, 
 	searchable: false, 
 	editable: false,
 	title: $CFSTR("ColdFusion"), 
 	
 	initialize: function(context, doc)
 	{
+		
 		this.onMouseOver = bind(this.onMouseOver, this);
 		this.onMouseOut = bind(this.onMouseOut, this);		
 		this.setUpDoc(doc);	
-		this.clear();
+		this.clear();		
 			
 		Firebug.Panel.initialize.apply(this, arguments);		
 	},	 
 		
 	destroy: function(state)
 	{
-		state.variables = this.variables;
+		if (state)
+	   		state.variables = this.variables;
 
 		Firebug.Panel.destroy.apply(this, arguments);
 	},	
@@ -1367,11 +1389,16 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		
 		if (state)
 			this.variables = state.variables;
+			
+		this.displayCurrentView();		
 	},
 		
 		
-	hide: function()
+	hide: function(state)
 	{
+		if (state)
+	   		state.variables = this.variables;
+			
 		this.showToolbarButtons("fbColdFireExtensionButtons", false);	
 	},
 	
@@ -1409,7 +1436,6 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
     {
 		this.file = null;
 		this.queue = [];
-		this.variables = [];  
 		this.rowData.clear();
     },
 	
@@ -1484,7 +1510,8 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 				file.cfObj = cfObj;
 				
 			}
-						
+			
+			this.context.cfFileIndex = index;
 			this.file = file;		
 			this.generateRows(file.cfObj);							
 			this.displayCurrentView();
@@ -1650,15 +1677,14 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		this.table = this.tableTag.append({}, this.panelNode, this);
 		//create header	
 		if (this.queue.length > 0) {
+			
+			var i = this.queue.length - 1;
+			while(i >= 0){
+				this.queue[i].isSelected = (this.queue[i] == this.file)? true : false;
+				i--;
+			}
+			
 			var headerRow = this.generalHeaderRow.insertRows({domPanel: this}, this.table.firstChild)[0];
-			//select current file
-			var select = this.document.getElementById('reqSelect');
-			select.selectedIndex = this.queue.indexOf(this.file);
-			//this is to prevent the popupshowing event from populating the options menu with duplicates
-			select.addEventListener('popupshowing',function(event){
-				event.stopPropagation();
-				event.preventDefault();
-			},false);
 
 		}
 		//add general rows  
@@ -2030,7 +2056,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			if (this.queue.length >= ColdFire['maxQueueRequests'])
 				this.queue.splice(0, 1);
 			
-			index = this.queue.push(file) - 1;					
+			index = this.queue.push(file) - 1;				
 											
 			if (ColdFire['showLastRequest'] || index == 0) {
 				this.showFile(index);
