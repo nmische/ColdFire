@@ -145,9 +145,12 @@ combination will result in ColdFire not returning any data.
 As noted in the previous section, the variables tab will not work for
 applications using the onRequest method of Application.cfc unless the
 Application.cfc extends one of the ColdFire Application components.
+Also, the variables tab can only output variables available in the
+requested template. This means that variables local to components,
+custom tags, or UDFs cannot be displayed using the variables tab.
 
 
-6. Special Instructions for JBoss
+6. Special Instructions for JBoss
 -----------------------------------------------------------------------
 
 JBoss has a default maximum HTTP header size of 4Kb in total. You can
