@@ -1350,14 +1350,6 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		Firebug.Panel.initialize.apply(this, arguments);		
 	},	 
 		
-	destroy: function(state)
-	{
-		if (state)
-	   		state.variables = this.variables;
-
-		Firebug.Panel.destroy.apply(this, arguments);
-	},	
-		
 	reattach: function(doc)
 	{
 		this.setUpDoc(doc);	
@@ -1387,18 +1379,12 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		if (!shouldShow)
 			return;		
 		
-		if (state)
-			this.variables = state.variables;
-			
 		this.displayCurrentView();		
 	},
 		
 		
 	hide: function(state)
 	{
-		if (state)
-	   		state.variables = this.variables;
-			
 		this.showToolbarButtons("fbColdFireExtensionButtons", false);	
 	},
 	
