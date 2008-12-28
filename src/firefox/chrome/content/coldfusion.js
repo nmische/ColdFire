@@ -807,7 +807,7 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 		} else {	
 			this.enabled = false;		
 			tab.setAttribute("disabled", "true");
-		} 	
+		} 			
 	},
 			
 	reattachContext: function(context)
@@ -816,23 +816,21 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 		this.syncFilterButtons(chrome);
 	},	
 	
-	destroyContext: function( context ) 
-	{
-		// do nothing now
-	},	
-	
 	showContext: function(browser, context)
     {
+		
 		var panel = context.getPanel(panelName);		
-		if (context.cfFileIndex == undefined) {
+		
+		if (!context.coldfire || !context.coldfire.file) {
 			panel.clear();
-			panel.showFile(0);
+			panel.updateLocation(null);
 		}
 		else {
-			panel.showFile(context.cfFileIndex);
-		}
+			panel.updateLocation(context.coldfire.file);
+		}		
+
     },
-		
+	
 	showPanel: function( browser, panel ) 
 	{ 	
 		
@@ -1346,9 +1344,14 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		this.onMouseOut = bind(this.onMouseOut, this);		
 		this.setUpDoc(doc);	
 		this.clear();		
-			
+					
 		Firebug.Panel.initialize.apply(this, arguments);		
 	},	 
+	
+	destroy: function(state) // Panel may store info on state
+    {
+        Firebug.Panel.destroy.apply(this, arguments);
+    },
 		
 	reattach: function(doc)
 	{
@@ -1357,7 +1360,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		Firebug.Panel.reattach.apply(this, arguments);	
 	}, 	
 	
-	initializeNode: function(oldPanelNode)
+	initializeNode: function(myPanelNode)
 	{
 		this.panelNode.addEventListener("mouseover", this.onMouseOver, false);
 		this.panelNode.addEventListener("mouseout", this.onMouseOut, false);
@@ -1379,14 +1382,83 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		if (!shouldShow)
 			return;		
 		
-		this.displayCurrentView();		
+		this.displayCurrentView();			
 	},
-		
 		
 	hide: function(state)
 	{
 		this.showToolbarButtons("fbColdFireExtensionButtons", false);	
+		//this.showToolbarButtons("fbLocationSeparator", false);
+		//this.showToolbarButtons("fbLocationList", false);
 	},
+	
+	supportsObject: function(object)
+    {
+ 		if (object instanceof NetFile)
+			return 1;
+			
+		return 0;
+    },
+	
+	navigate: function(object)
+    {
+		Firebug.Panel.navigate.apply(this, arguments);
+    },
+	
+	updateLocation: function(object)
+    {			
+			if(!object){
+				this.displayCurrentView();	
+				return;				
+			}
+			
+			var file = object;		
+				 
+			if(!file.hasOwnProperty("cfObj")) {	
+								
+				var headers = {
+					general: [],
+					queries: [],
+					trace: [],
+					templates: [],
+					ctemplates: [],
+					cfcs: [],
+					timer: [],
+					variables: []
+				};
+				
+				var re = /x-coldfire-([a-z]*)-([0-9]*)/;
+				
+				for (var i = 0; i < file.responseHeaders.length; i++){
+					var cfheader = re.exec(file.responseHeaders[i].name);
+					if (cfheader){
+						headers[cfheader[1]][parseInt(cfheader[2]) - 1] = file.responseHeaders[i].value;
+					}					
+				};
+				
+				var cfObj = {
+					generalObj: eval( "(" + this.stringifyHeaders(headers.general) + ")" ),
+					queriesObj: eval( "(" + this.stringifyHeaders(headers.queries) + ")" ),
+					traceObj: eval( "(" + this.stringifyHeaders(headers.trace) + ")" ),
+					templatesObj:  eval( "(" + this.stringifyHeaders(headers.templates) + ")" ),
+					ctemplatesObj: eval( "(" + this.stringifyHeaders(headers.ctemplates) + ")" ),
+					cfcsObj: eval( "(" + this.stringifyHeaders(headers.cfcs) + ")" ),
+					timerObj: eval( "(" + this.stringifyHeaders(headers.timer) + ")"),
+					variablesObj: eval( "(" + this.stringifyHeaders(headers.variables) + ")")
+				};			
+			
+			};	
+		
+			this.context.coldfire = { file: file };				
+			this.generateRows(cfObj);							
+			this.displayCurrentView();
+		 
+    },
+	
+	getLocationList: function()
+    {
+        return this.queue;
+    },	
 	
 	getOptionsMenuItems: function()
 	{
@@ -1398,6 +1470,16 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			{label: $CFSTR("ClearVariables"), nol10n: true, command: bindFixed(this.deleteVariables, this) }      
 		];
 	},
+	
+	getDefaultLocation: function(context)
+    {
+        return null;
+    },
+	
+	getObjectLocation: function(object)
+    {
+		return object.href;
+    },
 	
 	// see net panel
 	
@@ -1413,16 +1495,16 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 	
 	// coldfire	
 	
-	file: null,
 	queue: [],
 	variables: [],		
 	rowData: new RowData(),
 	
 	clear: function()
     {
-		this.file = null;
 		this.queue = [];
 		this.rowData.clear();
+		delete this.location;
+
     },
 	
 	setUpDoc: function(doc){
@@ -1453,57 +1535,6 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			return "{}";	
 		}
 	},	
-	
-	showFile: function(index) {
-		
-		var file = this.queue[index];
-		
-		if(file) {
-						
-			if(!file.cfObj){	
-				
-				var headers = {
-					general: [],
-					queries: [],
-					trace: [],
-					templates: [],
-					ctemplates: [],
-					cfcs: [],
-					timer: [],
-					variables: []
-				}
-				
-				var re = /x-coldfire-([a-z]*)-([0-9]*)/;
-				
-				for (var i = 0; i < file.responseHeaders.length; i++){
-					var cfheader = re.exec(file.responseHeaders[i].name);
-					if (cfheader){
-						headers[cfheader[1]][parseInt(cfheader[2]) - 1] = file.responseHeaders[i].value;
-					}					
-				}
-				
-				var cfObj = {
-					generalObj: eval( "(" + this.stringifyHeaders(headers.general) + ")" ),
-					queriesObj: eval( "(" + this.stringifyHeaders(headers.queries) + ")" ),
-					traceObj: eval( "(" + this.stringifyHeaders(headers.trace) + ")" ),
-					templatesObj:  eval( "(" + this.stringifyHeaders(headers.templates) + ")" ),
-					ctemplatesObj: eval( "(" + this.stringifyHeaders(headers.ctemplates) + ")" ),
-					cfcsObj: eval( "(" + this.stringifyHeaders(headers.cfcs) + ")" ),
-					timerObj: eval( "(" + this.stringifyHeaders(headers.timer) + ")"),
-					variablesObj: eval( "(" + this.stringifyHeaders(headers.variables) + ")")
-				};
-				
-				file.cfObj = cfObj;
-				
-			}
-			
-			this.context.cfFileIndex = index;
-			this.file = file;		
-			this.generateRows(file.cfObj);							
-			this.displayCurrentView();
-		}	
-		
-	},
 	
 	generateRows: function( theObj )
 	{
@@ -1661,7 +1692,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 	renderGeneralTable: function() {
 		//create table		
 		this.table = this.tableTag.append({}, this.panelNode, this);
-		//create header	
+		/* create header	
 		if (this.queue.length > 0) {
 			
 			var i = this.queue.length - 1;
@@ -1673,6 +1704,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			var headerRow = this.generalHeaderRow.insertRows({domPanel: this}, this.table.firstChild)[0];
 
 		}
+		*/
 		//add general rows  
 		if(this.rowData.generalRows.length)
 			var row = this.generalRowTag.insertRows({rows: this.rowData.generalRows}, this.table.childNodes[1])[0];			
@@ -1963,11 +1995,6 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
         }
     },
 	
-	onChangeReq: function(event){
-		var select = event.target;
-		select.domPanel.showFile(select.selectedIndex);
-	},
-		
 	getVariableRowIndex : function(row) {
 		var index = -1;
 		for (; row && hasClass(row, "variableRow"); row = row.previousSibling)
@@ -2042,10 +2069,10 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			if (this.queue.length >= ColdFire['maxQueueRequests'])
 				this.queue.splice(0, 1);
 			
-			index = this.queue.push(file) - 1;				
+			this.queue.push(file);				
 											
 			if (ColdFire['showLastRequest'] || index == 0) {
-				this.showFile(index);
+				this.navigate(file);
 			} else {
 				this.displayCurrentView();
 			}
