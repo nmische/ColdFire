@@ -2064,20 +2064,22 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 	{
 		
 		var index = this.queue.indexOf(file);
-				
+					
 		if ((index == -1) && (this.hasColdFireHeader(file))) {
 			
 			if (this.queue.length >= ColdFire['maxQueueRequests'])
 				this.queue.splice(0, 1);
 			
-			this.queue.push(file);				
-											
-			if (ColdFire['showLastRequest'] || index == 0) {
-				this.navigate(file);
-			} else {
-				this.displayCurrentView();
-			}
-		}		
+			index = this.queue.push(file) - 1;											
+			
+		}	
+		
+		if (ColdFire['showLastRequest'] || index == 0) {
+			this.navigate(file);
+		} else {
+			this.displayCurrentView();
+		}
+			
 	},
 	
 	hasColdFireHeader: function(file){
