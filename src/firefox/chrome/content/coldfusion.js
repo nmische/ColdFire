@@ -46,6 +46,8 @@ const STATE_IS_REQUEST = Ci.nsIWebProgressListener.STATE_IS_REQUEST;
 const NOTIFY_ALL = Ci.nsIWebProgress.NOTIFY_ALL;
 const nsIObserverService = Ci.nsIObserverService;
 const observerService = CCSV("@mozilla.org/observer-service;1", "nsIObserverService");
+const promtService = CCSV("@mozilla.org/embedcomp/prompt-service;1", "nsIPromptService");
+
 const logger = new LoggingUtil();
 
 function defineTags(){
@@ -1692,19 +1694,6 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 	renderGeneralTable: function() {
 		//create table		
 		this.table = this.tableTag.append({}, this.panelNode, this);
-		/* create header	
-		if (this.queue.length > 0) {
-			
-			var i = this.queue.length - 1;
-			while(i >= 0){
-				this.queue[i].isSelected = (this.queue[i] == this.file)? true : false;
-				i--;
-			}
-			
-			var headerRow = this.generalHeaderRow.insertRows({domPanel: this}, this.table.firstChild)[0];
-
-		}
-		*/
 		//add general rows  
 		if(this.rowData.generalRows.length)
 			var row = this.generalRowTag.insertRows({rows: this.rowData.generalRows}, this.table.childNodes[1])[0];			
@@ -2005,6 +1994,15 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 	addVariable: function(variable){		
 		var variableLine = this.context.chrome.$("fbColdFireVariableLine");
 		var varString = variable ? variable : variableLine.value;
+		
+		
+		var re = /^[A-Za-z_\u0024\u00A2\u00A3\u00A4\u00A5\u09F2\u09F3\u0E3F\u17DB\uFDFC\u20A0\u20A1\u20A2\u20A3\u20A4\u20A5\u20A6\u20A8\u20A9\u20AA\u20AB\u20AC\u20AD\u20AD\u20AD\u20AE\u20AF\u20B0\u20B1][A-Za-z0-9_\u0024\u00A2\u00A3\u00A4\u00A5\u09F2\u09F3\u0E3F\u17DB\uFDFC\u20A0\u20A1\u20A2\u20A3\u20A4\u20A5\u20A6\u20A8\u20A9\u20AA\u20AB\u20AC\u20AD\u20AD\u20AD\u20AE\u20AF\u20B0\u20B1]*$/;
+
+		if (!re.test(varString)) {			
+			promtService.alert(window, $CFSTR("ColdFire"), $CFSTR("InvalidVarName") + ": " + varString);
+			return;			
+		}
+				
 		variableLine.value = "";
 					
 		if (varString.length > 0) 

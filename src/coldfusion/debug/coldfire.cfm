@@ -643,6 +643,8 @@ Handles server side debugging for ColdFire
 	<cfset var varArray = ArrayNew(1)>	
 	<cfset var requestData = GetHttpRequestData()>
 	<cfset var response = getPageContext().getResponse()>
+	
+	<cftry>
 
 	<cfif structKeyExists(requestData.headers,"x-coldfire-variables")>
 		<cfset varJSON = requestData.headers["x-coldfire-variables"]>
@@ -672,8 +674,7 @@ Handles server side debugging for ColdFire
 	<cfif arguments.debugMode>
 		<cfdump var="#result#">
 	</cfif>
-
-	<cftry>
+	
 	<cfloop index="x" from="1" to="#arrayLen(result.general)#">
 		<cfheader name="x-coldfire-general-#x#" value="#result.general[x]#">
 	</cfloop>
@@ -698,7 +699,11 @@ Handles server side debugging for ColdFire
 	<cfloop index="x" from="1" to="#arrayLen(result.variables)#">
 		<cfheader name="x-coldfire-variables-#x#" value="#result.variables[x]#">				
 	</cfloop>
-	<cfcatch></cfcatch>
+	
+	<cfcatch>
+		<!--- make sure we don't throw an error --->
+	</cfcatch>
+	
 	</cftry>	
 
 </cffunction>
