@@ -45,7 +45,7 @@ const STATE_STOP = Ci.nsIWebProgressListener.STATE_STOP;
 const STATE_IS_REQUEST = Ci.nsIWebProgressListener.STATE_IS_REQUEST;
 const NOTIFY_ALL = Ci.nsIWebProgress.NOTIFY_ALL;
 const nsIObserverService = Ci.nsIObserverService;
-const observerService = CCSV("@mozilla.org/observer-service;1", "nsIObserverService");
+const observerService = CCSV("@joehewitt.com/firebug-http-observer;1", "nsIObserverService");
 const promtService = CCSV("@mozilla.org/embedcomp/prompt-service;1", "nsIPromptService");
 
 const logger = new LoggingUtil();
@@ -780,7 +780,7 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 	{		
 		ColdFire = FirebugChrome.window.ColdFire;
 		ColdFire.initialize();
-		observerService.addObserver(this, "http-on-modify-request", false);
+		observerService.addObserver(this, "firebug-http-event", false);
 	},
 	
 	initializeUI: function(detachArgs)
@@ -792,7 +792,7 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 	{
 		ColdFire.shutdown();
 		ColdFire = null;
-		observerService.removeObserver(context.coldfireProxy, "http-on-modify-request", false);
+		observerService.removeObserver(this, "firebug-http-event");
 		if(Firebug.getPref( 'defaultPanelName')=='coldfire' ) 
 		{
 			Firebug.setPref( 'defaultPanelName','console' );
@@ -880,9 +880,12 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 	
 	// nsIObserver interface method
 	observe: function(subject, topic, data) {		
+		
+		if (!(subject instanceof Ci.nsIHttpChannel))
+                return;
+		
 		if (topic == 'http-on-modify-request' && this.enabled) {
 			
-			subject.QueryInterface(Ci.nsIHttpChannel);
 			subject.setRequestHeader("User-Agent",
 					subject.getRequestHeader("User-Agent") + " " + "ColdFire/" + ColdFire.version,
 					true);
