@@ -763,7 +763,6 @@ const FormatterPlate = domplate(
 
 	
 var ColdFire;
-var Chrome;
 var panelName = "coldfusion";
 
 // coldfire module
@@ -834,20 +833,9 @@ Firebug.ColdFireModule = extend(Firebug.Module,
     },
 	
 	showPanel: function( browser, panel ) 
-	{ 	
-		
-		//TODO: Move this logic into ColdFirePanel.show()
-		
-		Chrome = browser.chrome;		
-		
-		var isColdFireExtension = panel && panel.name == "coldfusion"; 
-		var isVariablesView = this.coldfireView == "Variables";
-		var ColdFireVariableBox = Chrome.$( "fbColdFireVariableBox" ); 
-		collapse(ColdFireVariableBox, !(isColdFireExtension && isVariablesView));		
-		
+	{ 		
 		if (panel && panel.name == "coldfusion" && this.enabled)
-			this.changeCurrentView(this.coldfireView);
-		
+			this.changeCurrentView(this.coldfireView);		
 	},
 	
 	// coldfire
@@ -855,19 +843,25 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 	coldfireView: "General",
 		
 	syncFilterButtons: function(chrome)
-	{
-		var button = chrome.$("fbColdFireFilter-"+this.coldfireView);
+	{		
+		var theChrome = chrome ? chrome : FirebugChrome;
+		var button = theChrome.$("fbColdFireFilter-"+this.coldfireView);
 		button.checked = true;    
 	},	
-			
-	changeCurrentView: function( view ) {
-				
-		this.coldfireView = view;
-				
+	
+	syncVariablesBox: function(chrome)
+	{		
+		var theChrome = chrome ? chrome : FirebugChrome;
 		var isVariablesView = this.coldfireView == "Variables";
-		var ColdFireVariableBox = Chrome.$( "fbColdFireVariableBox" ); 
-		collapse(ColdFireVariableBox, !(isVariablesView));
-		
+		var coldFireVariableBox = theChrome.$( "fbColdFireVariableBox" ); 
+		collapse(coldFireVariableBox, !(isVariablesView));			   
+	},
+	
+	changeCurrentView: function( view ) 
+	{				
+		this.coldfireView = view;
+		this.syncFilterButtons();
+		this.syncVariablesBox();		
 		FirebugContext.getPanel( "coldfusion" ).displayCurrentView();
 	},	
 	
@@ -1384,6 +1378,8 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		
 		var shouldShow = this.shouldShow();
  		this.showToolbarButtons("fbColdFireExtensionButtonsFilter", shouldShow);
+		this.showToolbarButtons("fbColdFireVariableBox", shouldShow && Firebug.ColdFireModule.coldfireView == "Variables");
+		
 		if (!shouldShow)
 			return;		
 		
@@ -1393,8 +1389,8 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 	hide: function(state)
 	{
 		this.showToolbarButtons("fbColdFireExtensionButtons", false);	
-		//this.showToolbarButtons("fbLocationSeparator", false);
-		//this.showToolbarButtons("fbLocationList", false);
+		this.showToolbarButtons("fbColdFireVariableBox", false);
+		
 	},
 	
 	supportsObject: function(object)
