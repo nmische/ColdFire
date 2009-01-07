@@ -44,6 +44,7 @@ const cfPrefNames =
 [
     //coldfire
     "parseParams",
+	"suppressWhiteSpace",
 	"logMsgs",
 	"maxQueueRequests",
 	"showLastRequest",

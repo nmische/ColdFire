@@ -441,7 +441,7 @@ const FormatterPlate = domplate(
 	},
 	
 	formatString: function(value){
-		return "unknown object type:" + value.toString();
+		return (value) ? value.toString() : "";
 	},
 	
 	queryColSpan: function(value) {
@@ -646,124 +646,12 @@ const FormatterPlate = domplate(
 		}
 	},	
 	
-	/* this code for query formatting needs to be updated to use the domplate */
-	
-	cfsqltypes: [
-		"unknown",
-		//numeric types
-		"cf_sql_bigint", "cf_sql_bit", "cf_sql_blob", "cf_sql_decimal", "cf_sql_double", "cf_sql_float", "cf_sql_integer", "cf_sql_money", "cf_sql_money4", "cf_sql_numeric", "cf_sql_real", "cf_sql_refcursor", "cf_sql_smallint", "cf_sql_tinyint", 
-		//date time types
-		"cf_sql_date", "cf_sql_time", "cf_sql_timestamp",
-		//text types
-		"cf_sql_char", "cf_sql_clob", "cf_sql_idstamp", "cf_sql_longvarchar", "cf_sql_varchar"	
-	],
-	
-	formatQuery: function( sql, params){		
-		var sqlText = sql;
-		if (params.length && params.length > 0) {
-			// find out how many question marks we have in the query
-			var questionMarks = sqlText.match(/\?/g);
-			// if the number of question marks matches the number of values 
-			// and the option to parse is set to true go ahead and replace 
-			// question marks with parameter values	
-			if ((params.length == questionMarks.length) && ColdFire['parseParams'] ) {	
-				for (var i = 0; i < params.length; i++) {
-					// get the formatted value	
-					var val = this.formatParamValue(params[i]);
-					sqlText = sqlText.replace(/\?/,val);
-				}				
-			} else {
-				sqlText += this.formatQueryParams(params);
-			}
-		}
-		return sqlText;		
-	},
-	
-	formatQueryParams: function( params ){
-		if (params.length > 0){
-			var paramString = new StringBuffer();
-			paramString.append("<I><BR/>" + $CFSTR("QueryParamValues") + " -");
-			for( var x = 0; x < params.length; x++ ){
-				paramString.append("<BR/>" + $CFSTR("Parameter") + "#" + (x + 1) + "(" + this.cfsqltypes[params[x][0]] + ") = " + this.__escape__(params[x][1]));
-			}
-			paramString.append("</I>");
-			return paramString.toString();
-		}
-		return "";
-	},
-	
-	formatSPParams: function( params ) {		
-		if (params.length > 0) {
-			var tblString = new StringBuffer();
-			tblString.append("<TABLE border='0' cellpadding='2' cellspacing='0' width='100%'><TR style='background-color:#CCCCCC'><TH colspan='5' align='center'><B>" + $CFSTR("StoredProcedureParameters") + "</B></TH></TR><TR><TD><I>" + $CFSTR("lcType") + "</I></TD><TD><I>" + $CFSTR("lcCFSqlType") + "</I></TD><TD><I>" + $CFSTR("lcValue") +"</I></TD><TD><I>" + $CFSTR("lcVariable") + "</I></TD><TD><I>" + $CFSTR("lcDBVarname") + "</I></TD></TR>");
-			for( var x = 0; x < params.length; x++ ){
-				tblString.append("<TR><TD>" + params[x][0] + "</TD><TD>" + this.cfsqltypes[params[x][1]] + "</TD><TD>" + this.__escape__(params[x][2]) + "</TD><TD>" + params[x][3] + "</TD><TD>" + params[x][4] + "</TD></TR>");
-			}
-			tblString.append("</TABLE>");
-			return tblString.toString();			
-		}		
-		return "";
-	},
-	
-	formatSPResultSets: function( reslutsets ) {
-		if (reslutsets.length > 0) {
-			var tblString = new StringBuffer();
-			tblString.append("<TABLE border='0' cellpadding='2' cellspacing='0' width='100%'><TR style='background-color:#CCCCCC'><TH colspan='5' align='center'><B>" + $CFSTR("StoredProcedureResultSets") + "</B></TH></TR><TR><TD><I>" + $CFSTR("lcName") + "</I></TD><TD><I>" + $CFSTR("lcResultset") + "</I></TD></TR>");
-			for( var x = 0; x < reslutsets.length; x++ ){
-				tblString.append("<TR><TD>" + reslutsets[x][0] + "</TD><TD>" + reslutsets[x][1] + "</TD</TR>");
-			}
-			tblString.append("</TABLE>");
-			return tblString.toString();			
-		}		
-		return "";
-	},
-	
-	formatParamValue: function( param ) {
-		var type = param[0];
-		var value = param[1];
-		var tmpVal = value;
-		if (type == 2){
-			// handle bit types
-			tmpVal = (value == "1" || value.toUpperCase() == "TRUE" || value.toUpperCase() == "YES") ? 1 : 0;
-		} else if ( type < 15){
-			// handle numeric types
-			tmpVal =  value;
-		} else if (type < 18) {
-			// handle date time types
-			tmpVal = (value.indexOf("{") == 0) ? value : "'" + value + "'";
-		} else if (type < 23) {
-			// handle text types
-			tmpVal = "'" + value.toString().replace(/'/g, "''") + "'";
-		}		
-		return this.__escape__(tmpVal);		
-	},
-	
-	__escape__: function (value) {
-        function replaceChars(ch)
-        {
-            switch (ch)
-            {
-                case "<":
-                    return "&lt;";
-                case ">":
-                    return "&gt;";
-                case "&":
-                    return "&amp;";
-                case "'":
-                    return "&#39;";
-                case '"':
-                    return "&quot;";
-            }
-            return "?";
-        };
-        return String(value).replace(/[<>&"']/g, replaceChars);
-    }
-
 });
 
 	
 var ColdFire;
 var panelName = "coldfusion";
+var Chrome;
 
 // coldfire module
 
@@ -815,6 +703,7 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 	{
 		var chrome = context ? context.chrome : FirebugChrome;
 		this.syncFilterButtons(chrome);
+		this.syncVariablesBox(chrome);
 	},	
 	
 	showContext: function(browser, context)
@@ -834,6 +723,7 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 	
 	showPanel: function( browser, panel ) 
 	{ 		
+		Chrome = browser.chrome;		
 		if (panel && panel.name == "coldfusion" && this.enabled)
 			this.changeCurrentView(this.coldfireView);		
 	},
@@ -844,17 +734,17 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 		
 	syncFilterButtons: function(chrome)
 	{		
-		var theChrome = chrome ? chrome : FirebugChrome;
+		var theChrome = chrome ? chrome : Chrome;
 		var button = theChrome.$("fbColdFireFilter-"+this.coldfireView);
 		button.checked = true;    
 	},	
 	
 	syncVariablesBox: function(chrome)
 	{		
-		var theChrome = chrome ? chrome : FirebugChrome;
+		var theChrome = chrome ? chrome : Chrome;
 		var isVariablesView = this.coldfireView == "Variables";
-		var coldFireVariableBox = theChrome.$( "fbColdFireVariableBox" ); 
-		collapse(coldFireVariableBox, !(isVariablesView));			   
+		var coldFireVariableBox = theChrome.$("fbColdFireVariableBox"); 
+		collapse(coldFireVariableBox, !(isVariablesView));		
 	},
 	
 	changeCurrentView: function( view ) 
@@ -1118,12 +1008,79 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 				TD({width: "7%", align: "center", nowrap: "true"}, "$row.CACHEDQUERY|formatCachedQuery"),
 				TD({width: "49%"}, "$row.TEMPLATE"),
 				TD({width: "10%", align:"right"}, "$row.TIMESTAMP|formatTimeStamp")                    
-			)			
+			),
+			TR({class: "querySQL $row.ET|isSlow"},
+				TD({class: "valueCell", width: "100%", colspan: 7},
+					TAG('$row|queryDisplay', {row:'$row'})					
+				)
+			)		
 		),
 		
-	querySqlTag:
-		TR(
-			TD({class: "valueCell querySQL $row.ET|isSlow", width: "100%", colspan: 7},PRE())
+	storedProcTag:
+		DIV(
+			TAG("$this.spParamsTag", {parameters: "$row.PARAMETERS"}),
+			TAG("$this.spResultSetsTag", {resultsets: "$row.RESULTSETS"})
+		),
+		
+	spParamsTag:
+		TABLE({border: 0, width: "100%", cellpadding: 2, cellspacing: 0},		
+			THEAD(),
+			TBODY(
+				TR({class: "procHead"},
+					TH({colspan: "5", class: "procHead"}, $CFSTR("StoredProcedureParameters"))
+				),
+				TR({class: "procSubHead"},
+					TD({class: "procSubHead"}, $CFSTR("lcType")),
+					TD({class: "procSubHead"}, $CFSTR("lcCFSqlType")),
+					TD({class: "procSubHead"}, $CFSTR("lcValue")),
+					TD({class: "procSubHead"}, $CFSTR("lcVariable")),
+					TD({class: "procSubHead"}, $CFSTR("lcDBVarname"))
+				),
+				FOR("param", "$parameters",
+					TR({class: "procValue"},
+						TD({class: "procValue"},"$param|formatParamType"),
+						TD({class: "procValue"},"$param|formatParamCFSqlType"),
+						TD({class: "procValue"},"$param|formatParamValue"),
+						TD({class: "procValue"},"$param|formatParamVariable"),
+						TD({class: "procValue"},"$param|formatParamDBVarname")
+					)				
+				)	
+			),
+			TFOOT()		
+		),	
+	
+	spResultSetsTag:
+		TABLE({border: 0, width: "100%", cellpadding: 2, cellspacing: 0},		
+			TBODY(
+				TR({class: "procHead"},
+					TH({colspan: "2", class: "procHead"}, $CFSTR("StoredProcedureResultSets"))
+				),
+				TR({class: "procSubHead"},
+					TD({class: "procSubHead"}, $CFSTR("lcName")),
+					TD({class: "procSubHead"}, $CFSTR("lcResultset"))
+				),
+				FOR("resultset", "$resultsets",
+					TR({class: "procValue"},
+						TD({class: "procValue"},"$resultset|formatResultsetName"),
+						TD({class: "procValue"},"$resultset|formatResultsetNumber")
+					)				
+				)		
+			)			
+		),	
+		
+	sqlTag:
+		DIV (
+			PRE("$row|formatSQLString"),
+			TAG("$row|queryParamDisplay", {parameters: "$row.PARAMETERS"})
+		),
+		
+	sqlParamsTag:
+		DIV (
+			BR(),
+			DIV({class: "queryParam"}, "$parameters|formatParamHeader"),
+			FOR("param", "$parameters",
+				DIV({class: "queryParam"},"$param|fomatParamString")
+			)
 		),
 		
 	traceHeaderRow:
@@ -1222,18 +1179,32 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 				TD({class: "valueCell varValue", width: "80%", valign: "top"})
 			)
 		),
-	
-	
-	getGeneralOption: function(file)
-	{
-		if (file.isSelected) {
-			return this.generalOptionSelected;
-		} else {
-			return this.generalOption;
-		}
 		
+	blankDiv:
+		DIV(""),
+	
+	queryDisplay: function(row)
+	{
+		if (row.TYPE == "StoredProcedure") {
+			return this.storedProcTag;
+		} else {
+			return this.sqlTag;
+		}
 	},
 	
+	queryParamDisplay: function(row)
+	{
+		var sqlText = row.SQL;
+		var params = row.PARAMETERS;
+		if (params.length && params.length > 0) {			
+			var questionMarks = sqlText.match(/\?/g);			
+			if (!((params.length == questionMarks.length) && ColdFire['parseParams'] )) {	
+				return this.sqlParamsTag;				
+			}			
+		} 		
+		return this.blankDiv;				
+	},
+		
 	// convenience for domplates
 		
 	safeCFSTR: function(name)
@@ -1328,6 +1299,112 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			per = parseInt(times.cfcET * 100 / times.totalET);
 		return times.cfcET + "ms (" + per + "%)";
 	},	
+	
+	formatSQLString: function(query)
+	{		
+		var sqlText = query.SQL;
+		var params = query.PARAMETERS;
+		// parse parameters
+		if (params.length && params.length > 0) {			
+			var questionMarks = sqlText.match(/\?/g);			
+			if ((params.length == questionMarks.length) && ColdFire['parseParams'] ) {	
+				for (var i = 0; i < params.length; i++) {
+					// get the formatted value	
+					var val = this.formatParamInlineValue(params[i]);
+					sqlText = sqlText.replace(/\?/,val);
+				}				
+			}
+		}
+		// supress white space
+		if (ColdFire['suppressWhiteSpace']) {
+			var re = /^\s*$/mg;
+			sqlText = sqlText.replace(re,"");	
+		}
+		
+		return sqlText;		
+	},
+	
+	formatParamInlineValue: function(param) 
+	{
+		var type = param[0];
+		var value = param[1];
+		var tmpVal = value;
+		if (type == 2){
+			// handle bit types
+			tmpVal = (value == "1" || value.toUpperCase() == "TRUE" || value.toUpperCase() == "YES") ? 1 : 0;
+		} else if ( type < 15){
+			// handle numeric types
+			tmpVal =  value;
+		} else if (type < 18) {
+			// handle date time types
+			tmpVal = (value.indexOf("{") == 0) ? value : "'" + value + "'";
+		} else if (type < 23) {
+			// handle text types
+			tmpVal = "'" + value.toString().replace(/'/g, "''") + "'";
+		}
+		return tmpVal;				
+	},
+	
+	formatParamHeader: function(parameters)
+	{
+		// this is a little hack to store the param index for display in formatParamString below.
+		for(var i = 0; i < parameters.length; i++) {
+			var param = parameters[i];
+			param[param.length] = i + 1;
+		}
+		return $CFSTR("QueryParamValues") + " -";
+	},
+	
+	fomatParamString: function(param) {		
+		return $CFSTR("Parameter") + " #" + param[param.length-1] + " (" + this.cfsqltypes[param[0]] + ") = " + param[1];
+	},
+	
+	formatParamType: function(param)
+	{
+		return param[0];
+	},
+	
+	formatParamCFSqlType: function(param)
+	{
+		return this.cfsqltypes[param[1]];
+	},
+	
+	formatParamValue: function(param)
+	{
+		return param[2];
+	},
+	
+	formatParamVariable: function(param)
+	{
+		return param[3];
+	},
+	
+	formatParamDBVarname: function(param)
+	{
+		return param[4];
+	},
+	
+	formatResultsetName: function(resultset)
+	{
+		return resultset[0];
+	},
+	
+	formatResultsetNumber: function(resultset)
+	{
+		return resultset[1];
+	},
+	
+	// lookup array for CF SQL types
+	
+	cfsqltypes: [
+		"unknown",
+		//numeric types
+		"cf_sql_bigint", "cf_sql_bit", "cf_sql_blob", "cf_sql_decimal", "cf_sql_double", "cf_sql_float", "cf_sql_integer", "cf_sql_money", "cf_sql_money4", "cf_sql_numeric", "cf_sql_real", "cf_sql_refcursor", "cf_sql_smallint", "cf_sql_tinyint", 
+		//date time types
+		"cf_sql_date", "cf_sql_time", "cf_sql_timestamp",
+		//text types
+		"cf_sql_char", "cf_sql_clob", "cf_sql_idstamp", "cf_sql_longvarchar", "cf_sql_varchar"	
+	],	
 	
 	// extends panel	
 	
@@ -1464,7 +1541,8 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 	getOptionsMenuItems: function()
 	{
 		return [
-			this.cfMenuOption("ParseQueryParams","parseParams"),
+			this.cfMenuOptionRefresh("ParseQueryParams","parseParams"),
+			this.cfMenuOptionRefresh("SuppressQueryWhiteSpace","suppressWhiteSpace"),
 			this.cfMenuOption("ShowLastRequest","showLastRequest"),
 			this.cfMenuOption("EnhanceTrace","enhanceTrace"),
 			"-",
@@ -1745,21 +1823,6 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		//add db rows
 		if (this.rowData.queryRows.length) {
 			var row = this.queryRowTag.insertRows({rows: this.rowData.queryRows}, this.table.childNodes[1])[0];
-			do {
-				newRow = this.querySqlTag.insertRows({row: this.rowData.queryRows[rowNum]},row)[0];
-				// build SQL string
-				sqlString ="";
-				if (this.rowData.queryRows[rowNum].TYPE == "StoredProcedure") {
-					sqlString += FormatterPlate.formatSPParams(this.rowData.queryRows[rowNum].PARAMETERS);
-					sqlString += FormatterPlate.formatSPResultSets(this.rowData.queryRows[rowNum].RESULTSETS);
-				} else {
-					sqlString += FormatterPlate.formatQuery(this.rowData.queryRows[rowNum].SQL,this.rowData.queryRows[rowNum].PARAMETERS);
-				}	
-				// put this string in new row
-				newRow.firstChild.firstChild.innerHTML = sqlString;				
-				row = newRow.nextSibling;
-				rowNum++;				
-			} while (row)					
 		}		
 	},
 		
@@ -1992,9 +2055,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 	
 	addVariable: function(variable){		
 		var variableLine = this.context.chrome.$("fbColdFireVariableLine");
-		var varString = variable ? variable : variableLine.value;
-		
-		
+		var varString = variable ? variable : variableLine.value;	
 		var re = /^[A-Za-z_\u0024\u00A2\u00A3\u00A4\u00A5\u09F2\u09F3\u0E3F\u17DB\uFDFC\u20A0\u20A1\u20A2\u20A3\u20A4\u20A5\u20A6\u20A8\u20A9\u20AA\u20AB\u20AC\u20AD\u20AD\u20AD\u20AE\u20AF\u20B0\u20B1][A-Za-z0-9_\u0024\u00A2\u00A3\u00A4\u00A5\u09F2\u09F3\u0E3F\u17DB\uFDFC\u20A0\u20A1\u20A2\u20A3\u20A4\u20A5\u20A6\u20A8\u20A9\u20AA\u20AB\u20AC\u20AD\u20AD\u20AD\u20AE\u20AF\u20B0\u20B1]*$/;
 
 		if (!re.test(varString)) {			
@@ -2053,7 +2114,22 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 				command: bindFixed(ColdFire.updatePref, ColdFire, option, !ColdFire[option])
 				};		
 	},
+	
+	cfMenuOptionRefresh: function (label, option) {
+		return {
+				label: $CFSTR(label), 
+				type: "checkbox", 
+				nol10n: true,
+				checked: ColdFire[option],
+				command: bindFixed(this.toggleOption, this, option)
+				};		
+	},
 		
+	toggleOption: function (option) {
+		ColdFire.updatePref(option,!ColdFire[option]);
+		this.displayCurrentView();
+	},
+			
 	// handle files from netMonitor
 	
 	updateFile: function(file)
@@ -2066,15 +2142,15 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			if (this.queue.length >= ColdFire['maxQueueRequests'])
 				this.queue.splice(0, 1);
 			
-			index = this.queue.push(file) - 1;											
+			index = this.queue.push(file) - 1;	
 			
-		}	
+			if (ColdFire['showLastRequest'] || index == 0) {
+				this.navigate(file);
+			} else {
+				this.displayCurrentView();
+			}
 		
-		if (ColdFire['showLastRequest'] || index == 0) {
-			this.navigate(file);
-		} else {
-			this.displayCurrentView();
-		}
+		}	
 			
 	},
 	

@@ -70,6 +70,18 @@
 	background: url(chrome://coldfireextension/skin/sqlslowbg.gif) repeat-x #FFFFFF;
 }
 
+.queryParam {
+	font-style: italic;
+}
+
+.procHead {
+	background-color: #CCCCCC;
+	text-align: center;
+}
+
+.procSubHead {
+	font-style: italic;
+}
 
 /* variables */
 .variableToolbox {
@@ -79,11 +91,6 @@
     padding: 1px 2px;
 }
 
-#reqSelect {
-	font-family: Lucida Grande, Tahoma, sans-serif;
-    font-size: 11px;
-	width: 100%;
-}
 
 /* dump */
 table.cfdump_wddx,
