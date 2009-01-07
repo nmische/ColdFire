@@ -27,14 +27,24 @@ http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_web
 
 ------------------------------ LAST UPDATE ----------------------------- 
 
-Last Updated: Dec 21, 2008 (@VERSION@)
+Last Updated: Jan 7, 2009 (@VERSION@)
+
+* first 1.3 release!
+* fixed issues with trace.cfm custom tag.
+* new UI for selecting files from request queue.
+* added suppress query white space option.
+* toggling parse query params option now updates UI immediately.
+* updated query tab to use Firebug domplate.
+
+
+------------------------------ OLDER UPDATES ---------------------------
+
+Last Updated: Dec 21, 2008 (1.2.117.126)
 
 * fixed issues with execution times tab summary rows. (issues 42 and 44) 
 * fixed issue with variables tab. (issue 43) 
 * improved multiple tab support.
 
-
------------------------------- OLDER UPDATES ---------------------------
 
 Last Updated: Nov 16, 2008 (1.2.117.117)
 
@@ -42,6 +52,8 @@ Last Updated: Nov 16, 2008 (1.2.117.117)
 * added Application.cfc components to allow for variable tab usage on 
   sites that use Applicaiton.onRequest(). 
 * added support for enhanced tracing.
+
+
 Last Updated: Oct 21, 2008 (1.2.95.100)
 
 * updated coldfusion.js to fix cfsqltype formatting issue (issue 41).
