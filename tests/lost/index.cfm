@@ -27,6 +27,41 @@
 	FROM Users
 </cfquery>
 
+<cfquery name="getPassengersWithWhitespace" datasource="coldfiretest" cachedwithin="#CreateTimeSpan(0,0,5,0)#">
+	
+	
+	
+	
+	
+	
+	
+	SELECT
+	
+		UserID,
+		
+
+    			FirstName
+,
+
+    		
+	
+	   LastName,
+	  Active
+	FROM 
+	
+	
+	
+	
+Users
+
+
+   
+   
+			
+					
+						
+</cfquery>
+
 <cfquery name="getJack" datasource="coldfiretest">
 	SELECT 
 		*
