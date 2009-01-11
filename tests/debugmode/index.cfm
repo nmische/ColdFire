@@ -7,6 +7,13 @@
 <html>
 <head>
 	<title>ColdFire Tests</title>
+	
+	<script type="text/javascript">
+		window.onload = function(){
+			console.log(window._coldfireForceDebug);
+		};	
+	</script>
+	
 </head>
 <body>
 <h1>Debugging Mode Tests</h1>

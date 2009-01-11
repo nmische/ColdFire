@@ -6,7 +6,9 @@
 <body>
 <h1>ColdFire Tests</h1>
 <ul>
-	<li><a href="ajax/spryAutosuggest.cfm">AJAX Autosuggest</a></li>
+	<li><a href="ajax/spryAutosuggest.cfm">AJAX Autosuggest (Spry)</a></li>
+	<li><a href="ajax/cfAutosuggestCFC.cfm">AJAX Autosuggest (CFForm/CFC)</a></li>
+	<li><a href="ajax/cfAutosuggestCFM.cfm">AJAX Autosuggest (CFForm/CFM)</a></li>
 	<li><a href="ajax/cfdiv.cfm">AJAX CFDiv</a></li>
 	<li><a href="appcfc/index.cfm">Application CFC</a></li>
 	<li><a href="css/index.cfm">CSS</a></li>
