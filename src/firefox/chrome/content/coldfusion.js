@@ -706,6 +706,12 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 		this.syncVariablesBox(chrome);
 	},	
 	
+	watchWindow: function(context, win)
+	{
+		if (ColdFire["forceDebug"])
+   			win.wrappedJSObject._coldfireForceDebug = true;
+	},
+	
 	showContext: function(browser, context)
     {
 		
@@ -720,7 +726,7 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 		}		
 
     },
-	
+		
 	showPanel: function( browser, panel ) 
 	{ 		
 		Chrome = browser.chrome;		
@@ -770,9 +776,13 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 		
 		if (topic == 'http-on-modify-request' && this.enabled) {
 			
-			subject.setRequestHeader("User-Agent",
+			try{
+				subject.setRequestHeader("User-Agent",
 					subject.getRequestHeader("User-Agent") + " " + "ColdFire/" + ColdFire.version,
 					true);
+			} catch (e) {
+				logger.logMessage(e);
+			}
 			
 			try{
 				var variables = FirebugContext.getPanel( "coldfusion" ).variables;
@@ -792,6 +802,17 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 			} catch (e) {
 				logger.logMessage(e);
 			}
+			
+			/*
+			try{
+				if(ColdFire['forceDebug'])
+					subject.setRequestHeader("x-coldfire-force-debug", 
+						"true",
+						true);
+			} catch (e) {
+				logger.logMessage(e);
+			}
+			*/
 					
 		}		 
 	},
@@ -1317,8 +1338,13 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		}
 		// supress white space
 		if (ColdFire['suppressWhiteSpace']) {
-			var re = /^\s*$/mg;
-			sqlText = sqlText.replace(re,"");	
+			
+			var re = /^\s+\b\n?/gm;
+			sqlText = sqlText.replace(re,"");
+
+			re = /[ \f\r\t\v\u00A0\u2028\u2029]{2,}/g;
+			sqlText = sqlText.replace(re," ");
+		
 		}
 		
 		return sqlText;		
@@ -1545,6 +1571,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			this.cfMenuOptionRefresh("SuppressQueryWhiteSpace","suppressWhiteSpace"),
 			this.cfMenuOption("ShowLastRequest","showLastRequest"),
 			this.cfMenuOption("EnhanceTrace","enhanceTrace"),
+			{label: $CFSTR("ForceDebugging"), type: "checkbox", nol10n: true, checked: ColdFire["forceDebug"], command: bindFixed(this.toggleForceDebug, this, "forceDebug") },	
 			"-",
 			{label: $CFSTR("ClearVariables"), nol10n: true, command: bindFixed(this.deleteVariables, this) }      
 		];
@@ -1639,7 +1666,8 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		try{
 		//query rows		
 		for( var i = 0; i < theObj.queriesObj.DATA.DATASOURCE.length; i++ ){
-			this.rowData.dbET += parseInt(theObj.queriesObj.DATA.ET[i]);			
+			if(!isNaN(parseInt(theObj.queriesObj.DATA.ET[i])))
+				this.rowData.dbET += parseInt(theObj.queriesObj.DATA.ET[i]);			
 			var query = {
 				DATASOURCE: theObj.queriesObj.DATA.DATASOURCE[i],
 				ET: theObj.queriesObj.DATA.ET[i],
@@ -1660,7 +1688,8 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		try{
 		//et rows	  
 		for(var i = 0; i < theObj.templatesObj.DATA.TOTALTIME.length; i++){
-			this.rowData.templateET += parseInt(theObj.templatesObj.DATA.TOTALTIME[i]);
+			if(!isNaN(parseInt(theObj.templatesObj.DATA.TOTALTIME[i])))
+				this.rowData.templateET += parseInt(theObj.templatesObj.DATA.TOTALTIME[i]);
 			var temp = { 
 				TYPE: "Template",
 				TOTALTIME: theObj.templatesObj.DATA.TOTALTIME[i],
@@ -1672,7 +1701,8 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			this.rowData.etRows.push(temp);
 		}
 		for(var i = 0; i < theObj.ctemplatesObj.DATA.TOTALTIME.length; i++){
-			this.rowData.ctemplateET += parseInt(theObj.ctemplatesObj.DATA.TOTALTIME[i]);
+			if(!isNaN(parseInt(theObj.ctemplatesObj.DATA.TOTALTIME[i])))
+				this.rowData.ctemplateET += parseInt(theObj.ctemplatesObj.DATA.TOTALTIME[i]);
 			var temp = { 
 				TYPE: "Child Template / Tag",
 				TOTALTIME: theObj.ctemplatesObj.DATA.TOTALTIME[i],
@@ -1684,7 +1714,8 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			this.rowData.etRows.push(temp);
 		}
 		for(var i = 0; i < theObj.cfcsObj.DATA.TOTALTIME.length; i++){
-			this.rowData.cfcET += parseInt(theObj.cfcsObj.DATA.TOTALTIME[i]);
+			if(!isNaN(parseInt(theObj.cfcsObj.DATA.TOTALTIME[i])))
+				this.rowData.cfcET += parseInt(theObj.cfcsObj.DATA.TOTALTIME[i]);
 			var temp = { 
 				TYPE: "CFC",
 				TOTALTIME: theObj.cfcsObj.DATA.TOTALTIME[i],
@@ -1738,7 +1769,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		}catch(e){ logger.logMessage(e) }
 		
 		//total exection time
-		if (this.rowData.totalET == 0) {
+		if (this.rowData.totalET < 0) {
 			this.rowData.totalET = this.rowData.dbET + this.rowData.cfcET + this.rowData.templateET + this.rowData.ctemplateET;
 		}
 		
@@ -1788,7 +1819,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			}, this.table.childNodes[1])[0];
 			//other time row
 			var otherRow = this.etOtherRow.insertRows({
-				time: this.rowData.totalET - this.rowData.templateET - this.rowData.ctemplateET - this.rowData.cfcET
+				time: this.rowData.totalET - this.rowData.templateET
 			}, this.table.lastChild)[0];
 			//total row
 			var totalRow = this.etTotalRow.insertRows({
@@ -2058,9 +2089,14 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		var varString = variable ? variable : variableLine.value;	
 		var re = /^[A-Za-z_\u0024\u00A2\u00A3\u00A4\u00A5\u09F2\u09F3\u0E3F\u17DB\uFDFC\u20A0\u20A1\u20A2\u20A3\u20A4\u20A5\u20A6\u20A8\u20A9\u20AA\u20AB\u20AC\u20AD\u20AD\u20AD\u20AE\u20AF\u20B0\u20B1][A-Za-z0-9_\u0024\u00A2\u00A3\u00A4\u00A5\u09F2\u09F3\u0E3F\u17DB\uFDFC\u20A0\u20A1\u20A2\u20A3\u20A4\u20A5\u20A6\u20A8\u20A9\u20AA\u20AB\u20AC\u20AD\u20AD\u20AD\u20AE\u20AF\u20B0\u20B1]*$/;
 
-		if (!re.test(varString)) {			
-			promtService.alert(window, $CFSTR("ColdFire"), $CFSTR("InvalidVarName") + ": " + varString);
-			return;			
+		
+		var nameArray = varString.split(".");
+		
+		for (var i=0; i < nameArray.length; i++) {	
+			if (!re.test(nameArray[i])) {			
+				promtService.alert(window, $CFSTR("ColdFire"), $CFSTR("InvalidVarName") + ": " + varString);
+				return;			
+			}
 		}
 				
 		variableLine.value = "";
@@ -2123,6 +2159,15 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 				checked: ColdFire[option],
 				command: bindFixed(this.toggleOption, this, option)
 				};		
+	},
+	
+	toggleForceDebug: function (option) {
+		var val = !ColdFire[option]
+		ColdFire.updatePref(option,val);
+		if(this.context.window) {
+			this.context.window.wrappedJSObject._coldfireForceDebug = val;
+		}
+		this.displayCurrentView();
 	},
 		
 	toggleOption: function (option) {

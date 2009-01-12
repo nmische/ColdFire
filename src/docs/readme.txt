@@ -27,6 +27,20 @@ http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_web
 
 ------------------------------ LAST UPDATE ----------------------------- 
 
+Last Updated: Jan 11, 2009 (@VERSION@)
+
+* updated coldfire.cfm to address variable dump issue due to variable
+  scope pollution.
+* fixed issues with execution times (Thanks Ray Camden).
+* added cfajax.js to support new "Force Debugging" option for CF AJAX
+  requests.
+* enhanced white space suppression (Thanks Ray Camden and John Hartmann).
+* updated variable name validation in Variables tab to allow dot
+  notation.
+
+
+------------------------------ OLDER UPDATES ---------------------------
+
 Last Updated: Jan 7, 2009 (@VERSION@)
 
 * first 1.3 release!
@@ -36,8 +50,6 @@ Last Updated: Jan 7, 2009 (@VERSION@)
 * toggling parse query params option now updates UI immediately.
 * updated query tab to use Firebug domplate.
 
-
------------------------------- OLDER UPDATES ---------------------------
 
 Last Updated: Dec 21, 2008 (1.2.117.126)
 

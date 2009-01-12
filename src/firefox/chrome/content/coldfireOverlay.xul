@@ -74,7 +74,7 @@
 
 	
 	<vbox id="fbContentBox">
-		<hbox id="fbColdFireVariableBox"> 
+		<hbox id="fbColdFireVariableBox" collapsed="true"> 
 	        <label 
 	        	id="fbColdFireVariablePrompt" 
 	        	value="&coldfire.AddVariable;:"/>

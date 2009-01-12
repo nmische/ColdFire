@@ -264,8 +264,12 @@ Handles server side debugging for ColdFire
 	   	from data
 	   	where type = 'ExecutionTime'
 	</cfquery>
-	<cfset totaltime = cfdebug_execution.executiontime>
-		
+	
+	<cfif cfdebug_execution.recordcount>
+		<cfset totaltime = cfdebug_execution.executiontime>
+	<cfelse>
+		<cfset totaltime = -1>
+	</cfif>		
 	
 	<cfset queryAddRow(result)>
 	<cfset querySetCell(result, "label", "ColdFusionServer")>
@@ -591,33 +595,41 @@ Handles server side debugging for ColdFire
 	
 	<cfargument name="variableNames" type="array" required="true">
 	
-	<cfset var result = queryNew("label,value")>
-	<cfset var x = 1>
+	<cfset var __coldfireResult__ = queryNew("label,value")>
+	<cfset var __coldfireX__ = 1>
 	
-	<cfloop index="x" from="1" to="#arrayLen(arguments.variableNames)#">
-		
-		<cfset QueryAddRow(result)>
+	<cfloop index="__coldfireX__" from="1" to="#arrayLen(arguments.variableNames)#">
 			
-		<!--- set the label --->
-		<cfset QuerySetCell(result,"label",arguments.variableNames[x])>
+		<cftry>
+			
+			<cfset QueryAddRow(__coldfireResult__)>		
+				
+			<!--- set the label --->
+			<cfset QuerySetCell(__coldfireResult__,"label",arguments.variableNames[__coldfireX__])>
+			
+			<cfif CompareNoCase(variableNames[__coldfireX__],"variables") neq 0 and IsDefined(variableNames[__coldfireX__])>								
+				<!--- get the value --->
+				<cfset QuerySetCell(__coldfireResult__,"value",coldfire_udf_encode(evaluate(variableNames[__coldfireX__])))>			
+			<cfelseif StructKeyExists(request,"__coldFireVariableValues__") and StructKeyExists(request.__coldFireVariableValues__,variableNames[__coldfireX__])>
+				<!--- check to see if we were using application.cfm --->
+				<cfset QuerySetCell(__coldfireResult__,"value",coldfire_udf_encode(evaluate("request.__coldFireVariableValues__." & variableNames[__coldfireX__])))>
+			<cfelseif CompareNoCase(variableNames[__coldfireX__],"variables") eq 0>
+				<!--- get the value --->
+				<cfset QuerySetCell(__coldfireResult__,"value",coldfire_udf_encode(evaluate(variableNames[__coldfireX__])))>	
+			<cfelse>
+				<!--- set default value --->
+				<cfset QuerySetCell(__coldfireResult__,"value",coldfire_udf_encode("undefined"))>			
+			</cfif>
 		
-		<cfif CompareNoCase(variableNames[x],"variables") neq 0 and IsDefined(variableNames[x])>								
-			<!--- get the value --->
-			<cfset QuerySetCell(result,"value",coldfire_udf_encode(evaluate(variableNames[x])))>			
-		<cfelseif StructKeyExists(request,"__coldFireVariableValues__") and StructKeyExists(request.__coldFireVariableValues__,variableNames[x])>
-			<!--- check to see if we were using application.cfm --->
-			<cfset QuerySetCell(result,"value",coldfire_udf_encode(evaluate("request.__coldFireVariableValues__." & variableNames[x])))>
-		<cfelseif CompareNoCase(variableNames[x],"variables") eq 0>
-			<!--- get the value --->
-			<cfset QuerySetCell(result,"value",coldfire_udf_encode(evaluate(variableNames[x])))>	
-		<cfelse>
-			<!--- set default value --->
-			<cfset QuerySetCell(result,"value",coldfire_udf_encode("undefined"))>			
-		</cfif>
+			<cfcatch>
+				<!--- do nothing --->
+			</cfcatch>
+		
+		</cftry>
 		
 	</cfloop>
 	
-	<cfreturn result>
+	<cfreturn __coldfireResult__>
 	
 </cffunction>
 

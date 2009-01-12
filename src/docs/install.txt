@@ -124,11 +124,26 @@ Proceed with caution and be sure to backup all modified files!
 
 Another optional feature of ColdFire is enhanced tracing. To enable this
 feature you must install a custom trace.cfm tag. To install this tag
-find the wwwroot/WEB-INF/cftags folder under you ColdFusion installation
+find the wwwroot/WEB-INF/cftags folder under your ColdFusion installation
 folder. In this folder there should be a template named trace.cfm. Make
 a backup of this file, then rename it to trace_adobe.cfm and copy the
 trace.cfm tag, found in the coldfusion/cftags folder of the installation
 package, to the cftags folder.
+
+-Forced Debugging-
+
+NOTE: Forced debuggin involves altering your ColdFuison installation.
+Proceed with caution and be sure to backup all modified files!
+
+ColdFusion's AJAX libraries disable ColdFusion debugging, and hence
+ColdFire, by appending the _cf_nodebug parameter to AJAX requests.
+ColdFire gives you the option to override this behavior by installing
+a modified AJAX library. To install this library find the cfajax.js
+in your installations CFIDE/scripts/ajax/package folder and rename 
+it to cfajax.bak. Copy the cfajax.js file found in the 
+coldfusion/scripts folder of the installation package to the 
+CFIDE/scripts/ajax/package folder. To enable debugging of AJAX requests
+select the "Force Debugging" option in the ColdFire Firebug panel.
 
 
 5. Where ColdFire Does Not Work
@@ -140,7 +155,10 @@ not be able to work. First - if you use CFFLUSH anywhere on the page,
 ColdFire is unable to add header information to the request. Secondly -
 there are situations where certain tags will implicitly flush output.
 One example is CFTIMER/type="inline". Any use of this tag and attribute
-combination will result in ColdFire not returning any data.
+combination will result in ColdFire not returning any data. Thirdly -
+you cannot add headers to remote cfc calls after the requested method 
+is invoked (ie. in OnRequstEnd or the debugging template). This means
+you cannot use ColdFire to debug AJAX requests bound to components.
 
 As noted in the previous section, the variables tab will not work for
 applications using the onRequest method of Application.cfc unless the
