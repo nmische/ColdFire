@@ -41,7 +41,7 @@ Last Updated: Jan 11, 2009 (@VERSION@)
 
 ------------------------------ OLDER UPDATES ---------------------------
 
-Last Updated: Jan 7, 2009 (@VERSION@)
+Last Updated: Jan 7, 2009 (1.3.142.145)
 
 * first 1.3 release!
 * fixed issues with trace.cfm custom tag.
