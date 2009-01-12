@@ -111,6 +111,7 @@
 		<property name="install.dir" value="OperatingSystemPathToTestPofile"/>
        	<property name="cfserver.debug.dir" value="OperatingSystemPathToColdFusionDebugTemplates" />
 		<property name="cfserver.cftags.dir" value="OperatingSystemPathToColdFusionCFTagsTemplates" />
+		<property name="cfserver.cfide.dir" value="OperatingSystemPathToColdFusionCFIDEDirectory" />		
 		<property name="profile.name" value="NameOfTestProfile" />
     </target>
 
@@ -153,11 +154,19 @@
 		<available file="${cfserver.cftags.dir}/trace_adobe.cfm" property="trace_adobe.present" />
 	</target>
 	
-	<target name="backup-trace" description="checks that a backup of trace.cfm exists as trace_adobe.cfm" unless="trace_adobe.present">
+	<target name="backup-trace" description="backup trace.cfm as trace_adobe.cfm" unless="trace_adobe.present">
 		<copy file="${cfserver.cftags.dir}/trace.cfm" tofile="${cfserver.cftags.dir}/trace_adobe.cfm" />
 	</target>
+	
+	<target name="check-cfajax" description="checks that a backup of cfajax.js exists as cfajax.bak">
+		<available file="${cfserver.cfide.dir}/scripts/ajax/package/cfajax.bak" property="cfajax.bak.present" />
+	</target>
+	
+	<target name="backup-cfajax" description="backup cfajax.js as cfajax.bak" unless="cfajax.bak.present">
+		<copy file="${cfserver.cfide.dir}/scripts/ajax/package/cfajax.js" tofile="${cfserver.cftags.dir}/scripts/ajax/package/cfajax.bak" />
+	</target>
 
-	<target name="copy-to-cfserver" depends="version,check-trace,backup-trace" description="copies coldfusion debug template to server">
+	<target name="copy-to-cfserver" depends="version,check-trace,backup-trace,check-cfajax,backup-cfajax" description="copies coldfusion debug template to server">
         <copy file="${src.cf.dir}/debug/coldfire.cfm" tofile="${cfserver.debug.dir}/coldfire.cfm" overwrite="true">
                <filterchain>
                        <replacetokens>
@@ -166,6 +175,7 @@
                </filterchain>
         </copy>
 		<copy file="${src.cf.dir}/cftags/trace.cfm" tofile="${cfserver.cftags.dir}/trace.cfm" overwrite="true" />
+		<copy file="${src.cf.dir}/scripts/cfajax.js" tofile="${cfserver.cfide.dir}/scripts/ajax/package/cfajax.js" overwrite="true" />
     </target>
 
 	<target name="incremental-ff" depends="version, expand-templates, copy-to-extensions" description="builds a development version of the firefox extension and copies to profile" />
@@ -195,6 +205,7 @@
                </filterchain>
         </copy>
 		<copy file="${src.cf.dir}/cftags/trace.cfm" tofile="${build.cf.dir}/cftags/trace.cfm" overwrite="true" />
+		<copy file="${src.cf.dir}/scripts/cfajax.js" tofile="${build.cf.dir}/scripts/cfajax.js" overwrite="true" />
 		<copy file="${src.cf.dir}/appcfc/cf7/Application.cfc" tofile="${build.cf.dir}/appcfc/cf7/Application.cfc" overwrite="true" />
 		<copy file="${src.cf.dir}/appcfc/cf8/Application.cfc" tofile="${build.cf.dir}/appcfc/cf8/Application.cfc" overwrite="true" />
 	</target>
