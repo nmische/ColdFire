@@ -27,14 +27,18 @@ http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_web
 
 ------------------------------ LAST UPDATE ----------------------------- 
 
-Last Updated: Dec 21, 2008 (@VERSION@)
+Last Updated: Jan 14, 2008 (@VERSION@)
+
+* fixed issues with trace.cfm custom tag.
+
+
+------------------------------ OLDER UPDATES ---------------------------
+
+Last Updated: Dec 21, 2008 (1.2.117.126)
 
 * fixed issues with execution times tab summary rows. (issues 42 and 44) 
 * fixed issue with variables tab. (issue 43) 
 * improved multiple tab support.
-
-
------------------------------- OLDER UPDATES ---------------------------
 
 Last Updated: Nov 16, 2008 (1.2.117.117)
 
