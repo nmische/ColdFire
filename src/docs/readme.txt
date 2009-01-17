@@ -27,7 +27,14 @@ http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_web
 
 ------------------------------ LAST UPDATE ----------------------------- 
 
-Last Updated: Jan 11, 2009 (@VERSION@)
+Last Updated: Jan 17, 2009 (@VERSION@)
+
+* removed dependency on custom cfajax library.
+
+
+------------------------------ OLDER UPDATES ---------------------------
+
+Last Updated: Jan 11, 2009 (1.3.151.151)
 
 * updated coldfire.cfm to address variable dump issue due to variable
   scope pollution.
@@ -38,8 +45,6 @@ Last Updated: Jan 11, 2009 (@VERSION@)
 * updated variable name validation in Variables tab to allow dot
   notation.
 
-
------------------------------- OLDER UPDATES ---------------------------
 
 Last Updated: Jan 7, 2009 (1.3.142.145)
 

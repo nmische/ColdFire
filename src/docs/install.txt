@@ -130,21 +130,6 @@ a backup of this file, then rename it to trace_adobe.cfm and copy the
 trace.cfm tag, found in the coldfusion/cftags folder of the installation
 package, to the cftags folder.
 
--Forced Debugging-
-
-NOTE: Forced debuggin involves altering your ColdFuison installation.
-Proceed with caution and be sure to backup all modified files!
-
-ColdFusion's AJAX libraries disable ColdFusion debugging, and hence
-ColdFire, by appending the _cf_nodebug parameter to AJAX requests.
-ColdFire gives you the option to override this behavior by installing
-a modified AJAX library. To install this library find the cfajax.js
-in your installations CFIDE/scripts/ajax/package folder and rename 
-it to cfajax.bak. Copy the cfajax.js file found in the 
-coldfusion/scripts folder of the installation package to the 
-CFIDE/scripts/ajax/package folder. To enable debugging of AJAX requests
-select the "Force Debugging" option in the ColdFire Firebug panel.
-
 
 5. Where ColdFire Does Not Work
 -----------------------------------------------------------------------

@@ -706,12 +706,6 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 		this.syncVariablesBox(chrome);
 	},	
 	
-	watchWindow: function(context, win)
-	{
-		if (ColdFire["forceDebug"])
-   			win.wrappedJSObject._coldfireForceDebug = true;
-	},
-	
 	showContext: function(browser, context)
     {
 		
@@ -725,6 +719,13 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 			panel.updateLocation(context.coldfire.file);
 		}		
 
+    },
+	
+	loadedContext: function(context)
+    {		
+		if (context.window.wrappedJSObject.ColdFusion && ColdFire["forceDebug"]) {
+			setDebugMode(context.window.wrappedJSObject.ColdFusion,true);
+		}		
     },
 		
 	showPanel: function( browser, panel ) 
@@ -1571,7 +1572,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			this.cfMenuOptionRefresh("SuppressQueryWhiteSpace","suppressWhiteSpace"),
 			this.cfMenuOption("ShowLastRequest","showLastRequest"),
 			this.cfMenuOption("EnhanceTrace","enhanceTrace"),
-			{label: $CFSTR("ForceDebugging"), type: "checkbox", nol10n: true, checked: ColdFire["forceDebug"], command: bindFixed(this.toggleForceDebug, this, "forceDebug") },	
+			{label: $CFSTR("EnableCFAJAXDebugging"), type: "checkbox", nol10n: true, checked: ColdFire["forceDebug"], command: bindFixed(this.toggleForceDebug, this, "forceDebug") },	
 			"-",
 			{label: $CFSTR("ClearVariables"), nol10n: true, command: bindFixed(this.deleteVariables, this) }      
 		];
@@ -2164,10 +2165,9 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 	toggleForceDebug: function (option) {
 		var val = !ColdFire[option]
 		ColdFire.updatePref(option,val);
-		if(this.context.window) {
-			this.context.window.wrappedJSObject._coldfireForceDebug = val;
-		}
-		this.displayCurrentView();
+		if (this.context.window.wrappedJSObject.ColdFusion) {
+			setDebugMode(this.context.window.wrappedJSObject.ColdFusion,val);
+		}		
 	},
 		
 	toggleOption: function (option) {
