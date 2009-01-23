@@ -12,6 +12,7 @@
 	<li><a href="ajax/cfdiv.cfm">AJAX CFDiv</a></li>
 	<li><a href="appcfc/index.cfm">Application CFC</a></li>
 	<li><a href="css/index.cfm">CSS</a></li>
+	<li><a href="exceptions/index.cfm">Exceptions</a></li>
 	<li><a href="flashforms/index.cfm">Flash Forms</a></li>
 	<li><a href="frames/frameset.cfm">Frames</a></li>
 	<li><a href="dumptests/index.cfm">Dump Tests</a></li>
