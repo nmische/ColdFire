@@ -26,6 +26,8 @@
 	<li><a href="##" onclick="loadTests('wddx')">WDDX</a></li>
 	<li><a href="##" onclick="loadTests('xml')">XML</a></li>
 </ul>
+
+<p><small><b>Note:</b> you cannot use coldfire debugging with these tests. Either disable debugging or use classic.cfm.</small></p>
 </body>
 </html>
 </cfoutput>
