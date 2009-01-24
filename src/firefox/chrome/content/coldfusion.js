@@ -836,6 +836,7 @@ RowData.prototype =
 {
     generalRows: [],
 	etRows: [],
+	exceptionRows: [],
 	queryRows: [],
 	traceRows: [],
 	timerRows: [],
@@ -849,6 +850,7 @@ RowData.prototype =
 	clear: function() {
 		this.generalRows = [];
 		this.etRows = [];
+		this.exceptionRows = [];
 		this.queryRows = [];
 		this.traceRows = [];
 		this.timerRows = [];
@@ -979,6 +981,37 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			TD({class: "valueCell bold", width: "90%", colspan: 4}, $CFSTR('CFCExecTime')),
 			TD({class: "valueCell bold", width: "10%", align: "right", colspan: 2}, "$times|formatCFCTime")		
 		),	
+		
+	exceptionHeaderRow:
+		TR({class: "headerRow"},
+			TH({class: "headerCell", width: "10%"},
+				DIV({class: "headerCellBox"},
+					$CFSTR('Timestamp')
+				)
+			),
+			TH({class: "headerCell alphaValue", width: "25%"},
+				DIV({class: "headerCellBox"},
+					$CFSTR('Type')
+				)
+			),
+			TH({class: "headerCell alphaValue", width: "65%"},
+				DIV({class: "headerCellBox"},
+					$CFSTR('Template')
+				)
+			)			
+		),
+	
+	exceptionRowTag:
+		FOR("row", "$rows",
+			TR(
+				TD({width: "10%"},"$row.TIMESTAMP|formatTimeStamp"),
+				TD({width: "25%"},"$row.NAME|formatExceptionName"),				
+				TD({width: "65%"},"$row|formatExceptionLocation")                    
+			),
+			TR(
+				TD({class: "valueCell exceptionMessage", width: "100%", colspan: 3}, PRE("$row.MESSAGE"))
+			)		
+		),
 		
 		
 	queryHeaderRow:
@@ -1241,6 +1274,20 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 	isSlow: function(time)
 	{
 		return (parseInt(time) > 250)? "slow": "";
+	},
+	
+	formatExceptionName: function(name)
+	{
+		var i = name.indexOf("Exception");
+		if (i >= 0)
+			return name;
+		
+		return name + " Exception";
+	},
+	
+	formatExceptionLocation: function(row)
+	{
+		return row.TEMPLATE + " : line " + row.LINE;
 	},
 	
 	formatCachedQuery: function(cached)
@@ -1523,6 +1570,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 								
 				var headers = {
 					general: [],
+					exceptions: [],
 					queries: [],
 					trace: [],
 					templates: [],
@@ -1543,6 +1591,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 				
 				var cfObj = {
 					generalObj: eval( "(" + this.stringifyHeaders(headers.general) + ")" ),
+					exceptionsObj: eval( "(" + this.stringifyHeaders(headers.exceptions) + ")" ),
 					queriesObj: eval( "(" + this.stringifyHeaders(headers.queries) + ")" ),
 					traceObj: eval( "(" + this.stringifyHeaders(headers.trace) + ")" ),
 					templatesObj:  eval( "(" + this.stringifyHeaders(headers.templates) + ")" ),
@@ -1661,6 +1710,20 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 				VALUE: theObj.generalObj.DATA.VALUE[i]
 			}
 			this.rowData.generalRows.push( temp );
+		}
+		}catch(e){ logger.logMessage(e) }
+		
+		try{		
+		//exception rows
+		for( var i = 0; i < theObj.exceptionsObj.DATA.NAME.length; i++ ){
+			var exception = {
+				TIMESTAMP: theObj.exceptionsObj.DATA.TIMESTAMP[i],
+				NAME: theObj.exceptionsObj.DATA.NAME[i],
+				TEMPLATE: theObj.exceptionsObj.DATA.TEMPLATE[i],
+				LINE: theObj.exceptionsObj.DATA.LINE[i],
+				MESSAGE: theObj.exceptionsObj.DATA.MESSAGE[i]
+			};	
+			this.rowData.exceptionRows.push(exception);
 		}
 		}catch(e){ logger.logMessage(e) }
 		
@@ -1785,6 +1848,9 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			case "ET":
 				this.renderETTable();
 				break;
+			case "Exceptions":
+				this.renderExceptionTable();
+				break;
 			case "DB":
 				this.renderDBTable();
 				break;
@@ -1843,6 +1909,17 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 				}
 			}, dbRow)[0];			
 		}
+	},
+	
+	renderExceptionTable: function() {				
+		//create table		
+		this.table = this.tableTag.append({}, this.panelNode, this);
+		//create header		
+		var headerRow =  this.exceptionHeaderRow.insertRows({}, this.table.firstChild)[0];
+		//add exception rows
+		if (this.rowData.exceptionRows.length) {
+			var row = this.exceptionRowTag.insertRows({rows: this.rowData.exceptionRows}, this.table.childNodes[1])[0];
+		}		
 	},
 	
 	renderDBTable: function() {				

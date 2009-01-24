@@ -1,9 +1,9 @@
 <!ENTITY  coldfire.AddVariable           "Add Variable">
 <!ENTITY  coldfire.ColdFire              "ColdFire">
 <!ENTITY  coldfire.General               "General">
-<!ENTITY  coldfire.ExecutionTimes        "Execution Times">
+<!ENTITY  coldfire.ExecTimes             "Exec Times">
+<!ENTITY  coldfire.Exceptions            "Exceptions">
 <!ENTITY  coldfire.DBQueries             "DB Queries">
 <!ENTITY  coldfire.Traces                "Traces">
 <!ENTITY  coldfire.Timer                 "Timer">
-<!ENTITY  coldfire.Variable              "Variable">
 <!ENTITY  coldfire.Variables             "Variables">

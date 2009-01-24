@@ -38,6 +38,12 @@
     border: none;
 }
 
+/* exception */
+.exceptionMessage {
+	font-family: Monaco, monospace;
+	padding-left: 20px;
+}
+
 /* trace */
 .traceWarning {
 	background-color:#FFFACD;
