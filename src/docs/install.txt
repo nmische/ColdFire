@@ -130,6 +130,70 @@ a backup of this file, then rename it to trace_adobe.cfm and copy the
 trace.cfm tag, found in the coldfusion/cftags folder of the installation
 package, to the cftags folder.
 
+-ColdSpring AOP-
+
+ColdFusion does not run the debugging template at the end of remote
+CFC requests, which means that ColdFire debugging information will
+not be available to Flex Remoting, CF AJAX, or other similar
+requests. To work around this issue the ColdFire debugging template
+has been implemented as ColdSpring after returning advice. This advice
+can be found in the coldfusion/coldspring folder of the installation
+package. The following ColdSpring configuration demonstrates how this
+advice may be applied to a ColdSpring remote proxy.
+
+<beans>  
+
+	<bean 
+		id="service" 
+		class="myapp.service" />  
+
+	<bean 
+		id="remoteService" 
+		class="coldspring.aop.framework.RemoteFactoryBean" 
+		lazy-init="false">  
+		
+		<property name="target">  
+			<ref bean="service" />  
+		</property>  
+		<property name="serviceName">  
+			<value>remoteService</value>  
+		</property>  
+		<property name="relativePath">  
+			<value>/remote</value>  
+		</property>  
+		<property name="remoteMethodNames">  
+			<value>*</value>  
+		</property>  
+		<property name="beanFactoryName">  
+			<value>beanFactory</value>  
+		</property>  
+		<property name="interceptorNames">
+			<list>
+				<value>coldfireAdvisor</value>
+			</list>
+		</property>
+		
+	</bean>  	
+	
+	<bean 
+		id="coldfireAdvice" 
+		class="coldfire.ColdFireAdvice" />
+
+	<bean 
+		id="coldfireAdvisor" 
+		class="coldspring.aop.support.NamedMethodPointcutAdvisor">
+		
+		<property name="advice">
+			<ref bean="coldfireAdvice" />
+		</property>
+		<property name="mappedNames">
+			<value>*</value>
+		</property>
+		
+	</bean>
+
+</beans>
+
 
 5. Where ColdFire Does Not Work
 -----------------------------------------------------------------------
@@ -143,7 +207,8 @@ One example is CFTIMER/type="inline". Any use of this tag and attribute
 combination will result in ColdFire not returning any data. Thirdly -
 you cannot add headers to remote cfc calls after the requested method 
 is invoked (ie. in OnRequstEnd or the debugging template). This means
-you cannot use ColdFire to debug AJAX requests bound to components.
+you cannot use ColdFire to debug AJAX requests bound to components
+unless you use the provided ColdSpring AOP advice. 
 
 As noted in the previous section, the variables tab will not work for
 applications using the onRequest method of Application.cfc unless the

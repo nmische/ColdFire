@@ -27,9 +27,11 @@ http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_web
 
 ------------------------------ LAST UPDATE ----------------------------- 
 
-Last Updated: Jan 17, 2009 (@VERSION@)
+Last Updated: Jan 24, 2009 (@VERSION@)
 
 * removed dependency on custom cfajax library.
+* added exceptions tab.
+* added ColdFireAdvice for ColdSpring AOP.
 
 
 ------------------------------ OLDER UPDATES ---------------------------
