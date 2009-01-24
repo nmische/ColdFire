@@ -1,0 +1,1 @@
+<!--- This file should be built before testing using the copy-to-tests ANT target --->

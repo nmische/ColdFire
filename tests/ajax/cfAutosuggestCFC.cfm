@@ -6,11 +6,11 @@
 <cfform>
     Last Name:<br />
     <cfinput type="text" name="lastName"
-        autosuggest="cfc:suggestcfc.getLNames({cfautosuggestvalue})"><br />
+        autosuggest="cfc:remoteSuggestCFC.getLNames({cfautosuggestvalue})"><br />
     <br />
     First Name:<br />
     <cfinput type="text" name="firstName"
-        autosuggest="cfc:suggestcfc.getFNames({cfautosuggestvalue},{lastName})">
+        autosuggest="cfc:remoteSuggestCFC.getFNames({cfautosuggestvalue},{lastName})">
 </cfform>
 </body>
 </html>
