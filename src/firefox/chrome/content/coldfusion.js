@@ -45,7 +45,9 @@ const STATE_STOP = Ci.nsIWebProgressListener.STATE_STOP;
 const STATE_IS_REQUEST = Ci.nsIWebProgressListener.STATE_IS_REQUEST;
 const NOTIFY_ALL = Ci.nsIWebProgress.NOTIFY_ALL;
 const nsIObserverService = Ci.nsIObserverService;
-const observerService = CCSV("@mozilla.org/observer-service;1", "nsIObserverService");
+const observerService = CCSV("@joehewitt.com/firebug-http-observer;1", "nsIObserverService");
+const promtService = CCSV("@mozilla.org/embedcomp/prompt-service;1", "nsIPromptService");
+
 const logger = new LoggingUtil();
 
 function defineTags(){
@@ -439,7 +441,7 @@ const FormatterPlate = domplate(
 	},
 	
 	formatString: function(value){
-		return "unknown object type:" + value.toString();
+		return (value) ? value.toString() : "";
 	},
 	
 	queryColSpan: function(value) {
@@ -644,125 +646,12 @@ const FormatterPlate = domplate(
 		}
 	},	
 	
-	/* this code for query formatting needs to be updated to use the domplate */
-	
-	cfsqltypes: [
-		"unknown",
-		//numeric types
-		"cf_sql_bigint", "cf_sql_bit", "cf_sql_blob", "cf_sql_decimal", "cf_sql_double", "cf_sql_float", "cf_sql_integer", "cf_sql_money", "cf_sql_money4", "cf_sql_numeric", "cf_sql_real", "cf_sql_refcursor", "cf_sql_smallint", "cf_sql_tinyint", 
-		//date time types
-		"cf_sql_date", "cf_sql_time", "cf_sql_timestamp",
-		//text types
-		"cf_sql_char", "cf_sql_clob", "cf_sql_idstamp", "cf_sql_longvarchar", "cf_sql_varchar"	
-	],
-	
-	formatQuery: function( sql, params){		
-		var sqlText = sql;
-		if (params.length && params.length > 0) {
-			// find out how many question marks we have in the query
-			var questionMarks = sqlText.match(/\?/g);
-			// if the number of question marks matches the number of values 
-			// and the option to parse is set to true go ahead and replace 
-			// question marks with parameter values	
-			if ((params.length == questionMarks.length) && ColdFire['parseParams'] ) {	
-				for (var i = 0; i < params.length; i++) {
-					// get the formatted value	
-					var val = this.formatParamValue(params[i]);
-					sqlText = sqlText.replace(/\?/,val);
-				}				
-			} else {
-				sqlText += this.formatQueryParams(params);
-			}
-		}
-		return sqlText;		
-	},
-	
-	formatQueryParams: function( params ){
-		if (params.length > 0){
-			var paramString = new StringBuffer();
-			paramString.append("<I><BR/>" + $CFSTR("QueryParamValues") + " -");
-			for( var x = 0; x < params.length; x++ ){
-				paramString.append("<BR/>" + $CFSTR("Parameter") + "#" + (x + 1) + "(" + this.cfsqltypes[params[x][0]] + ") = " + this.__escape__(params[x][1]));
-			}
-			paramString.append("</I>");
-			return paramString.toString();
-		}
-		return "";
-	},
-	
-	formatSPParams: function( params ) {		
-		if (params.length > 0) {
-			var tblString = new StringBuffer();
-			tblString.append("<TABLE border='0' cellpadding='2' cellspacing='0' width='100%'><TR style='background-color:#CCCCCC'><TH colspan='5' align='center'><B>" + $CFSTR("StoredProcedureParameters") + "</B></TH></TR><TR><TD><I>" + $CFSTR("lcType") + "</I></TD><TD><I>" + $CFSTR("lcCFSqlType") + "</I></TD><TD><I>" + $CFSTR("lcValue") +"</I></TD><TD><I>" + $CFSTR("lcVariable") + "</I></TD><TD><I>" + $CFSTR("lcDBVarname") + "</I></TD></TR>");
-			for( var x = 0; x < params.length; x++ ){
-				tblString.append("<TR><TD>" + params[x][0] + "</TD><TD>" + this.cfsqltypes[params[x][1]] + "</TD><TD>" + this.__escape__(params[x][2]) + "</TD><TD>" + params[x][3] + "</TD><TD>" + params[x][4] + "</TD></TR>");
-			}
-			tblString.append("</TABLE>");
-			return tblString.toString();			
-		}		
-		return "";
-	},
-	
-	formatSPResultSets: function( reslutsets ) {
-		if (reslutsets.length > 0) {
-			var tblString = new StringBuffer();
-			tblString.append("<TABLE border='0' cellpadding='2' cellspacing='0' width='100%'><TR style='background-color:#CCCCCC'><TH colspan='5' align='center'><B>" + $CFSTR("StoredProcedureResultSets") + "</B></TH></TR><TR><TD><I>" + $CFSTR("lcName") + "</I></TD><TD><I>" + $CFSTR("lcResultset") + "</I></TD></TR>");
-			for( var x = 0; x < reslutsets.length; x++ ){
-				tblString.append("<TR><TD>" + reslutsets[x][0] + "</TD><TD>" + reslutsets[x][1] + "</TD</TR>");
-			}
-			tblString.append("</TABLE>");
-			return tblString.toString();			
-		}		
-		return "";
-	},
-	
-	formatParamValue: function( param ) {
-		var type = param[0];
-		var value = param[1];
-		var tmpVal = value;
-		if (type == 2){
-			// handle bit types
-			tmpVal = (value == "1" || value.toUpperCase() == "TRUE" || value.toUpperCase() == "YES") ? 1 : 0;
-		} else if ( type < 15){
-			// handle numeric types
-			tmpVal =  value;
-		} else if (type < 18) {
-			// handle date time types
-			tmpVal = (value.indexOf("{") == 0) ? value : "'" + value + "'";
-		} else if (type < 23) {
-			// handle text types
-			tmpVal = "'" + value.toString().replace(/'/g, "''") + "'";
-		}		
-		return this.__escape__(tmpVal);		
-	},
-	
-	__escape__: function (value) {
-        function replaceChars(ch)
-        {
-            switch (ch)
-            {
-                case "<":
-                    return "&lt;";
-                case ">":
-                    return "&gt;";
-                case "&":
-                    return "&amp;";
-                case "'":
-                    return "&#39;";
-                case '"':
-                    return "&quot;";
-            }
-            return "?";
-        };
-        return String(value).replace(/[<>&"']/g, replaceChars);
-    }
-
 });
 
 	
 var ColdFire;
-var Chrome;
 var panelName = "coldfusion";
+var Chrome;
 
 // coldfire module
 
@@ -778,7 +667,7 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 	{		
 		ColdFire = FirebugChrome.window.ColdFire;
 		ColdFire.initialize();
-		observerService.addObserver(this, "http-on-modify-request", false);
+		observerService.addObserver(this, "firebug-http-event", false);
 	},
 	
 	initializeUI: function(detachArgs)
@@ -790,7 +679,7 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 	{
 		ColdFire.shutdown();
 		ColdFire = null;
-		observerService.removeObserver(context.coldfireProxy, "http-on-modify-request", false);
+		observerService.removeObserver(this, "firebug-http-event");
 		if(Firebug.getPref( 'defaultPanelName')=='coldfire' ) 
 		{
 			Firebug.setPref( 'defaultPanelName','console' );
@@ -807,47 +696,43 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 		} else {	
 			this.enabled = false;		
 			tab.setAttribute("disabled", "true");
-		} 	
+		} 			
 	},
 			
 	reattachContext: function(context)
 	{
 		var chrome = context ? context.chrome : FirebugChrome;
 		this.syncFilterButtons(chrome);
-	},	
-	
-	destroyContext: function( context ) 
-	{
-		// do nothing now
+		this.syncVariablesBox(chrome);
 	},	
 	
 	showContext: function(browser, context)
     {
+		
 		var panel = context.getPanel(panelName);		
-		if (context.cfFileIndex == undefined) {
+		
+		if (!context.coldfire || !context.coldfire.file) {
 			panel.clear();
-			panel.showFile(0);
+			panel.updateLocation(null);
 		}
 		else {
-			panel.showFile(context.cfFileIndex);
-		}
+			panel.updateLocation(context.coldfire.file);
+		}		
+
+    },
+	
+	loadedContext: function(context)
+    {		
+		if (context.window.wrappedJSObject.ColdFusion && ColdFire["forceDebug"]) {
+			setDebugMode(context.window.wrappedJSObject.ColdFusion,true);
+		}		
     },
 		
 	showPanel: function( browser, panel ) 
-	{ 	
-		
-		//TODO: Move this logic into ColdFirePanel.show()
-		
+	{ 		
 		Chrome = browser.chrome;		
-		
-		var isColdFireExtension = panel && panel.name == "coldfusion"; 
-		var isVariablesView = this.coldfireView == "Variables";
-		var ColdFireVariableBox = Chrome.$( "fbColdFireVariableBox" ); 
-		collapse(ColdFireVariableBox, !(isColdFireExtension && isVariablesView));		
-		
 		if (panel && panel.name == "coldfusion" && this.enabled)
-			this.changeCurrentView(this.coldfireView);
-		
+			this.changeCurrentView(this.coldfireView);		
 	},
 	
 	// coldfire
@@ -855,19 +740,25 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 	coldfireView: "General",
 		
 	syncFilterButtons: function(chrome)
-	{
-		var button = chrome.$("fbColdFireFilter-"+this.coldfireView);
+	{		
+		var theChrome = chrome ? chrome : Chrome;
+		var button = theChrome.$("fbColdFireFilter-"+this.coldfireView);
 		button.checked = true;    
 	},	
-			
-	changeCurrentView: function( view ) {
-				
-		this.coldfireView = view;
-				
+	
+	syncVariablesBox: function(chrome)
+	{		
+		var theChrome = chrome ? chrome : Chrome;
 		var isVariablesView = this.coldfireView == "Variables";
-		var ColdFireVariableBox = Chrome.$( "fbColdFireVariableBox" ); 
-		collapse(ColdFireVariableBox, !(isVariablesView));
-		
+		var coldFireVariableBox = theChrome.$("fbColdFireVariableBox"); 
+		collapse(coldFireVariableBox, !(isVariablesView));		
+	},
+	
+	changeCurrentView: function( view ) 
+	{				
+		this.coldfireView = view;
+		this.syncFilterButtons();
+		this.syncVariablesBox();		
 		FirebugContext.getPanel( "coldfusion" ).displayCurrentView();
 	},	
 	
@@ -880,12 +771,19 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 	
 	// nsIObserver interface method
 	observe: function(subject, topic, data) {		
+		
+		if (!(subject instanceof Ci.nsIHttpChannel))
+                return;
+		
 		if (topic == 'http-on-modify-request' && this.enabled) {
 			
-			subject.QueryInterface(Ci.nsIHttpChannel);
-			subject.setRequestHeader("User-Agent",
+			try{
+				subject.setRequestHeader("User-Agent",
 					subject.getRequestHeader("User-Agent") + " " + "ColdFire/" + ColdFire.version,
 					true);
+			} catch (e) {
+				logger.logMessage(e);
+			}
 			
 			try{
 				var variables = FirebugContext.getPanel( "coldfusion" ).variables;
@@ -905,6 +803,17 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 			} catch (e) {
 				logger.logMessage(e);
 			}
+			
+			/*
+			try{
+				if(ColdFire['forceDebug'])
+					subject.setRequestHeader("x-coldfire-force-debug", 
+						"true",
+						true);
+			} catch (e) {
+				logger.logMessage(e);
+			}
+			*/
 					
 		}		 
 	},
@@ -927,6 +836,7 @@ RowData.prototype =
 {
     generalRows: [],
 	etRows: [],
+	exceptionRows: [],
 	queryRows: [],
 	traceRows: [],
 	timerRows: [],
@@ -940,6 +850,7 @@ RowData.prototype =
 	clear: function() {
 		this.generalRows = [];
 		this.etRows = [];
+		this.exceptionRows = [];
 		this.queryRows = [];
 		this.traceRows = [];
 		this.timerRows = [];
@@ -1071,6 +982,37 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			TD({class: "valueCell bold", width: "10%", align: "right", colspan: 2}, "$times|formatCFCTime")		
 		),	
 		
+	exceptionHeaderRow:
+		TR({class: "headerRow"},
+			TH({class: "headerCell", width: "10%"},
+				DIV({class: "headerCellBox"},
+					$CFSTR('Timestamp')
+				)
+			),
+			TH({class: "headerCell alphaValue", width: "25%"},
+				DIV({class: "headerCellBox"},
+					$CFSTR('Type')
+				)
+			),
+			TH({class: "headerCell alphaValue", width: "65%"},
+				DIV({class: "headerCellBox"},
+					$CFSTR('Template')
+				)
+			)			
+		),
+	
+	exceptionRowTag:
+		FOR("row", "$rows",
+			TR(
+				TD({width: "10%"},"$row.TIMESTAMP|formatTimeStamp"),
+				TD({width: "25%"},"$row.NAME|formatExceptionName"),				
+				TD({width: "65%"},"$row|formatExceptionLocation")                    
+			),
+			TR(
+				TD({class: "valueCell exceptionMessage", width: "100%", colspan: 3}, PRE("$row.MESSAGE"))
+			)		
+		),
+		
 		
 	queryHeaderRow:
 		TR({class: "headerRow queryTable", onclick: "$onHeaderClick"},
@@ -1121,12 +1063,79 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 				TD({width: "7%", align: "center", nowrap: "true"}, "$row.CACHEDQUERY|formatCachedQuery"),
 				TD({width: "49%"}, "$row.TEMPLATE"),
 				TD({width: "10%", align:"right"}, "$row.TIMESTAMP|formatTimeStamp")                    
-			)			
+			),
+			TR({class: "querySQL $row.ET|isSlow"},
+				TD({class: "valueCell", width: "100%", colspan: 7},
+					TAG('$row|queryDisplay', {row:'$row'})					
+				)
+			)		
 		),
 		
-	querySqlTag:
-		TR(
-			TD({class: "valueCell querySQL $row.ET|isSlow", width: "100%", colspan: 7},PRE())
+	storedProcTag:
+		DIV(
+			TAG("$this.spParamsTag", {parameters: "$row.PARAMETERS"}),
+			TAG("$this.spResultSetsTag", {resultsets: "$row.RESULTSETS"})
+		),
+		
+	spParamsTag:
+		TABLE({border: 0, width: "100%", cellpadding: 2, cellspacing: 0},		
+			THEAD(),
+			TBODY(
+				TR({class: "procHead"},
+					TH({colspan: "5", class: "procHead"}, $CFSTR("StoredProcedureParameters"))
+				),
+				TR({class: "procSubHead"},
+					TD({class: "procSubHead"}, $CFSTR("lcType")),
+					TD({class: "procSubHead"}, $CFSTR("lcCFSqlType")),
+					TD({class: "procSubHead"}, $CFSTR("lcValue")),
+					TD({class: "procSubHead"}, $CFSTR("lcVariable")),
+					TD({class: "procSubHead"}, $CFSTR("lcDBVarname"))
+				),
+				FOR("param", "$parameters",
+					TR({class: "procValue"},
+						TD({class: "procValue"},"$param|formatParamType"),
+						TD({class: "procValue"},"$param|formatParamCFSqlType"),
+						TD({class: "procValue"},"$param|formatParamValue"),
+						TD({class: "procValue"},"$param|formatParamVariable"),
+						TD({class: "procValue"},"$param|formatParamDBVarname")
+					)				
+				)	
+			),
+			TFOOT()		
+		),	
+	
+	spResultSetsTag:
+		TABLE({border: 0, width: "100%", cellpadding: 2, cellspacing: 0},		
+			TBODY(
+				TR({class: "procHead"},
+					TH({colspan: "2", class: "procHead"}, $CFSTR("StoredProcedureResultSets"))
+				),
+				TR({class: "procSubHead"},
+					TD({class: "procSubHead"}, $CFSTR("lcName")),
+					TD({class: "procSubHead"}, $CFSTR("lcResultset"))
+				),
+				FOR("resultset", "$resultsets",
+					TR({class: "procValue"},
+						TD({class: "procValue"},"$resultset|formatResultsetName"),
+						TD({class: "procValue"},"$resultset|formatResultsetNumber")
+					)				
+				)		
+			)			
+		),	
+		
+	sqlTag:
+		DIV (
+			PRE("$row|formatSQLString"),
+			TAG("$row|queryParamDisplay", {parameters: "$row.PARAMETERS"})
+		),
+		
+	sqlParamsTag:
+		DIV (
+			BR(),
+			DIV({class: "queryParam"}, "$parameters|formatParamHeader"),
+			FOR("param", "$parameters",
+				DIV({class: "queryParam"},"$param|fomatParamString")
+			)
 		),
 		
 	traceHeaderRow:
@@ -1225,18 +1234,32 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 				TD({class: "valueCell varValue", width: "80%", valign: "top"})
 			)
 		),
-	
-	
-	getGeneralOption: function(file)
-	{
-		if (file.isSelected) {
-			return this.generalOptionSelected;
-		} else {
-			return this.generalOption;
-		}
 		
+	blankDiv:
+		DIV(""),
+	
+	queryDisplay: function(row)
+	{
+		if (row.TYPE == "StoredProcedure") {
+			return this.storedProcTag;
+		} else {
+			return this.sqlTag;
+		}
 	},
 	
+	queryParamDisplay: function(row)
+	{
+		var sqlText = row.SQL;
+		var params = row.PARAMETERS;
+		if (params.length && params.length > 0) {			
+			var questionMarks = sqlText.match(/\?/g);			
+			if (!((params.length == questionMarks.length) && ColdFire['parseParams'] )) {	
+				return this.sqlParamsTag;				
+			}			
+		} 		
+		return this.blankDiv;				
+	},
+		
 	// convenience for domplates
 		
 	safeCFSTR: function(name)
@@ -1251,6 +1274,20 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 	isSlow: function(time)
 	{
 		return (parseInt(time) > 250)? "slow": "";
+	},
+	
+	formatExceptionName: function(name)
+	{
+		var i = name.indexOf("Exception");
+		if (i >= 0)
+			return name;
+		
+		return name + " Exception";
+	},
+	
+	formatExceptionLocation: function(row)
+	{
+		return row.TEMPLATE + " : line " + row.LINE;
 	},
 	
 	formatCachedQuery: function(cached)
@@ -1332,6 +1369,117 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		return times.cfcET + "ms (" + per + "%)";
 	},	
 	
+	formatSQLString: function(query)
+	{		
+		var sqlText = query.SQL;
+		var params = query.PARAMETERS;
+		// parse parameters
+		if (params.length && params.length > 0) {			
+			var questionMarks = sqlText.match(/\?/g);			
+			if ((params.length == questionMarks.length) && ColdFire['parseParams'] ) {	
+				for (var i = 0; i < params.length; i++) {
+					// get the formatted value	
+					var val = this.formatParamInlineValue(params[i]);
+					sqlText = sqlText.replace(/\?/,val);
+				}				
+			}
+		}
+		// supress white space
+		if (ColdFire['suppressWhiteSpace']) {
+			
+			var re = /^\s+\b\n?/gm;
+			sqlText = sqlText.replace(re,"");
+
+			re = /[ \f\r\t\v\u00A0\u2028\u2029]{2,}/g;
+			sqlText = sqlText.replace(re," ");
+		
+		}
+		
+		return sqlText;		
+	},
+	
+	formatParamInlineValue: function(param) 
+	{
+		var type = param[0];
+		var value = param[1];
+		var tmpVal = value;
+		if (type == 2){
+			// handle bit types
+			tmpVal = (value == "1" || value.toUpperCase() == "TRUE" || value.toUpperCase() == "YES") ? 1 : 0;
+		} else if ( type < 15){
+			// handle numeric types
+			tmpVal =  value;
+		} else if (type < 18) {
+			// handle date time types
+			tmpVal = (value.indexOf("{") == 0) ? value : "'" + value + "'";
+		} else if (type < 23) {
+			// handle text types
+			tmpVal = "'" + value.toString().replace(/'/g, "''") + "'";
+		}
+		return tmpVal;				
+	},
+	
+	formatParamHeader: function(parameters)
+	{
+		// this is a little hack to store the param index for display in formatParamString below.
+		for(var i = 0; i < parameters.length; i++) {
+			var param = parameters[i];
+			param[param.length] = i + 1;
+		}
+		return $CFSTR("QueryParamValues") + " -";
+	},
+	
+	fomatParamString: function(param) {		
+		return $CFSTR("Parameter") + " #" + param[param.length-1] + " (" + this.cfsqltypes[param[0]] + ") = " + param[1];
+	},
+	
+	formatParamType: function(param)
+	{
+		return param[0];
+	},
+	
+	formatParamCFSqlType: function(param)
+	{
+		return this.cfsqltypes[param[1]];
+	},
+	
+	formatParamValue: function(param)
+	{
+		return param[2];
+	},
+	
+	formatParamVariable: function(param)
+	{
+		return param[3];
+	},
+	
+	formatParamDBVarname: function(param)
+	{
+		return param[4];
+	},
+	
+	formatResultsetName: function(resultset)
+	{
+		return resultset[0];
+	},
+	
+	formatResultsetNumber: function(resultset)
+	{
+		return resultset[1];
+	},
+	
+	// lookup array for CF SQL types
+	
+	cfsqltypes: [
+		"unknown",
+		//numeric types
+		"cf_sql_bigint", "cf_sql_bit", "cf_sql_blob", "cf_sql_decimal", "cf_sql_double", "cf_sql_float", "cf_sql_integer", "cf_sql_money", "cf_sql_money4", "cf_sql_numeric", "cf_sql_real", "cf_sql_refcursor", "cf_sql_smallint", "cf_sql_tinyint", 
+		//date time types
+		"cf_sql_date", "cf_sql_time", "cf_sql_timestamp",
+		//text types
+		"cf_sql_char", "cf_sql_clob", "cf_sql_idstamp", "cf_sql_longvarchar", "cf_sql_varchar"	
+	],	
+	
 	// extends panel	
 	
 	name: panelName, 
@@ -1346,17 +1494,14 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		this.onMouseOut = bind(this.onMouseOut, this);		
 		this.setUpDoc(doc);	
 		this.clear();		
-			
+					
 		Firebug.Panel.initialize.apply(this, arguments);		
 	},	 
-		
-	destroy: function(state)
-	{
-		if (state)
-	   		state.variables = this.variables;
-
-		Firebug.Panel.destroy.apply(this, arguments);
-	},	
+	
+	destroy: function(state) // Panel may store info on state
+    {
+        Firebug.Panel.destroy.apply(this, arguments);
+    },
 		
 	reattach: function(doc)
 	{
@@ -1365,7 +1510,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		Firebug.Panel.reattach.apply(this, arguments);	
 	}, 	
 	
-	initializeNode: function(oldPanelNode)
+	initializeNode: function(myPanelNode)
 	{
 		this.panelNode.addEventListener("mouseover", this.onMouseOver, false);
 		this.panelNode.addEventListener("mouseout", this.onMouseOut, false);
@@ -1384,34 +1529,113 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		
 		var shouldShow = this.shouldShow();
  		this.showToolbarButtons("fbColdFireExtensionButtonsFilter", shouldShow);
+		this.showToolbarButtons("fbColdFireVariableBox", shouldShow && Firebug.ColdFireModule.coldfireView == "Variables");
+		
 		if (!shouldShow)
 			return;		
 		
-		if (state)
-			this.variables = state.variables;
-			
-		this.displayCurrentView();		
+		this.displayCurrentView();			
 	},
-		
 		
 	hide: function(state)
 	{
-		if (state)
-	   		state.variables = this.variables;
-			
 		this.showToolbarButtons("fbColdFireExtensionButtons", false);	
+		this.showToolbarButtons("fbColdFireVariableBox", false);
+		
 	},
+	
+	supportsObject: function(object)
+    {
+ 		if (object instanceof NetFile)
+			return 1;
+			
+		return 0;
+    },
+	
+	navigate: function(object)
+    {
+		Firebug.Panel.navigate.apply(this, arguments);
+    },
+	
+	updateLocation: function(object)
+    {			
+			if(!object){
+				this.displayCurrentView();	
+				return;				
+			}
+			
+			var file = object;		
+				 
+			if(!file.hasOwnProperty("cfObj")) {	
+								
+				var headers = {
+					general: [],
+					exceptions: [],
+					queries: [],
+					trace: [],
+					templates: [],
+					ctemplates: [],
+					cfcs: [],
+					timer: [],
+					variables: []
+				};
+				
+				var re = /x-coldfire-([a-z]*)-([0-9]*)/;
+				
+				for (var i = 0; i < file.responseHeaders.length; i++){
+					var cfheader = re.exec(file.responseHeaders[i].name);
+					if (cfheader){
+						headers[cfheader[1]][parseInt(cfheader[2]) - 1] = file.responseHeaders[i].value;
+					}					
+				};
+				
+				var cfObj = {
+					generalObj: eval( "(" + this.stringifyHeaders(headers.general) + ")" ),
+					exceptionsObj: eval( "(" + this.stringifyHeaders(headers.exceptions) + ")" ),
+					queriesObj: eval( "(" + this.stringifyHeaders(headers.queries) + ")" ),
+					traceObj: eval( "(" + this.stringifyHeaders(headers.trace) + ")" ),
+					templatesObj:  eval( "(" + this.stringifyHeaders(headers.templates) + ")" ),
+					ctemplatesObj: eval( "(" + this.stringifyHeaders(headers.ctemplates) + ")" ),
+					cfcsObj: eval( "(" + this.stringifyHeaders(headers.cfcs) + ")" ),
+					timerObj: eval( "(" + this.stringifyHeaders(headers.timer) + ")"),
+					variablesObj: eval( "(" + this.stringifyHeaders(headers.variables) + ")")
+				};			
+			
+			};	
+		
+			this.context.coldfire = { file: file };				
+			this.generateRows(cfObj);							
+			this.displayCurrentView();
+		 
+    },
+	
+	getLocationList: function()
+    {
+        return this.queue;
+    },	
 	
 	getOptionsMenuItems: function()
 	{
 		return [
-			this.cfMenuOption("ParseQueryParams","parseParams"),
+			this.cfMenuOptionRefresh("ParseQueryParams","parseParams"),
+			this.cfMenuOptionRefresh("SuppressQueryWhiteSpace","suppressWhiteSpace"),
 			this.cfMenuOption("ShowLastRequest","showLastRequest"),
 			this.cfMenuOption("EnhanceTrace","enhanceTrace"),
+			{label: $CFSTR("EnableCFAJAXDebugging"), type: "checkbox", nol10n: true, checked: ColdFire["forceDebug"], command: bindFixed(this.toggleForceDebug, this, "forceDebug") },	
 			"-",
 			{label: $CFSTR("ClearVariables"), nol10n: true, command: bindFixed(this.deleteVariables, this) }      
 		];
 	},
+	
+	getDefaultLocation: function(context)
+    {
+        return null;
+    },
+	
+	getObjectLocation: function(object)
+    {
+		return object.href;
+    },
 	
 	// see net panel
 	
@@ -1427,16 +1651,16 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 	
 	// coldfire	
 	
-	file: null,
 	queue: [],
 	variables: [],		
 	rowData: new RowData(),
 	
 	clear: function()
     {
-		this.file = null;
 		this.queue = [];
 		this.rowData.clear();
+		delete this.location;
+
     },
 	
 	setUpDoc: function(doc){
@@ -1468,57 +1692,6 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		}
 	},	
 	
-	showFile: function(index) {
-		
-		var file = this.queue[index];
-		
-		if(file) {
-						
-			if(!file.cfObj){	
-				
-				var headers = {
-					general: [],
-					queries: [],
-					trace: [],
-					templates: [],
-					ctemplates: [],
-					cfcs: [],
-					timer: [],
-					variables: []
-				}
-				
-				var re = /x-coldfire-([a-z]*)-([0-9]*)/;
-				
-				for (var i = 0; i < file.responseHeaders.length; i++){
-					var cfheader = re.exec(file.responseHeaders[i].name);
-					if (cfheader){
-						headers[cfheader[1]][parseInt(cfheader[2]) - 1] = file.responseHeaders[i].value;
-					}					
-				}
-				
-				var cfObj = {
-					generalObj: eval( "(" + this.stringifyHeaders(headers.general) + ")" ),
-					queriesObj: eval( "(" + this.stringifyHeaders(headers.queries) + ")" ),
-					traceObj: eval( "(" + this.stringifyHeaders(headers.trace) + ")" ),
-					templatesObj:  eval( "(" + this.stringifyHeaders(headers.templates) + ")" ),
-					ctemplatesObj: eval( "(" + this.stringifyHeaders(headers.ctemplates) + ")" ),
-					cfcsObj: eval( "(" + this.stringifyHeaders(headers.cfcs) + ")" ),
-					timerObj: eval( "(" + this.stringifyHeaders(headers.timer) + ")"),
-					variablesObj: eval( "(" + this.stringifyHeaders(headers.variables) + ")")
-				};
-				
-				file.cfObj = cfObj;
-				
-			}
-			
-			this.context.cfFileIndex = index;
-			this.file = file;		
-			this.generateRows(file.cfObj);							
-			this.displayCurrentView();
-		}	
-		
-	},
-	
 	generateRows: function( theObj )
 	{
 		
@@ -1540,10 +1713,25 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		}
 		}catch(e){ logger.logMessage(e) }
 		
+		try{		
+		//exception rows
+		for( var i = 0; i < theObj.exceptionsObj.DATA.NAME.length; i++ ){
+			var exception = {
+				TIMESTAMP: theObj.exceptionsObj.DATA.TIMESTAMP[i],
+				NAME: theObj.exceptionsObj.DATA.NAME[i],
+				TEMPLATE: theObj.exceptionsObj.DATA.TEMPLATE[i],
+				LINE: theObj.exceptionsObj.DATA.LINE[i],
+				MESSAGE: theObj.exceptionsObj.DATA.MESSAGE[i]
+			};	
+			this.rowData.exceptionRows.push(exception);
+		}
+		}catch(e){ logger.logMessage(e) }
+		
 		try{
 		//query rows		
 		for( var i = 0; i < theObj.queriesObj.DATA.DATASOURCE.length; i++ ){
-			this.rowData.dbET += parseInt(theObj.queriesObj.DATA.ET[i]);			
+			if(!isNaN(parseInt(theObj.queriesObj.DATA.ET[i])))
+				this.rowData.dbET += parseInt(theObj.queriesObj.DATA.ET[i]);			
 			var query = {
 				DATASOURCE: theObj.queriesObj.DATA.DATASOURCE[i],
 				ET: theObj.queriesObj.DATA.ET[i],
@@ -1564,7 +1752,8 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		try{
 		//et rows	  
 		for(var i = 0; i < theObj.templatesObj.DATA.TOTALTIME.length; i++){
-			this.rowData.templateET += parseInt(theObj.templatesObj.DATA.TOTALTIME[i]);
+			if(!isNaN(parseInt(theObj.templatesObj.DATA.TOTALTIME[i])))
+				this.rowData.templateET += parseInt(theObj.templatesObj.DATA.TOTALTIME[i]);
 			var temp = { 
 				TYPE: "Template",
 				TOTALTIME: theObj.templatesObj.DATA.TOTALTIME[i],
@@ -1576,7 +1765,8 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			this.rowData.etRows.push(temp);
 		}
 		for(var i = 0; i < theObj.ctemplatesObj.DATA.TOTALTIME.length; i++){
-			this.rowData.ctemplateET += parseInt(theObj.ctemplatesObj.DATA.TOTALTIME[i]);
+			if(!isNaN(parseInt(theObj.ctemplatesObj.DATA.TOTALTIME[i])))
+				this.rowData.ctemplateET += parseInt(theObj.ctemplatesObj.DATA.TOTALTIME[i]);
 			var temp = { 
 				TYPE: "Child Template / Tag",
 				TOTALTIME: theObj.ctemplatesObj.DATA.TOTALTIME[i],
@@ -1588,7 +1778,8 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			this.rowData.etRows.push(temp);
 		}
 		for(var i = 0; i < theObj.cfcsObj.DATA.TOTALTIME.length; i++){
-			this.rowData.cfcET += parseInt(theObj.cfcsObj.DATA.TOTALTIME[i]);
+			if(!isNaN(parseInt(theObj.cfcsObj.DATA.TOTALTIME[i])))
+				this.rowData.cfcET += parseInt(theObj.cfcsObj.DATA.TOTALTIME[i]);
 			var temp = { 
 				TYPE: "CFC",
 				TOTALTIME: theObj.cfcsObj.DATA.TOTALTIME[i],
@@ -1642,7 +1833,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		}catch(e){ logger.logMessage(e) }
 		
 		//total exection time
-		if (this.rowData.totalET == 0) {
+		if (this.rowData.totalET < 0) {
 			this.rowData.totalET = this.rowData.dbET + this.rowData.cfcET + this.rowData.templateET + this.rowData.ctemplateET;
 		}
 		
@@ -1656,6 +1847,9 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 				break;
 			case "ET":
 				this.renderETTable();
+				break;
+			case "Exceptions":
+				this.renderExceptionTable();
 				break;
 			case "DB":
 				this.renderDBTable();
@@ -1675,18 +1869,6 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 	renderGeneralTable: function() {
 		//create table		
 		this.table = this.tableTag.append({}, this.panelNode, this);
-		//create header	
-		if (this.queue.length > 0) {
-			
-			var i = this.queue.length - 1;
-			while(i >= 0){
-				this.queue[i].isSelected = (this.queue[i] == this.file)? true : false;
-				i--;
-			}
-			
-			var headerRow = this.generalHeaderRow.insertRows({domPanel: this}, this.table.firstChild)[0];
-
-		}
 		//add general rows  
 		if(this.rowData.generalRows.length)
 			var row = this.generalRowTag.insertRows({rows: this.rowData.generalRows}, this.table.childNodes[1])[0];			
@@ -1704,7 +1886,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			}, this.table.childNodes[1])[0];
 			//other time row
 			var otherRow = this.etOtherRow.insertRows({
-				time: this.rowData.totalET - this.rowData.templateET - this.rowData.ctemplateET - this.rowData.cfcET
+				time: this.rowData.totalET - this.rowData.templateET
 			}, this.table.lastChild)[0];
 			//total row
 			var totalRow = this.etTotalRow.insertRows({
@@ -1729,6 +1911,17 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		}
 	},
 	
+	renderExceptionTable: function() {				
+		//create table		
+		this.table = this.tableTag.append({}, this.panelNode, this);
+		//create header		
+		var headerRow =  this.exceptionHeaderRow.insertRows({}, this.table.firstChild)[0];
+		//add exception rows
+		if (this.rowData.exceptionRows.length) {
+			var row = this.exceptionRowTag.insertRows({rows: this.rowData.exceptionRows}, this.table.childNodes[1])[0];
+		}		
+	},
+	
 	renderDBTable: function() {				
 		//create table		
 		this.table = this.tableTag.append({}, this.panelNode, this);
@@ -1739,21 +1932,6 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		//add db rows
 		if (this.rowData.queryRows.length) {
 			var row = this.queryRowTag.insertRows({rows: this.rowData.queryRows}, this.table.childNodes[1])[0];
-			do {
-				newRow = this.querySqlTag.insertRows({row: this.rowData.queryRows[rowNum]},row)[0];
-				// build SQL string
-				sqlString ="";
-				if (this.rowData.queryRows[rowNum].TYPE == "StoredProcedure") {
-					sqlString += FormatterPlate.formatSPParams(this.rowData.queryRows[rowNum].PARAMETERS);
-					sqlString += FormatterPlate.formatSPResultSets(this.rowData.queryRows[rowNum].RESULTSETS);
-				} else {
-					sqlString += FormatterPlate.formatQuery(this.rowData.queryRows[rowNum].SQL,this.rowData.queryRows[rowNum].PARAMETERS);
-				}	
-				// put this string in new row
-				newRow.firstChild.firstChild.innerHTML = sqlString;				
-				row = newRow.nextSibling;
-				rowNum++;				
-			} while (row)					
 		}		
 	},
 		
@@ -1977,11 +2155,6 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
         }
     },
 	
-	onChangeReq: function(event){
-		var select = event.target;
-		select.domPanel.showFile(select.selectedIndex);
-	},
-		
 	getVariableRowIndex : function(row) {
 		var index = -1;
 		for (; row && hasClass(row, "variableRow"); row = row.previousSibling)
@@ -1991,7 +2164,19 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 	
 	addVariable: function(variable){		
 		var variableLine = this.context.chrome.$("fbColdFireVariableLine");
-		var varString = variable ? variable : variableLine.value;
+		var varString = variable ? variable : variableLine.value;	
+		var re = /^[A-Za-z_\u0024\u00A2\u00A3\u00A4\u00A5\u09F2\u09F3\u0E3F\u17DB\uFDFC\u20A0\u20A1\u20A2\u20A3\u20A4\u20A5\u20A6\u20A8\u20A9\u20AA\u20AB\u20AC\u20AD\u20AD\u20AD\u20AE\u20AF\u20B0\u20B1][A-Za-z0-9_\u0024\u00A2\u00A3\u00A4\u00A5\u09F2\u09F3\u0E3F\u17DB\uFDFC\u20A0\u20A1\u20A2\u20A3\u20A4\u20A5\u20A6\u20A8\u20A9\u20AA\u20AB\u20AC\u20AD\u20AD\u20AD\u20AE\u20AF\u20B0\u20B1]*$/;
+
+		
+		var nameArray = varString.split(".");
+		
+		for (var i=0; i < nameArray.length; i++) {	
+			if (!re.test(nameArray[i])) {			
+				promtService.alert(window, $CFSTR("ColdFire"), $CFSTR("InvalidVarName") + ": " + varString);
+				return;			
+			}
+		}
+				
 		variableLine.value = "";
 					
 		if (varString.length > 0) 
@@ -2043,27 +2228,52 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 				command: bindFixed(ColdFire.updatePref, ColdFire, option, !ColdFire[option])
 				};		
 	},
+	
+	cfMenuOptionRefresh: function (label, option) {
+		return {
+				label: $CFSTR(label), 
+				type: "checkbox", 
+				nol10n: true,
+				checked: ColdFire[option],
+				command: bindFixed(this.toggleOption, this, option)
+				};		
+	},
+	
+	toggleForceDebug: function (option) {
+		var val = !ColdFire[option]
+		ColdFire.updatePref(option,val);
+		if (this.context.window.wrappedJSObject.ColdFusion) {
+			setDebugMode(this.context.window.wrappedJSObject.ColdFusion,val);
+		}		
+	},
 		
+	toggleOption: function (option) {
+		ColdFire.updatePref(option,!ColdFire[option]);
+		this.displayCurrentView();
+	},
+			
 	// handle files from netMonitor
 	
 	updateFile: function(file)
 	{
 		
 		var index = this.queue.indexOf(file);
-				
+					
 		if ((index == -1) && (this.hasColdFireHeader(file))) {
 			
 			if (this.queue.length >= ColdFire['maxQueueRequests'])
 				this.queue.splice(0, 1);
 			
-			index = this.queue.push(file) - 1;				
-											
+			index = this.queue.push(file) - 1;	
+			
 			if (ColdFire['showLastRequest'] || index == 0) {
-				this.showFile(index);
+				this.navigate(file);
 			} else {
 				this.displayCurrentView();
 			}
-		}		
+		
+		}	
+			
 	},
 	
 	hasColdFireHeader: function(file){

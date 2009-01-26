@@ -1,121 +1,5 @@
-<html>
-	<head>
-		<title>ColdFire Test</title>
-	</head>
-	<body>
-		<h1>ColdFire Test</h1>
-		
-		<cfinclude template="include.cfm" />
-		
-		<iframe height="100" with="75%" src="theothers.cfm" />
-		
-	
-	</body>
-</html>
-
-<!--- Test General Tab --->
-
-<!--- Test Execution Times Tab --->
-
-<cfset computer = CreateObject("component","computer") />
-<cfset log = computer.printLog() />
-
-<!--- Test DB Queries Tab --->
-
-<cfquery name="getPassengers" datasource="coldfiretest" cachedwithin="#CreateTimeSpan(0,0,5,0)#">
-	SELECT *
-	FROM Users
-</cfquery>
-
-<cfquery name="getPassengersWithWhitespace" datasource="coldfiretest" cachedwithin="#CreateTimeSpan(0,0,5,0)#">
-	
-	
-	
-	
-	
-	
-	
-	SELECT
-	
-		UserID,
-		
-
-    			FirstName
-,
-
-    		
-	
-	   LastName,
-	  Active
-	FROM 
-	
-	
-	
-	
-Users
-
-
-   
-   
-			
-					
-						
-</cfquery>
-
-<cfquery name="getJack" datasource="coldfiretest">
-	SELECT 
-		*
-	FROM 
-		Users
-	WHERE 
-		FirstName = <cfqueryparam value="Jack" cfsqltype="cf_sql_varchar">
-		AND Active = <cfqueryparam value="Yes" cfsqltype="cf_sql_bit">
-</cfquery>
-
-<cfstoredproc procedure="GetUsers" datasource="coldfiretest" debug="true">
-	<cfprocparam dbvarname="fnfilter" value="K" cfsqltype="cf_sql_varchar">
-	<cfprocparam dbvarname="lnfilter" value="A" cfsqltype="cf_sql_varchar">
-	<cfprocparam dbvarname="afilter" value="1" cfsqltype="cf_sql_bit">
-	<cfprocresult name="getKate">
-</cfstoredproc>
-
-<!--- Test Traces Tab (Text) --->
-
-<cftrace text="108:00" type="information">
-<cftrace text="004:00" type="warning">
-<cftrace text="001:00" type="warning">
-<cftrace text="000:10" type="warning">
-<cftrace text="000:00" type="error">
-<cftrace text="System Failure" type="fatal information">
-
-
-<!--- Test Timer Tab --->
-
-<cftimer label="Timer One" type="debug">
-<cf_sleep ms="3" />
-</cftimer>
-
-<cftimer label="Timer Two" type="debug">
-<cf_sleep ms="7" />
-</cftimer>
-
-<cftimer label="Timer Three" type="debug">
-<cf_sleep ms="14" />
-</cftimer>
-
-<cftimer label="Timer Four" type="debug">
-<cf_sleep ms="15" />
-</cftimer>
-
-<cftimer label="Timer Five" type="debug">
-<cf_sleep ms="22" />
-</cftimer>
-
-<cftimer label="Timer Six" type="debug">
-<cf_sleep ms="41" />
-</cftimer>
-
-<!--- Test Variables Tab --->
+<cfset computer= StructNew()>
+<cfset computer.processor = "Intel"/>
 
 <cfset flightNumber = "815" />
 <cfset stations = ArrayNew(1) />
@@ -194,14 +78,44 @@ Users
 </script>
 </cfsavecontent>
 
+
+
+
 <!--- Test Traces Tab (Var) --->
 
-<cftrace category="test" var="computer" />
-<cftrace category="test" var="log" />
-<cftrace category="LOST" var="flightNumber" />
+<cftrace text="Just Some Text" >
+
+<cftrace category="test" type="warning" var="computer" />
+<cftrace category="LOST" var="flightNumber" >
 <cftrace category="LOST" var="stations" />
-<cftrace var="multilineVar" />
-<cftrace var="undefinedVar" />
+
+<cftrace var="multilineVar" >
+<cftrace type="fatal information" var="undefinedVar" />
+
+<cftrace text="Hello World!" >
+<cftrace text="stations" var="stations" />
+
+<cftrace inline="true" text="Inline text trace." >
+
+<cftrace abort="true" text="This is an abort." />
 
 
 
+<cfoutput>
+<html>
+<head>
+	<title>ColdFire Tests</title>
+</head>
+<body>
+<h1>ColdFire Trace Tests</h1>
+
+<cfif IsDebugMode()>
+	<cfset factory = CreateObject("java","coldfusion.server.ServiceFactory")>
+	<cfset cfdebugger = factory.getDebuggingService()>
+	<cfset qEvents = cfdebugger.getDebugger().getData()>
+	<cfdump var="#qEvents#">
+</cfif>
+
+</body>
+</html>
+</cfoutput>

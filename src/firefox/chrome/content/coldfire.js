@@ -44,10 +44,12 @@ const cfPrefNames =
 [
     //coldfire
     "parseParams",
+	"suppressWhiteSpace",
 	"logMsgs",
 	"maxQueueRequests",
 	"showLastRequest",
-	"enhanceTrace"
+	"enhanceTrace",
+	"forceDebug"
 ];
 
 var cfOptionUpdateMap = {};

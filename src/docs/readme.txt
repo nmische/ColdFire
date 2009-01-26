@@ -27,18 +27,43 @@ http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_web
 
 ------------------------------ LAST UPDATE ----------------------------- 
 
-Last Updated: Jan 14, 2008 (@VERSION@)
+Last Updated: Jan 24, 2009 (@VERSION@)
 
-* fixed issues with trace.cfm custom tag.
+* removed dependency on custom cfajax library.
+* added exceptions tab.
+* added ColdFireAdvice for ColdSpring AOP.
 
 
 ------------------------------ OLDER UPDATES ---------------------------
+
+Last Updated: Jan 11, 2009 (1.3.151.151)
+
+* updated coldfire.cfm to address variable dump issue due to variable
+  scope pollution.
+* fixed issues with execution times (Thanks Ray Camden).
+* added cfajax.js to support new "Force Debugging" option for CF AJAX
+  requests.
+* enhanced white space suppression (Thanks Ray Camden and John Hartmann).
+* updated variable name validation in Variables tab to allow dot
+  notation.
+
+
+Last Updated: Jan 7, 2009 (1.3.142.145)
+
+* first 1.3 release!
+* fixed issues with trace.cfm custom tag.
+* new UI for selecting files from request queue.
+* added suppress query white space option.
+* toggling parse query params option now updates UI immediately.
+* updated query tab to use Firebug domplate.
+
 
 Last Updated: Dec 21, 2008 (1.2.117.126)
 
 * fixed issues with execution times tab summary rows. (issues 42 and 44) 
 * fixed issue with variables tab. (issue 43) 
 * improved multiple tab support.
+
 
 Last Updated: Nov 16, 2008 (1.2.117.117)
 

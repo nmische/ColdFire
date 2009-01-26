@@ -33,11 +33,18 @@
 							oncommand="Firebug.ColdFireModule.changeCurrentView('General')" /> 
 						<toolbarbutton 
 							id="fbColdFireFilter-ET" 
-							label="&coldfire.ExecutionTimes;"
+							label="&coldfire.ExecTimes;"
 							type="radio" 
 							class="toolbar-text-button" 
 							group="firebugColdFireFilter" 
 							oncommand="Firebug.ColdFireModule.changeCurrentView('ET')"/> 
+						<toolbarbutton 
+							id="fbColdFireFilter-Exceptions" 
+							label="&coldfire.Exceptions;"
+							type="radio" 
+							class="toolbar-text-button" 
+							group="firebugColdFireFilter" checked="true" 
+							oncommand="Firebug.ColdFireModule.changeCurrentView('Exceptions')" /> 
 						<toolbarbutton 
 							id="fbColdFireFilter-DB" 
 							label="&coldfire.DBQueries;"
@@ -74,7 +81,7 @@
 
 	
 	<vbox id="fbContentBox">
-		<hbox id="fbColdFireVariableBox"> 
+		<hbox id="fbColdFireVariableBox" collapsed="true"> 
 	        <label 
 	        	id="fbColdFireVariablePrompt" 
 	        	value="&coldfire.AddVariable;:"/>

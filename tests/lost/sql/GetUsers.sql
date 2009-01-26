@@ -19,3 +19,8 @@ BEGIN
 END$$
 
 DELIMITER ;
+
+/* 
+Be sure to run the following to give the user permission to run the procedure.
+GRANT SELECT ON `mysql`.`proc` TO 'username'@'host'; 
+*/

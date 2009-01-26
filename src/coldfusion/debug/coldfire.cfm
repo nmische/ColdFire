@@ -192,6 +192,39 @@ Handles server side debugging for ColdFire
 
 
 <cffunction 
+	name="coldfire_udf_getExceptions"
+	returntype="query"
+	output="false" 
+	hint="Gets includes, custom tags.">
+		
+	<cfargument name="data" type="query" required="true">
+
+	<cfset var result = queryNew("timestamp,name,template,line,message")>
+	<cfset var tmp = "">
+	
+	<cfquery dbType="query" name="tmp" debug="false">
+		SELECT *
+		FROM data
+		WHERE type = 'Exception'
+	</cfquery>
+	
+	<cfloop query="tmp">
+		<cfset queryAddRow(result)>
+		<cfset querySetCell(result,"timestamp",tmp.timestamp)>
+		<cfset querySetCell(result,"name",tmp.name)>
+		<cfset querySetCell(result,"template",tmp.template)>
+		<cfset querySetCell(result,"line",tmp.line)>
+		<cfset querySetCell(result,"message",tmp.message)>
+	</cfloop>
+	
+	<cfreturn result>
+	
+</cffunction>
+
+
+
+
+<cffunction 
 	name="coldfire_udf_getFiles"
 	returntype="query" 
 	output="false" 
@@ -264,8 +297,12 @@ Handles server side debugging for ColdFire
 	   	from data
 	   	where type = 'ExecutionTime'
 	</cfquery>
-	<cfset totaltime = cfdebug_execution.executiontime>
-		
+	
+	<cfif cfdebug_execution.recordcount>
+		<cfset totaltime = cfdebug_execution.executiontime>
+	<cfelse>
+		<cfset totaltime = -1>
+	</cfif>		
 	
 	<cfset queryAddRow(result)>
 	<cfset querySetCell(result, "label", "ColdFusionServer")>
@@ -591,33 +628,41 @@ Handles server side debugging for ColdFire
 	
 	<cfargument name="variableNames" type="array" required="true">
 	
-	<cfset var result = queryNew("label,value")>
-	<cfset var x = 1>
+	<cfset var __coldfireResult__ = queryNew("label,value")>
+	<cfset var __coldfireX__ = 1>
 	
-	<cfloop index="x" from="1" to="#arrayLen(arguments.variableNames)#">
-		
-		<cfset QueryAddRow(result)>
+	<cfloop index="__coldfireX__" from="1" to="#arrayLen(arguments.variableNames)#">
 			
-		<!--- set the label --->
-		<cfset QuerySetCell(result,"label",arguments.variableNames[x])>
+		<cftry>
+			
+			<cfset QueryAddRow(__coldfireResult__)>		
+				
+			<!--- set the label --->
+			<cfset QuerySetCell(__coldfireResult__,"label",arguments.variableNames[__coldfireX__])>
+			
+			<cfif CompareNoCase(variableNames[__coldfireX__],"variables") neq 0 and IsDefined(variableNames[__coldfireX__])>								
+				<!--- get the value --->
+				<cfset QuerySetCell(__coldfireResult__,"value",coldfire_udf_encode(evaluate(variableNames[__coldfireX__])))>			
+			<cfelseif StructKeyExists(request,"__coldFireVariableValues__") and StructKeyExists(request.__coldFireVariableValues__,variableNames[__coldfireX__])>
+				<!--- check to see if we were using application.cfm --->
+				<cfset QuerySetCell(__coldfireResult__,"value",coldfire_udf_encode(evaluate("request.__coldFireVariableValues__." & variableNames[__coldfireX__])))>
+			<cfelseif CompareNoCase(variableNames[__coldfireX__],"variables") eq 0>
+				<!--- get the value --->
+				<cfset QuerySetCell(__coldfireResult__,"value",coldfire_udf_encode(evaluate(variableNames[__coldfireX__])))>	
+			<cfelse>
+				<!--- set default value --->
+				<cfset QuerySetCell(__coldfireResult__,"value",coldfire_udf_encode("undefined"))>			
+			</cfif>
 		
-		<cfif CompareNoCase(variableNames[x],"variables") neq 0 and IsDefined(variableNames[x])>								
-			<!--- get the value --->
-			<cfset QuerySetCell(result,"value",coldfire_udf_encode(evaluate(variableNames[x])))>			
-		<cfelseif StructKeyExists(request,"__coldFireVariableValues__") and StructKeyExists(request.__coldFireVariableValues__,variableNames[x])>
-			<!--- check to see if we were using application.cfm --->
-			<cfset QuerySetCell(result,"value",coldfire_udf_encode(evaluate("request.__coldFireVariableValues__." & variableNames[x])))>
-		<cfelseif CompareNoCase(variableNames[x],"variables") eq 0>
-			<!--- get the value --->
-			<cfset QuerySetCell(result,"value",coldfire_udf_encode(evaluate(variableNames[x])))>	
-		<cfelse>
-			<!--- set default value --->
-			<cfset QuerySetCell(result,"value",coldfire_udf_encode("undefined"))>			
-		</cfif>
+			<cfcatch>
+				<!--- do nothing --->
+			</cfcatch>
+		
+		</cftry>
 		
 	</cfloop>
 	
-	<cfreturn result>
+	<cfreturn __coldfireResult__>
 	
 </cffunction>
 
@@ -633,17 +678,28 @@ Handles server side debugging for ColdFire
 	<cfargument name="debugMode" type="boolean" required="false" default="false">
 	<cfargument name="maxHeader" type="numeric" required="false" default="8000">
 	
-	<!--- Gets the debug data. Taken from Adobe's classic.cfm. --->
+	<!--- Gets the debug data. --->
 	<cfset var factory = CreateObject("java","coldfusion.server.ServiceFactory")>
-	<cfset var cfdebugger = factory.getDebuggingService()>
-	<cfset var qEvents = cfdebugger.getDebugger().getData()>
+	<cfset var cfdebugger = factory.getDebuggingService().getDebugger()>
+	<cfset var qEvents = "">
 	
 	<cfset var result = StructNew()>
 	<cfset var varJSON = "">
 	<cfset var varArray = ArrayNew(1)>	
 	<cfset var requestData = GetHttpRequestData()>
 	<cfset var response = getPageContext().getResponse()>
-
+	
+			
+	<cftry>
+	
+	<cfif not IsDefined("cfdebugger")>
+		<!--- Return Error --->
+		<cfset coldfire_udf_error(debugMode=false,maxHeader=8000,msg="The coldfusion debugging service does not appear to be running.")>
+		<cfreturn>
+	</cfif>
+		
+	<cfset qEvents = cfdebugger.getData()>
+	 
 	<cfif structKeyExists(requestData.headers,"x-coldfire-variables")>
 		<cfset varJSON = requestData.headers["x-coldfire-variables"]>
 		<cfset varArray = coldfire_udf_decode(varJSON)>
@@ -653,6 +709,7 @@ Handles server side debugging for ColdFire
 	<cfset result.templates = coldfire_udf_encode(coldfire_udf_getTemplates(qEvents))>		
 	<cfset result.ctemplates = coldfire_udf_encode(coldfire_udf_getChildTemplates(qEvents))>
 	<cfset result.cfcs = coldfire_udf_encode(coldfire_udf_getCFCs(qEvents))>
+	<cfset result.execeptions = coldfire_udf_encode(coldfire_udf_getExceptions(qEvents))>
 	<cfset result.queries = coldfire_udf_encode(coldfire_udf_getQueries(qEvents))>
 	<cfset result.trace = coldfire_udf_encode(coldfire_udf_getTrace(qEvents))>			
 	<cfset result.timer = coldfire_udf_encode(coldfire_udf_getTimer(qEvents))>			
@@ -663,6 +720,7 @@ Handles server side debugging for ColdFire
 	<cfset result.templates = coldfire_udf_sizeSplit(result.templates, arguments.maxHeader)>
 	<cfset result.ctemplates = coldfire_udf_sizeSplit(result.ctemplates, arguments.maxHeader)>
 	<cfset result.cfcs = coldfire_udf_sizeSplit(result.cfcs, arguments.maxHeader)>
+	<cfset result.execeptions = coldfire_udf_sizeSplit(result.execeptions, arguments.maxHeader)>
 	<cfset result.queries = coldfire_udf_sizeSplit(result.queries, arguments.maxHeader)>
 	<cfset result.trace = coldfire_udf_sizeSplit(result.trace, arguments.maxHeader)>
 	<cfset result.timer = coldfire_udf_sizeSplit(result.timer, arguments.maxHeader)>
@@ -672,8 +730,7 @@ Handles server side debugging for ColdFire
 	<cfif arguments.debugMode>
 		<cfdump var="#result#">
 	</cfif>
-
-	<cftry>
+	
 	<cfloop index="x" from="1" to="#arrayLen(result.general)#">
 		<cfheader name="x-coldfire-general-#x#" value="#result.general[x]#">
 	</cfloop>
@@ -685,6 +742,9 @@ Handles server side debugging for ColdFire
 	</cfloop>
 	<cfloop index="x" from="1" to="#arrayLen(result.cfcs)#">
 		<cfheader name="x-coldfire-cfcs-#x#" value="#result.cfcs[x]#">
+	</cfloop>
+	<cfloop index="x" from="1" to="#arrayLen(result.execeptions)#">
+		<cfheader name="x-coldfire-exceptions-#x#" value="#result.execeptions[x]#">
 	</cfloop>
 	<cfloop index="x" from="1" to="#arrayLen(result.queries)#">
 		<cfheader name="x-coldfire-queries-#x#" value="#result.queries[x]#">
@@ -698,7 +758,11 @@ Handles server side debugging for ColdFire
 	<cfloop index="x" from="1" to="#arrayLen(result.variables)#">
 		<cfheader name="x-coldfire-variables-#x#" value="#result.variables[x]#">				
 	</cfloop>
-	<cfcatch></cfcatch>
+	
+	<cfcatch>
+		<!--- make sure we don't throw an error --->
+	</cfcatch>
+	
 	</cftry>	
 
 </cffunction>
