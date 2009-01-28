@@ -46,9 +46,9 @@ http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+implied. See the License for the specific language governing 
+permissions and limitations under the License.
 
 
 3. Contributors
@@ -74,30 +74,30 @@ you must have both the Firefox web browser
 (http://www.mozilla.org/firefox) as well as the Firebug extension
 (www.getfirebug.com) installed. There are different version of the
 Firefox web browser and Firebug extension available. This version of
-ColdFire has been designed to work with Firefox 3 and Firebug 1.2.
+ColdFire has been designed to work with Firefox 3 and Firebug 1.3.0.
 
 4.2 ColdFire
 
-To install the ColdFire extension, extract the .zip installation package
-to a folder on your computer. Next go to the File/Open dialog in Firefox
-and select the coldfire_v1.2.XX.XX.xpi, located in the Firefox folder of
-the extracted installation package, and open it. Be sure to restart
-Firefox when asked.
+To install the ColdFire extension, extract the .zip installation
+package to a folder on your computer. Next go to the File/Open dialog
+in Firefox and select the coldfire_v1.3.XX.XX.xpi, located in the 
+Firefox folder of the extracted installation package, and open it.
+Be sure to restart Firefox when asked.
 
 Next you need to find your ColdFusion installation folder. Typically
 this will be C:/ColdFusion8. ColdFire was tested on ColdFusion 8, but
 should work in ColdFusion 6 & 7. Under your ColdFusion installation
-folder, find the wwwroot/WEB-INF/debug folder. Copy the coldfire.cfm
-template located in the /coldfusion/debug folder of the installation 
+folder, find the WEB-INF/debug folder. Copy the coldfire.cfm template
+located in the /coldfusion/debug folder of the installation 
 package to this folder.
 
 Go to your ColdFusion Administrator, enable debugging, and select
 coldfire.cfm from the drop down. Ensure your IP is listed or that there
 is no IP restriction in place.
 
-Once you have done that you should then be able to view ColdFusion debug
-information from within it's tab in the Firebug tool. Obviously you need
-to hit a ColdFusion page to see the debugging information.
+Once you have done that you should then be able to view ColdFusion
+debug information from within it's tab in the Firebug tool. Obviously
+you need to hit a ColdFusion page to see the debugging information.
 
 4.3 Optional Installations and Files
 
@@ -122,13 +122,13 @@ ColdFusion 8.
 NOTE: Enhanced tracing involves altering your ColdFuison installation.
 Proceed with caution and be sure to backup all modified files!
 
-Another optional feature of ColdFire is enhanced tracing. To enable this
-feature you must install a custom trace.cfm tag. To install this tag
-find the wwwroot/WEB-INF/cftags folder under your ColdFusion installation
+Another optional feature of ColdFire is enhanced tracing. To enable 
+this feature you must install a custom trace.cfm tag. To install this
+tag find the WEB-INF/cftags folder under your ColdFusion installation
 folder. In this folder there should be a template named trace.cfm. Make
 a backup of this file, then rename it to trace_adobe.cfm and copy the
-trace.cfm tag, found in the coldfusion/cftags folder of the installation
-package, to the cftags folder.
+trace.cfm tag, found in the coldfusion/cftags folder of the
+installation package, to the cftags folder.
 
 -ColdSpring AOP-
 
@@ -235,8 +235,8 @@ execution time reports but it should cover most cases).
 
 <!-- 
 	Use a custom version of StandardService that allows the connectors
-	to be started independent of the normal lifecycle start to allow web
-	apps to be deployed before starting the connectors. 
+	to be started independent of the normal lifecycle start to allow
+	web apps to be deployed before starting the connectors. 
 --> 
 
 <Service
