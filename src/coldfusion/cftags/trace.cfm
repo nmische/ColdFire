@@ -14,13 +14,10 @@
 			<cfset factory = CreateObject("java","coldfusion.server.ServiceFactory")>
 			<cfset cfdebugger = factory.getDebuggingService()>
 			<cfset data = cfdebugger.getDebugger().getData()>
-			<cfif not StructKeyExists(request,"__coldFireTraceStartTime__")>
-				<cflock type="exclusive" name="__coldfireTraceStartTimeLock__" timeout="5">
-					<cfif not StructKeyExists(request,"__coldFireTraceStartTime__")>
-						<cfset request.__coldFireTraceStartTime__ = GetTickCount()>
-					</cfif>				
-				</cflock>
-			</cfif>					
+			
+			<cfquery name="getStartTime" dbtype="query">
+				SELECT MIN(startTime) AS minStartTime FROM data WHERE type = 'Template'
+			</cfquery>		
 			
 			<cfset row = QueryAddRow(data) />
 			
@@ -31,7 +28,7 @@
 			<cfset QuerySetCell(data,"message",attributes.var & " = ",row) />
 			
 			<!--- endTime --->
-			<cfset QuerySetCell(data,"endTime",GetTickCount() - request.__coldFireTraceStartTime__,row) />
+			<cfset QuerySetCell(data,"endTime",GetTickCount() - getStartTime.minStartTime,row) />
 					
 			<!--- priority --->
 			<cfif StructKeyExists(attributes, "type")>
