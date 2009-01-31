@@ -706,6 +706,172 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 		this.syncVariablesBox(chrome);
 	},	
 	
+	watchWindow: function(context, win)
+	{
+   		if (ColdFire["forceDebug"]) {
+			if (win.wrappedJSObject.ColdFusion) {
+				setDebugMode(context.window.wrappedJSObject.ColdFusion,true);
+			} else if (typeof win.wrappedJSObject.onload != "function") {
+				win.wrappedJSObject.onload = function() {
+					if (this.ColdFusion) {							
+						
+						var $C = this.ColdFusion;
+						var $A = $C.Ajax;
+						var $X = $C.AjaxProxy;
+						var $B = $C.Bind;
+						var $E = $C.Event;
+						var $L = $C.Log;
+						var $U = $C.Util;
+						var $D = $C.DOM;
+						var $S = $C.Spry;
+						var $P = $C.Pod;
+	
+						$A.sendMessage = function(url, _1a, _1b, _1c, _1d, _1e, _1f){
+							var req = $A.createXMLHttpRequest();
+							if (!_1a) {
+								_1a = "GET";
+							}
+							if (_1c && _1d) {
+								req.onreadystatechange = function(){
+									$A.callback(req, _1d, _1e);
+								};
+							}
+							if (_1b) {
+								_1b += "&_cf_nodebug=false&_cf_nocache=true";
+							}
+							else {
+								_1b = "_cf_nodebug=false&_cf_nocache=true";
+							}
+							if (window._cf_clientid) {
+								_1b += "&_cf_clientid=" + _cf_clientid;
+							}
+							if (_1a == "GET") {
+								if (_1b) {
+									_1b += "&_cf_rc=" + ($C.requestCounter++);
+									if (url.indexOf("?") == -1) {
+										url += "?" + _1b;
+									}
+									else {
+										url += "&" + _1b;
+									}
+								}
+								$L.info("ajax.sendmessage.get", "http", [url]);
+								req.open(_1a, url, _1c);
+								req.send(null);
+							}
+							else {
+								$L.info("ajax.sendmessage.post", "http", [url, _1b]);
+								req.open(_1a, url, _1c);
+								req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+								if (_1b) {
+									req.send(_1b);
+								}
+								else {
+									req.send(null);
+								}
+							}
+							if (!_1c) {
+								while (req.readyState != 4) {
+								}
+								if ($A.isRequestError(req)) {
+									$C.handleError(null, "ajax.sendmessage.error", "http", [req.status, req.statusText], req.status, req.statusText, _1f);
+								}
+								else {
+									return req;
+								}
+							}
+						};
+						$S.bindHandler = function(_163, _164){
+							var url;
+							var _166 = "_cf_nodebug=false&_cf_nocache=true";
+							if (window._cf_clientid) {
+								_166 += "&_cf_clientid=" + _cf_clientid;
+							}
+							var _167 = window[_164.bindTo];
+							var _168 = (typeof(_167) == "undefined");
+							if (_164.cfc) {
+								var _169 = {};
+								var _16a = _164.bindExpr;
+								for (var i = 0; i < _16a.length; i++) {
+									var _16c;
+									if (_16a[i].length == 2) {
+										_16c = _16a[i][1];
+									}
+									else {
+										_16c = $B.getBindElementValue(_16a[i][1], _16a[i][2], _16a[i][3], false, _168);
+									}
+									_169[_16a[i][0]] = _16c;
+								}
+								_169 = $X.JSON.encode(_169);
+								_166 += "&method=" + _164.cfcFunction;
+								_166 += "&argumentCollection=" + encodeURIComponent(_169);
+								$L.info("spry.bindhandler.loadingcfc", "http", [_164.bindTo, _164.cfc, _164.cfcFunction, _169]);
+								url = _164.cfc;
+							}
+							else {
+								url = $B.evaluateBindTemplate(_164, false, true, _168);
+								$L.info("spry.bindhandler.loadingurl", "http", [_164.bindTo, url]);
+							}
+							var _16d = _164.options ||
+							{};
+							if ((_167 && _167._cf_type == "json") || _164.dsType == "json") {
+								_166 += "&returnformat=json";
+							}
+							if (_167) {
+								if (_167.requestInfo.method == "GET") {
+									_16d.method = "GET";
+									if (url.indexOf("?") == -1) {
+										url += "?" + _166;
+									}
+									else {
+										url += "&" + _166;
+									}
+								}
+								else {
+									_16d.postData = _166;
+									_16d.method = "POST";
+									_167.setURL("");
+								}
+								_167.setURL(url, _16d);
+								_167.loadData();
+							}
+							else {
+								if (!_16d.method || _16d.method == "GET") {
+									if (url.indexOf("?") == -1) {
+										url += "?" + _166;
+									}
+									else {
+										url += "&" + _166;
+									}
+								}
+								else {
+									_16d.postData = _166;
+									_16d.useCache = false;
+								}
+								var ds;
+								if (_164.dsType == "xml") {
+									ds = new Spry.Data.XMLDataSet(url, _164.xpath, _16d);
+								}
+								else {
+									ds = new Spry.Data.JSONDataSet(url, _16d);
+									ds.preparseFunc = $S.preparseData;
+								}
+								ds._cf_type = _164.dsType;
+								var _16f = {
+									onLoadError: function(req){
+										$C.handleError(_164.errorHandler, "spry.bindhandler.error", "http", [_164.bindTo, req.url, req.requestInfo.postData]);
+									}
+								};
+								ds.addObserver(_16f);
+								window[_164.bindTo] = ds;
+							}
+						};
+					}
+				}			
+			}
+		}
+	},
+	
 	showContext: function(browser, context)
     {
 		
@@ -721,13 +887,6 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 
     },
 	
-	loadedContext: function(context)
-    {		
-		if (context.window.wrappedJSObject.ColdFusion && ColdFire["forceDebug"]) {
-			setDebugMode(context.window.wrappedJSObject.ColdFusion,true);
-		}		
-    },
-		
 	showPanel: function( browser, panel ) 
 	{ 		
 		Chrome = browser.chrome;		
