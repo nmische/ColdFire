@@ -1223,7 +1223,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 				TD({width: "49%"}, "$row.TEMPLATE"),
 				TD({width: "10%", align:"right"}, "$row.TIMESTAMP|formatTimeStamp")                    
 			),
-			TR({class: "querySQL $row.ET|isSlow"},
+			TR({class: "querySQL $row.ET|isSlow", _repObject: "$row"},
 				TD({class: "valueCell", width: "100%", colspan: 7},
 					TAG('$row|queryDisplay', {row:'$row'})					
 				)
@@ -1627,6 +1627,44 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		return resultset[1];
 	},
 	
+	formatClipboardSQL: function(query)
+	{
+		var sqlText = "";
+		
+		if (query.TYPE == "StoredProcedure") {
+			// TODO: format stored procedures for clipboard
+		} else {
+			sqlText = query.SQL;
+			var params = query.PARAMETERS;
+			// parse parameters
+			if (params.length && params.length > 0) {	
+			
+				// this is a little hack to store the param index for display in formatParamString below.
+				for(var i = 0; i < params.length; i++) {
+					var param = params[i];
+					param[param.length] = i + 1;
+				}
+					
+				var questionMarks = sqlText.match(/\?/g);			
+				if (params.length == questionMarks.length) {	
+					for (var i = 0; i < params.length; i++) {
+						// get the formatted value	
+						var val = this.formatParamInlineValue(params[i]);
+						val += " /* " + this.fomatParamString(params[i]) + " */ ";						
+						sqlText = sqlText.replace(/\?/,val);
+					}				
+				} else {
+					for (var i = 0; i < params.length; i++) {
+						// get the formatted value	
+						var val = this.fomatParamString(params[i]);
+						sqlText += "\n" + val;
+					}	
+				}
+			}
+		}		
+		return sqlText;	
+	},
+	
 	// lookup array for CF SQL types
 	
 	cfsqltypes: [
@@ -1785,6 +1823,23 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			{label: $CFSTR("ClearVariables"), nol10n: true, command: bindFixed(this.deleteVariables, this) }      
 		];
 	},
+	
+	getContextMenuItems: function(nada, target)
+    {
+        var items = [];
+
+        var query = Firebug.getRepObject(target);
+        if (!query)
+            return items;
+			
+		var cbText = this.formatClipboardSQL(query);
+			
+		items.push(
+			{label: "Copy SQL", command: bindFixed(copyToClipboard, FBL, cbText) }
+		);
+
+        return items;
+    },
 	
 	getDefaultLocation: function(context)
     {
