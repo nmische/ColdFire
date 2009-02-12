@@ -6,3 +6,4 @@ pref("extensions.coldfire.maxQueueRequests", 10);
 pref("extensions.coldfire.showLastRequest", true);
 pref("extensions.coldfire.enhanceTrace", false);
 pref("extensions.coldfire.forceDebug", false);
+pref("extensions.coldfire.dbType", 1);

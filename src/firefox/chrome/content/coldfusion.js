@@ -48,6 +48,9 @@ const nsIObserverService = Ci.nsIObserverService;
 const observerService = CCSV("@joehewitt.com/firebug-http-observer;1", "nsIObserverService");
 const promtService = CCSV("@mozilla.org/embedcomp/prompt-service;1", "nsIPromptService");
 
+// Database Types
+const SQL_SERVER = 1;
+
 const logger = new LoggingUtil();
 
 function defineTags(){
@@ -1528,23 +1531,29 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		return times.cfcET + "ms (" + per + "%)";
 	},	
 	
-	formatSQLString: function(query)
+	formatSQLString: function(query, parseParams, showParam, suppressWhiteSpace)
 	{		
+		var parseParams = (parseParams) ? parseParams : ColdFire['parseParams'];
+		var showParam = (showParam) ? showParam : false;
+		var suppressWhiteSpace = (suppressWhiteSpace) ? suppressWhiteSpace : ColdFire['suppressWhiteSpace'];
+		
 		var sqlText = query.SQL;
 		var params = query.PARAMETERS;
 		// parse parameters
 		if (params.length && params.length > 0) {			
 			var questionMarks = sqlText.match(/\?/g);			
-			if ((params.length == questionMarks.length) && ColdFire['parseParams'] ) {	
+			if ((params.length == questionMarks.length) && parseParams ) {	
 				for (var i = 0; i < params.length; i++) {
 					// get the formatted value	
 					var val = this.formatParamInlineValue(params[i]);
+					if (showParam)
+						val += " /* " + this.fomatParamString(params[i]) + " */ ";
 					sqlText = sqlText.replace(/\?/,val);
 				}				
 			}
 		}
 		// supress white space
-		if (ColdFire['suppressWhiteSpace']) {
+		if (suppressWhiteSpace) {
 			
 			var re = /^\s+\b\n?/gm;
 			sqlText = sqlText.replace(re,"");
@@ -1629,40 +1638,84 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 	
 	formatClipboardSQL: function(query)
 	{
-		var sqlText = "";
+		var sqlText = "";		
 		
 		if (query.TYPE == "StoredProcedure") {
-			// TODO: format stored procedures for clipboard
-		} else {
-			sqlText = query.SQL;
-			var params = query.PARAMETERS;
-			// parse parameters
-			if (params.length && params.length > 0) {	
 			
-				// this is a little hack to store the param index for display in formatParamString below.
-				for(var i = 0; i < params.length; i++) {
-					var param = params[i];
-					param[param.length] = i + 1;
-				}
-					
-				var questionMarks = sqlText.match(/\?/g);			
-				if (params.length == questionMarks.length) {	
+			
+			
+			switch (ColdFire['dbType']) {
+				case SQL_SERVER:
+					sqlText = this.formatSQLServerProc(query);
+					break;				
+			}		
+			
+		} else {
+						
+			sqlText = this. formatSQLString(query, true, true, false);
+			
+			var params = query.PARAMETERS;
+								
+			if (params.length && params.length > 0) {				
+				var questionMarks = query.SQL.match(/\?/g);			
+				if (params.length != questionMarks.length) {					
 					for (var i = 0; i < params.length; i++) {
+						// this is a little hack to store the param index for display in formatParamString below.
+						var param = params[i];
+						param[param.length] = i + 1;
 						// get the formatted value	
-						var val = this.formatParamInlineValue(params[i]);
-						val += " /* " + this.fomatParamString(params[i]) + " */ ";						
-						sqlText = sqlText.replace(/\?/,val);
-					}				
-				} else {
-					for (var i = 0; i < params.length; i++) {
-						// get the formatted value	
-						var val = this.fomatParamString(params[i]);
+						var val = this.fomatParamString(param);
 						sqlText += "\n" + val;
 					}	
 				}
 			}
+			
 		}		
 		return sqlText;	
+	},
+	
+	formatSQLServerProc: function(query) {
+		
+		var sqlText = "EXEC\t" + query.QUERYNAME;
+		
+		var params = query.PARAMETERS;
+		var delim = "";
+		
+		if (params.length && params.length > 0) {
+			for (var i = 0; i < params.length; i++) {
+				var param = params[i];
+				
+				var dbVarName = this.formatParamDBVarname(param);
+				var val = this.formatParamValue(param);
+				
+				switch (this.formatParamType(param)){
+					
+					case "IN":
+					case "in":
+						// handle in params
+						sqlText += delim + "\n\t\t";
+						if (dbVarName.length)
+							sqlText += dbVarName + "=";
+						sqlText += val;						
+						break;
+					case "OUT":
+					case "out":
+						// handle out params
+						
+						break;
+						
+					case "INOUT":
+					case "inout":
+						// handle inout params
+						
+						break;							
+				}				
+				delim = ",";
+			}				
+		}
+		
+		return sqlText;
+		
 	},
 	
 	// lookup array for CF SQL types
