@@ -27,14 +27,22 @@ http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_web
 
 ------------------------------ LAST UPDATE ----------------------------- 
 
-Last Updated: Jan 24, 2009 (@VERSION@)
+Last Updated: April 4, 2009 (@VERSION@)
+
+* updated SQL rendering to use domplate.
+* added Copy SQL context menu option.
+* fixed issue with reported start and end times with enhanced trace tag.
+* changed CFAJAX JS injection so that more requests can be debugged.
+
+
+------------------------------ OLDER UPDATES ---------------------------
+
+Last Updated: Jan 24, 2009 (1.3.172.172)
 
 * removed dependency on custom cfajax library.
 * added exceptions tab.
 * added ColdFireAdvice for ColdSpring AOP.
 
-
------------------------------- OLDER UPDATES ---------------------------
 
 Last Updated: Jan 11, 2009 (1.3.151.151)
 
