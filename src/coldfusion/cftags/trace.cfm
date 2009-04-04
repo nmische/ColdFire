@@ -15,7 +15,7 @@
 			<cfset cfdebugger = factory.getDebuggingService()>
 			<cfset data = cfdebugger.getDebugger().getData()>
 			
-			<cfquery name="getStartTime" dbtype="query">
+			<cfquery name="__ColdFireTraceGetStartTime__" dbtype="query">
 				SELECT MIN(startTime) AS minStartTime FROM data WHERE type = 'Template'
 			</cfquery>		
 			
@@ -28,7 +28,7 @@
 			<cfset QuerySetCell(data,"message",attributes.var & " = ",row) />
 			
 			<!--- endTime --->
-			<cfset QuerySetCell(data,"endTime",GetTickCount() - getStartTime.minStartTime,row) />
+			<cfset QuerySetCell(data,"endTime",GetTickCount() - __ColdFireTraceGetStartTime__.minStartTime,row) />
 					
 			<!--- priority --->
 			<cfif StructKeyExists(attributes, "type")>

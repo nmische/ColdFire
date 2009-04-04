@@ -375,7 +375,7 @@ Handles server side debugging for ColdFire
 		<cfquery dbType="query" name="coldfire_queries" debug="false">
 			SELECT *, (endtime - starttime) AS executiontime
 			FROM data
-			WHERE type = 'SqlQuery'
+			WHERE type = 'SqlQuery' AND name <> '__ColdFireTraceGetStartTime__'
 		</cfquery>
 		<cfscript>
 			if( coldfire_queries.recordcount eq 1 and len(trim(coldfire_queries.executiontime)) )
