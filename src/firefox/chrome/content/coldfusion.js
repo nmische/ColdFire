@@ -1552,6 +1552,9 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 
 			re = /[ \f\r\t\v\u00A0\u2028\u2029]{2,}/g;
 			sqlText = sqlText.replace(re," ");
+			
+			re = /\s+$/;
+			sqlText = sqlText.replace(re,"");
 		
 		}
 		
@@ -1935,7 +1938,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		var cbText = this.formatClipboardSQL(query);
 			
 		items.push(
-			{label: "Copy SQL", command: bindFixed(copyToClipboard, FBL, cbText) }
+			{label: $CFSTR("CopySQL"), command: bindFixed(copyToClipboard, FBL, cbText) }
 		);
 
         return items;
