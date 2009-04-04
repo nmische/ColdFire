@@ -366,7 +366,7 @@ Handles server side debugging for ColdFire
 	<cfset var parameters = "">
 	<cfset var resultsets = "">	
 	<cfset var recordcount = 0>	
-	<cfset var cfsqltypes = "cf_sql_bigint,cf_sql_bit,cf_sql_blob,cf_sql_decimal,cf_sql_double,cf_sql_float,cf_sql_integer,cf_sql_money,cf_sql_money4,cf_sql_numeric,cf_sql_real,cf_sql_refcursor,cf_sql_smallint,cf_sql_tinyint">
+	<cfset var cfsqltypes = "cf_sql_bigint,cf_sql_binary,cf_sql_bit,cf_sql_blob,cf_sql_decimal,cf_sql_double,cf_sql_float,cf_sql_integer,cf_sql_longvarbinary,cf_sql_money,cf_sql_numeric,cf_sql_real,cf_sql_smallint,cf_sql_tinyint,cf_sql_varbinary">
 	<cfset cfsqltypes = cfsqltypes & ",cf_sql_date,cf_sql_time,cf_sql_timestamp">
 	<cfset cfsqltypes = cfsqltypes & ",cf_sql_char,cf_sql_clob,cf_sql_idstamp,cf_sql_longvarchar,cf_sql_varchar">
 	
@@ -397,9 +397,6 @@ Handles server side debugging for ColdFire
 		<cfset parameters = "">
 		<cfset resultsets = "">	
 		<cfset recordcount = 0>
-		
-		<cfset sql = replace(sql, "<", "&lt;", "all")>	
-		<cfset sql = replace(sql, ">", "&gt;", "all")>	
 				
 		<cfif ArrayLen(coldfire_queries.attributes[coldfire_queries.currentRow])>
 			<cfset parameters = ArrayNew(1)>		
@@ -480,7 +477,7 @@ Handles server side debugging for ColdFire
 				<cfif StructKeyExists(attr,"type")>
 					<cfset parameters[x][1] = attr.type>
 				<cfelse>
-					<cfset parameters[x][1] = "">
+					<cfset parameters[x][1] = "IN">
 				</cfif>	
 				<cfif StructKeyExists(attr,"sqltype")>
 					<cfset parameters[x][2] = ListFindNoCase(cfsqltypes,attr.sqltype)>
@@ -501,6 +498,21 @@ Handles server side debugging for ColdFire
 					<cfset parameters[x][5] = attr.dbvarname>
 				<cfelse>
 					<cfset parameters[x][5] = "">
+				</cfif>
+				<cfif StructKeyExists(attr,"maxLength")>
+					<cfset parameters[x][6] = attr.maxLength>
+				<cfelse>
+					<cfset parameters[x][6] = "">
+				</cfif>
+				<cfif StructKeyExists(attr,"scale")>
+					<cfset parameters[x][7] = attr.scale>
+				<cfelse>
+					<cfset parameters[x][7] = "">
+				</cfif>
+				<cfif StructKeyExists(attr,"null")>
+					<cfset parameters[x][8] = attr.null>
+				<cfelse>
+					<cfset parameters[x][8] = "">
 				</cfif>
 			</cfloop>
 		</cfif>	
