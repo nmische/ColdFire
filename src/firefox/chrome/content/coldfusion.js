@@ -965,18 +965,7 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 			} catch (e) {
 				logger.logMessage(e);
 			}
-			
-			/*
-			try{
-				if(ColdFire['forceDebug'])
-					subject.setRequestHeader("x-coldfire-force-debug", 
-						"true",
-						true);
-			} catch (e) {
-				logger.logMessage(e);
-			}
-			*/
-					
+				
 		}		 
 	},
 	
@@ -1546,8 +1535,11 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 				for (var i = 0; i < params.length; i++) {
 					// get the formatted value	
 					var val = this.formatParamInlineValue(params[i]);
-					if (showParam)
-						val += " /* " + this.fomatParamString(params[i]) + " */ ";
+					if (showParam) {
+						var param = params[i];
+						param[param.length] = i + 1;
+						val += " /* " + this.fomatParamString(param) + " */ ";
+					}						
 					sqlText = sqlText.replace(/\?/,val);
 				}				
 			}
@@ -1610,7 +1602,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 	{
 		return this.cfsqltypes[param[1]];
 	},
-	
+		
 	formatParamValue: function(param)
 	{
 		return param[2];
@@ -1640,15 +1632,17 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 	{
 		var sqlText = "";		
 		
-		if (query.TYPE == "StoredProcedure") {
+		if (query.TYPE == "StoredProcedure") {		
 			
+			sqlText = "With searching comes loss\nand the presence of absence:\nno stored procedures.";
 			
-			
+			/*
 			switch (ColdFire['dbType']) {
 				case SQL_SERVER:
 					sqlText = this.formatSQLServerProc(query);
 					break;				
-			}		
+			}	
+			*/	
 			
 		} else {
 						
@@ -1674,12 +1668,29 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		return sqlText;	
 	},
 	
+	// lookup array for CF SQL types
+	
+	cfsqltypes: [
+		"unknown",
+		//numeric types
+		"cf_sql_bigint", "cf_sql_binary", "cf_sql_bit", "cf_sql_blob", "cf_sql_decimal", "cf_sql_double", "cf_sql_float", "cf_sql_integer", "cf_sql_longvarbinary", "cf_sql_money", "cf_sql_numeric", "cf_sql_real", "cf_sql_smallint", "cf_sql_tinyint", "cf_sql_varbinary", 
+		//date time types
+		"cf_sql_date", "cf_sql_time", "cf_sql_timestamp",
+		//text types
+		"cf_sql_char", "cf_sql_clob", "cf_sql_idstamp", "cf_sql_longvarchar", "cf_sql_varchar"	
+	],	
+	
+	// SQL Server Stored Procedure
+	
 	formatSQLServerProc: function(query) {
 		
+		var decText = "";
+		var assignText = "";		
 		var sqlText = "EXEC\t" + query.QUERYNAME;
 		
 		var params = query.PARAMETERS;
-		var delim = "";
+		var sqlTexDelim = "";
+		var decTextDelim = "DECLARE\t";
 		
 		if (params.length && params.length > 0) {
 			for (var i = 0; i < params.length; i++) {
@@ -1693,14 +1704,24 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 					case "IN":
 					case "in":
 						// handle in params
-						sqlText += delim + "\n\t\t";
+						sqlText += sqlTexDelim + "\n\t\t";
 						if (dbVarName.length)
 							sqlText += dbVarName + "=";
-						sqlText += val;						
+						sqlText += val;	
+						sqlTextDelim = ",";					
 						break;
 					case "OUT":
 					case "out":
-						// handle out params
+						// handle out params						
+						var varName = getSQLServerProcParamVarName(param);
+						var varType = getSQLServerProcParamType(param);(param)
+						
+						decText += decTextDelim + varName + " " + varType;
+						decTextDelim = ",\n\t\t";
+						
+						sqlText += sqlTextDelim + "\n\t\t";
+						sqlText += varName + " = " + varName + " OUTPUT";
+						sqlTextDelim = ",";
 						
 						break;
 						
@@ -1710,7 +1731,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 						
 						break;							
 				}				
-				delim = ",";
+				
 			}				
 		}
 		
@@ -1718,18 +1739,44 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		
 	},
 	
-	// lookup array for CF SQL types
+	getSQLServerProcParamVarName: function(param) {
+		var dbVarName = formatParamDBVarname(param);
+		
+		if (dbVarName != "")
+			return dbVarName;
+			
+		dbVarName = formatParamVariable(param).toString().split("=")[0];
+		
+		return '@' + dbVarName;
+	},
 	
-	cfsqltypes: [
+	getSQLServerProcParamType: function(param) {
+		var dbSQLType = this.sqlservertypes[param[1]];
+		
+		var maxLength = ( param[5] == "" && param[6] != "" ) ? "18" : param[5];
+		var scale = param[6];
+		
+		// check for maxLength, scale
+		if (scale != "") {			
+			dbSQLType += "(" + maxLength + "," + scale + ")";			
+		} else if (maxLength != "") {
+			dbSQLType += "(" + maxLength + ")";
+		}
+		
+		return dbSQLType;
+		
+	},
+	
+	sqlservertypes: [
 		"unknown",
 		//numeric types
-		"cf_sql_bigint", "cf_sql_bit", "cf_sql_blob", "cf_sql_decimal", "cf_sql_double", "cf_sql_float", "cf_sql_integer", "cf_sql_money", "cf_sql_money4", "cf_sql_numeric", "cf_sql_real", "cf_sql_refcursor", "cf_sql_smallint", "cf_sql_tinyint", 
+		"BIGINT", "BINARY", "BIT", "VARBINARY(MAX)", "DECIMAL", "FLOAT", "FLOAT", "INT", "IMAGE", "MONEY", "NUMERIC", "REAL", "SMALLINT", "TINYINT", "VARBINARY",
 		//date time types
-		"cf_sql_date", "cf_sql_time", "cf_sql_timestamp",
+		"DATETIME", "DATETIME", "DATETIME",
 		//text types
-		"cf_sql_char", "cf_sql_clob", "cf_sql_idstamp", "cf_sql_longvarchar", "cf_sql_varchar"	
-	],	
-	
+		"CHAR", "VARCHAR(MAX)", "UNIQUEIDENTIFIER", "TEXT", "VARCHAR"
+	],
+		
 	// extends panel	
 	
 	name: panelName, 
