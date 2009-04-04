@@ -135,19 +135,20 @@
 
 	<target name="expand-templates" depends="expand-install-template" description="fill in version info" />
 
-	<!-- targets for incremental builds -->
-	
-	
+	<!-- targets for incremental builds -->	
 
 	<target name="copy-to-extensions" depends="clean-reg" description="copies extension files to profle">
         <copy todir="${install.dir}/extensions/${extension.id}" >
-            <fileset dir="${src.ff.dir}" excludes="**/*.tpl.xml" />
+            <fileset dir="${src.ff.dir}" excludes="**/*.tpl.xml, **/*.gif" />
 			<filterchain>
                    <replacetokens>
                         <token key="VERSION" value="${version}"/>
                    </replacetokens>
            </filterchain>
         </copy>
+		<copy todir="${install.dir}/extensions/${extension.id}" >
+            <fileset dir="${src.ff.dir}" includes="**/*.gif" />
+		</copy>
     </target>
 	
 	<target name="check-trace" description="checks that a backup of trace.cfm exists as trace_adobe.cfm">
@@ -223,12 +224,16 @@
 		<mkdir dir="${build.ff.dir}/chrome" />
 
 		<copy todir="${build.ff.dir}/jar">
-			<fileset dir="${src.ff.dir}/chrome" includes="content/**, locale/**, skin/**" excludes="${excludes}"/>
+			<fileset dir="${src.ff.dir}/chrome" includes="content/**, locale/**, skin/**" excludes="${excludes}, **/*.gif"/>
 			<filterchain>
                    <replacetokens>
                         <token key="VERSION" value="${version}"/>
                    </replacetokens>
            </filterchain>
+		</copy>
+		
+		<copy todir="${build.ff.dir}/jar">
+			<fileset dir="${src.ff.dir}/chrome" includes="**/*.gif" />
 		</copy>
 		
 		<zip destfile="${build.ff.dir}/chrome/${name}.jar" 
@@ -237,7 +242,7 @@
 			includes="**" />		
 
 		<delete dir="${build.ff.dir}/jar" />
-
+		
 	</target>
 
 	<!--
