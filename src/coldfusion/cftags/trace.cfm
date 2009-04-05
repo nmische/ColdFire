@@ -15,7 +15,7 @@
 			<cfset cfdebugger = factory.getDebuggingService()>
 			<cfset data = cfdebugger.getDebugger().getData()>
 			
-			<cfquery name="__ColdFireTraceGetStartTime__" dbtype="query">
+			<cfquery name="__ColdFireTraceGetStartTime__" dbtype="query" debug="false">
 				SELECT MIN(startTime) AS minStartTime FROM data WHERE type = 'Template'
 			</cfquery>		
 			
