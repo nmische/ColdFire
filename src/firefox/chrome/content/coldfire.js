@@ -49,7 +49,8 @@ const cfPrefNames =
 	"maxQueueRequests",
 	"showLastRequest",
 	"enhanceTrace",
-	"forceDebug"
+	"forceDebug",
+	"dbType"
 ];
 
 var cfOptionUpdateMap = {};
