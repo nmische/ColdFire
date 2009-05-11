@@ -27,15 +27,22 @@ http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_web
 
 ------------------------------ LAST UPDATE ----------------------------- 
 
-Last Updated: April 4, 2009 (@VERSION@)
+Last Updated: May 11, 2009 (@VERSION@)
+
+* fixed component domplate to support components with no methods.
+* added option to show execution time totals at top of tab.
+* fixed issue with preference persistence.
+
+
+------------------------------ OLDER UPDATES ---------------------------
+
+Last Updated: April 4, 2009 (1.3.187.187)
 
 * updated SQL rendering to use domplate.
 * added Copy SQL context menu option.
 * fixed issue with reported start and end times with enhanced trace tag.
 * changed CFAJAX JS injection so that more requests can be debugged.
 
-
------------------------------- OLDER UPDATES ---------------------------
 
 Last Updated: Jan 24, 2009 (1.3.172.172)
 
