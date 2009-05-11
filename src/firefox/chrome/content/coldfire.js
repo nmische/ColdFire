@@ -50,7 +50,8 @@ const cfPrefNames =
 	"showLastRequest",
 	"enhanceTrace",
 	"forceDebug",
-	"dbType"
+	"dbType",
+	"etTotalsOnTop"
 ];
 
 var cfOptionUpdateMap = {};

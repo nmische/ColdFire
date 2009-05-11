@@ -198,23 +198,32 @@ const FormatterPlate = domplate(
 				TR(
 					TH({class:'cfc',colspan:2,onclick:'$cfdumpToggleTable',style:'cursor:pointer;',title:'click to collapse'},'component $value.NAME')
 				),
-				TR(				
-					TD({class:'cfc',onclick:'$cfdumpToggleRow',style:'cursor:pointer;background-color:#FF99AA;font-style:normal;',title:'click to collapse'},'METHODS'),
-					TD({style:'display:block',valign:'top'},
-						TABLE({class:'cfdump_cfc'},
-							TBODY(
-								FOR('func','$value.FUNCTIONS',
-									TR({valign:'top'},
-										TD({class:'cfc',onclick:'$cfdumpToggleRow',style:'cursor:pointer;background-color:#FF99AA;font-style:normal;',title:'click to collapse'},'$func.NAME'),
-										TD(TAG('$this.customfunctionTable',{value:'$func'}))								
-									)							
-								)	
-							)					
-						)					
-					)					
-				)
+				TAG('$value|formatComponentFunctions',{value:'$value'})					
 			)
 		),
+		
+	functionsTable:
+		TR(				
+			TD({class:'cfc',onclick:'$cfdumpToggleRow',style:'cursor:pointer;background-color:#FF99AA;font-style:normal;',title:'click to collapse'},'METHODS'),
+			TD({style:'display:block',valign:'top'},
+				TABLE({class:'cfdump_cfc'},
+					TBODY(
+						FOR('func','$value.FUNCTIONS',
+							TR({valign:'top'},
+								TD({class:'cfc',onclick:'$cfdumpToggleRow',style:'cursor:pointer;background-color:#FF99AA;font-style:normal;',title:'click to collapse'},'$func.NAME'),
+								TD(TAG('$this.customfunctionTable',{value:'$func'}))								
+							)							
+						)	
+					)					
+				)
+			)					
+		),
+		
+	functionsRow:
+		TR(				
+			TD({class:'cfc',onclick:'$cfdumpToggleRow',style:'cursor:pointer;background-color:#FF99AA;font-style:normal;',title:'click to collapse'},'METHODS'),
+			TD({style:'display:block',valign:'top'},'none')					
+		),		
 		
 	objectTable:
 		TABLE({class: 'cfdump_object'},
@@ -374,7 +383,18 @@ const FormatterPlate = domplate(
 				
 	unknownDiv:
 		DIV('$value|formatString'),
+
+	blankDiv:
+		DIV(''),
 			
+	formatComponentFunctions: function(value) {
+		if (value.hasOwnProperty("FUNCTIONS") && value.FUNCTIONS.length > 0) {
+			return this.functionsTable;
+		} else {
+			return this.functionsRow;
+		}
+	},
+	
 	formatParamName: function(param) {
 		return (param.hasOwnProperty("NAME")) ? param.NAME : "";			
 	},
@@ -1921,6 +1941,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			this.cfMenuOptionRefresh("SuppressQueryWhiteSpace","suppressWhiteSpace"),
 			this.cfMenuOption("ShowLastRequest","showLastRequest"),
 			this.cfMenuOption("EnhanceTrace","enhanceTrace"),
+			this.cfMenuOptionRefresh("ExecTimeTotalsOnTop","etTotalsOnTop"),
 			{label: $CFSTR("EnableCFAJAXDebugging"), type: "checkbox", nol10n: true, checked: ColdFire["forceDebug"], command: bindFixed(this.toggleForceDebug, this, "forceDebug") },	
 			"-",
 			{label: $CFSTR("ClearVariables"), nol10n: true, command: bindFixed(this.deleteVariables, this) }      
@@ -2154,6 +2175,15 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			this.rowData.totalET = this.rowData.dbET + this.rowData.cfcET + this.rowData.templateET + this.rowData.ctemplateET;
 		}
 		
+		try{
+		//add total execution time to general tab
+		var temp = {
+			LABEL: $CFSTR("TotalExecTime"),
+			VALUE: this.rowData.totalET + " ms" 
+		}
+		this.rowData.generalRows.push( temp );
+		}catch(e){ logger.logMessage(e) }
+		
 	},
 	
 	displayCurrentView: function(){
@@ -2198,33 +2228,60 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		var headerRow =  this.etHeaderRow.insertRows({}, this.table.firstChild)[0];
 		//add et rows
 		if (this.rowData.etRows.length) {
+			// put totals at top if pref is set
+			if (ColdFire['etTotalsOnTop']) {							
+				//total row
+				var totalRow = this.etTotalRow.insertRows({
+					totalTime: this.rowData.totalET
+				}, headerRow)[0];
+				//db row 
+				var dbRow = this.etDBRow.insertRows({
+					times: {
+						totalET: this.rowData.totalET,
+						dbET: this.rowData.dbET
+					}
+				}, totalRow)[0];
+				//cfc row
+				var cfcRow = this.etCFCRow.insertRows({
+					times: {
+						totalET: this.rowData.totalET,
+						cfcET: this.rowData.cfcET
+					}
+				}, dbRow)[0];				
+				//other time row
+				var otherRow = this.etOtherRow.insertRows({
+					time: this.rowData.totalET - this.rowData.templateET
+				}, cfcRow)[0];				
+			}
+						
 			var row = this.etRowTag.insertRows({
 				rows: this.rowData.etRows
 			}, this.table.childNodes[1])[0];
-			//other time row
-			var otherRow = this.etOtherRow.insertRows({
-				time: this.rowData.totalET - this.rowData.templateET
-			}, this.table.lastChild)[0];
-			//total row
-			var totalRow = this.etTotalRow.insertRows({
-				totalTime: this.rowData.totalET
-			}, otherRow)[0];
-			//db row 
-			var dbRow = this.etDBRow.insertRows({
-				times: {
-					totalET: this.rowData.totalET,
-					dbET: this.rowData.dbET
-				}
-			}, totalRow)[0];
-			//cfc row
-			var cfcRow = this.etCFCRow.insertRows({
-				times: {
-					totalET: this.rowData.totalET,
-					templateET: this.rowData.templateET,
-					ctemplateET: this.rowData.ctemplateET,
-					cfcET: this.rowData.cfcET
-				}
-			}, dbRow)[0];			
+			
+			if (!ColdFire['etTotalsOnTop']) {
+				//other time row
+				var otherRow = this.etOtherRow.insertRows({
+					time: this.rowData.totalET - this.rowData.templateET
+				}, this.table.lastChild)[0];
+				//total row
+				var totalRow = this.etTotalRow.insertRows({
+					totalTime: this.rowData.totalET
+				}, otherRow)[0];
+				//db row 
+				var dbRow = this.etDBRow.insertRows({
+					times: {
+						totalET: this.rowData.totalET,
+						dbET: this.rowData.dbET
+					}
+				}, totalRow)[0];
+				//cfc row
+				var cfcRow = this.etCFCRow.insertRows({
+					times: {
+						totalET: this.rowData.totalET,
+						cfcET: this.rowData.cfcET
+					}
+				}, dbRow)[0];
+			}			
 		}
 	},
 	
@@ -2542,7 +2599,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 				type: "checkbox", 
 				nol10n: true,
 				checked: ColdFire[option],
-				command: bindFixed(ColdFire.updatePref, ColdFire, option, !ColdFire[option])
+				command: bindFixed(ColdFire.setPref, ColdFire, option, !ColdFire[option])
 				};		
 	},
 	
@@ -2558,14 +2615,14 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 	
 	toggleForceDebug: function (option) {
 		var val = !ColdFire[option]
-		ColdFire.updatePref(option,val);
+		ColdFire.setPref(option,val);
 		if (this.context.window.wrappedJSObject.ColdFusion) {
 			setDebugMode(this.context.window.wrappedJSObject.ColdFusion,val);
 		}		
 	},
 		
 	toggleOption: function (option) {
-		ColdFire.updatePref(option,!ColdFire[option]);
+		ColdFire.setPref(option,!ColdFire[option]);
 		this.displayCurrentView();
 	},
 			
