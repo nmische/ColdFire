@@ -1941,6 +1941,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			this.cfMenuOptionRefresh("SuppressQueryWhiteSpace","suppressWhiteSpace"),
 			this.cfMenuOption("ShowLastRequest","showLastRequest"),
 			this.cfMenuOption("EnhanceTrace","enhanceTrace"),
+			this.cfMenuOption("ExecutionTimeTotalsOnTop","etTotalsOnTop"),
 			{label: $CFSTR("EnableCFAJAXDebugging"), type: "checkbox", nol10n: true, checked: ColdFire["forceDebug"], command: bindFixed(this.toggleForceDebug, this, "forceDebug") },	
 			"-",
 			{label: $CFSTR("ClearVariables"), nol10n: true, command: bindFixed(this.deleteVariables, this) }      
@@ -2598,7 +2599,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 				type: "checkbox", 
 				nol10n: true,
 				checked: ColdFire[option],
-				command: bindFixed(ColdFire.updatePref, ColdFire, option, !ColdFire[option])
+				command: bindFixed(ColdFire.setPref, ColdFire, option, !ColdFire[option])
 				};		
 	},
 	
@@ -2614,14 +2615,14 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 	
 	toggleForceDebug: function (option) {
 		var val = !ColdFire[option]
-		ColdFire.updatePref(option,val);
+		ColdFire.setPref(option,val);
 		if (this.context.window.wrappedJSObject.ColdFusion) {
 			setDebugMode(this.context.window.wrappedJSObject.ColdFusion,val);
 		}		
 	},
 		
 	toggleOption: function (option) {
-		ColdFire.updatePref(option,!ColdFire[option]);
+		ColdFire.setPref(option,!ColdFire[option]);
 		this.displayCurrentView();
 	},
 			
