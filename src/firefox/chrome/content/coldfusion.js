@@ -1941,7 +1941,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			this.cfMenuOptionRefresh("SuppressQueryWhiteSpace","suppressWhiteSpace"),
 			this.cfMenuOption("ShowLastRequest","showLastRequest"),
 			this.cfMenuOption("EnhanceTrace","enhanceTrace"),
-			this.cfMenuOption("ExecutionTimeTotalsOnTop","etTotalsOnTop"),
+			this.cfMenuOptionRefresh("ExecTimeTotalsOnTop","etTotalsOnTop"),
 			{label: $CFSTR("EnableCFAJAXDebugging"), type: "checkbox", nol10n: true, checked: ColdFire["forceDebug"], command: bindFixed(this.toggleForceDebug, this, "forceDebug") },	
 			"-",
 			{label: $CFSTR("ClearVariables"), nol10n: true, command: bindFixed(this.deleteVariables, this) }      
