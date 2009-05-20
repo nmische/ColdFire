@@ -8,6 +8,7 @@
 	<property name="src.dir" location="src" />
 	<property name="src.cf.dir" location ="src/coldfusion" />
 	<property name="src.ff.dir" location ="src/firefox" />
+	<property name="src.railo.dir" location ="src/railo" />
 	<property name="build.dir" location="build" />
 	<property name="build.cf.dir" location ="build/coldfusion" />
 	<property name="build.ff.dir" location ="build/firefox" />
@@ -111,7 +112,8 @@
 		<property name="install.dir" value="OperatingSystemPathToTestPofile"/>
        	<property name="cfserver.debug.dir" value="OperatingSystemPathToColdFusionDebugTemplates" />
 		<property name="cfserver.cftags.dir" value="OperatingSystemPathToColdFusionCFTagsTemplates" />
-		<property name="cfserver.cfide.dir" value="OperatingSystemPathToColdFusionCFIDEDirectory" />		
+		<property name="cfserver.cfide.dir" value="OperatingSystemPathToColdFusionCFIDEDirectory" />
+		<property name="railoserver.debug.dir" value="OperatingSystemPathToRailoDebugTemplates" />		
 		<property name="profile.name" value="NameOfTestProfile" />
     </target>
 
@@ -170,6 +172,16 @@
 		<copy file="${src.cf.dir}/cftags/trace.cfm" tofile="${cfserver.cftags.dir}/trace.cfm" overwrite="true" />
 	</target>
 	
+	<target name="copy-to-railoserver" depends="version,check-trace,backup-trace" description="copies railo debug template to server">
+        <copy file="${src.railo.dir}/debug/debugging-coldfire.cfm" tofile="${railoserver.debug.dir}/debugging-coldfire.cfm" overwrite="true">
+               <filterchain>
+                       <replacetokens>
+                            <token key="CF_REVISION" value="${coldfusion.revision}"/>
+                       </replacetokens>
+               </filterchain>
+        </copy>
+	</target>
+	
 	<target name="copy-to-tests" depends="version" description="copies coldspring advice to tests directory">
         <copy file="${src.cf.dir}/coldspring/ColdFireAdvice.cfc" tofile="${basedir}/tests/ajax/ColdFireAdvice.cfc" overwrite="true">
                <filterchain>
@@ -184,7 +196,13 @@
 
 	<target name="incremental-cf" depends="version, copy-to-cfserver" description="builds a development version of the coldfusion debug template and copies to server" />
 
-	<target name="incremental-both" depends="version, expand-templates, copy-to-extensions, copy-to-cfserver" />
+	<target name="incremental-railo" depends="version, copy-to-railoserver" description="builds a development version of the railo debug template and copies to server" />
+	
+	<target name="incremental-ff-cf" depends="version, expand-templates, copy-to-extensions, copy-to-cfserver" />
+
+	<target name="incremental-ff-railo" depends="version, expand-templates, copy-to-extensions, copy-to-railoserver" />
+		
+	<target name="incremental-all" depends="version, expand-templates, copy-to-extensions, copy-to-cfserver, copy-to-railoserver" />
 
 	<target name="incremental-relaunch" depends="version, expand-templates, copy-to-extensions, copy-to-cfserver, start-firefox" />
 		
