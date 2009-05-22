@@ -26,6 +26,7 @@
 		
 </cfif>
 
+
 <cffunction 
 	name="coldfire_udf_error" 
 	returntype="void" 
@@ -60,97 +61,44 @@
 	
 </cffunction>
 
-<!---
+
 <cffunction 
 	name="coldfire_udf_getCFCs"
 	returntype="query"
 	output="false" 
 	hint="Gets CFC from the debugging info">
 		
-	<cfargument name="data" type="query" required="true">
-
+	<cfargument name="data" type="struct" required="true">
+	
+	<cfset var pages = data.pages>	
 	<cfset var first_result = "">
-	<cfset var result = queryNew("cfc,method,et,timestamp,template,starttime")>
+	<cfset var result = queryNew("cfc,method,totaltime,totalinstances,avgtime")>
 	<cfset var cfc = "">
-	<cfset var method = "">
-	<cfset var realtemplate = "">
-	<cfset var template_copy = "">
-	<cfset var realmethod = "">
-	<cfset var realbody = "">
+	<cfset var method = "">	
 	
 	<cfquery dbType="query" name="first_result" debug="false">
-		select template, (endTime - startTime) as et, [timestamp]
-		from data
-		where type = 'Template'
-		
-		and template like 'CFC[[ %'
-		escape '['
-
-		group by template, [timestamp], startTime, endTime
-
+		select src as template, total as totaltime, count as totalinstances, avg as avgtime
+		from pages
+		where src like '%.cfc%'
 	</cfquery>
 
 	<cfloop query="first_result">
-		<cfset queryAddRow(result)>
-		<cfset querySetCell(result, "et", et)>
-		<cfset querySetCell(result, "timestamp", timestamp)>
-		<cfset querySetCell(result, "starttime", starttime)>
-		<!--- A CFC template looks like so:
-			   CFC[ C:\web\testingzone\Application.cfc | onRequestStart(/testingzone/test.cfm) ] from C:\web\testingzone\Application.cfc
-			It contains the CFC, the method signature, and the template 
-		--->
-		<cfset cfc = trim(listFirst(template,"|"))>
-		<cfset cfc = replaceNoCase(cfc, "CFC[ ", "")>
+		<cfset queryAddRow(result)>		
+		<cfset cfc = trim(listFirst(template,"$"))>		
 		<cfset querySetCell(result, "cfc", cfc)>
-		<!--- hide complex value. this is a bit of a hack. --->
-		<cfset template_copy = replaceNoCase(template, "([complex value])", "(COMPLEX VALUE)")>
-		<!---
-		<cfset method = trim(listLast(listFirst(template_copy, "]"),"|"))>
-		--->
-		<cfset method = rereplace(template, "(CFC\[ .+? \| )((.*)\(.*\)) ].*", "\2")>
-		<cfset method = trim(method)>
-		<!--- Our methods can be REALLY freaking huge, like in MG. Let's do a sanity check. --->
-
-		<cfif find("(", method)>
-			<cfset realmethod = left(method, find("(", method)-1)>
-			<cfset realbody = replace(method, realmethod & "(", "")>
-			<cfif len(realbody) gt 1>
-				<cfset realbody = left(realbody, len(realbody) - 1)>
-				<!---
-				<cfset method = realmethod & " RAAAAAAAAAAAY" & realbody & "DEBUG: #template#">
-				--->
-				<cfset realbody = htmlEditFormat(realbody)>
-				<cfif len(realbody) gt 250>
-					<cfset realbody = left(realbody, 250) & " ...">
-					<cfset method = realmethod & "(" & realbody & ")">
-				</cfif>
-			</cfif>
+		<cfif find("$",template)>		
+			<cfset method = trim(listLast(template,"$"))>
+		<cfelse>
+			<cfset method = "">
 		</cfif>
-
 		<cfset querySetCell(result, "method",method)>
-		<cfset realtemplate	= reReplace(template, "CFC\[(.*)?\] from ", "")>
-		<cfset realtemplate = realtemplate & "." & method>
-		<cfset querySetCell(result, "template", realtemplate)>
-		
+		<cfset querySetCell(result, "totaltime", totaltime)>
+		<cfset querySetCell(result, "totalinstances", totalinstances)>
+		<cfset querySetCell(result, "avgtime", avgtime)>		
 	</cfloop>
-
-	<!--- now group it down a bit --->
-	<cfquery name="result" dbtype="query" debug="false">
-	select	sum(et) as totaltime, avg(et) as avgtime, count(template) as totalinstances, cfc, method
-	from	result
-	group by cfc, method
-	</cfquery>
-
-	<!--- lastly - re remove template --->
-	<cfquery name="result" dbtype="query" debug="false">
-	select totaltime, avgtime, totalinstances, cfc, method
-	from   result
-	</cfquery>
 	
 	<cfreturn result>	
 </cffunction>
-
-
 
 
 <cffunction 
@@ -159,12 +107,17 @@
 	output="false" 
 	hint="Gets includes, custom tags.">
 		
-	<cfargument name="data" type="query" required="true">
+	<cfargument name="data" type="struct" required="true">
 
-	<cfreturn coldfire_udf_getFiles(data, false)>
+	<cfset var result = queryNew("template,totaltime,totalinstances,avgtime")>
+	
+	<!--- TODO: Join with history and figure out which templates are child templates --->
+	
+	<cfreturn result />	
+	
 </cffunction>
 
-
+<!---
 
 
 <cffunction 
@@ -199,52 +152,6 @@
 
 
 
-
-<cffunction 
-	name="coldfire_udf_getFiles"
-	returntype="query" 
-	output="false" 
-	hint="Gets files from the debugging info. Used by two other UDFs to get file based info.">
-	
-	<cfargument name="data" type="query" required="true">
-	<cfargument name="templates" type="boolean" required="false" default="true" hint="If true, we only get top level templates. If false, we get includes/tags">
-				
-	<cfset var result = queryNew("")>
-
-	<cfquery dbType="query" name="result" debug="false">
-		select template, sum(endTime - startTime) as totaltime, count(template) as totalinstances, avg(endTime-startTime) as avgtime
-		from data
-		where type = 'Template'
-
-		<cfif arguments.templates>
-		and	(
-			parent = ''
-			or
-			parent like '%\Application.cfc'
-			or
-			parent like '%\Application.cfm'
-			)
-		<cfelse>
-		and (
-			parent != ''
-			and
-			parent not like '%\Application.cfc'
-			and
-			parent not like '%\Application.cfm'
-		)
-		</cfif>
-		
-		and template not like 'CFC[[ %'
-		escape '['
-
-		and template not like 'CFIDE\\%'
-
-		group by template
-
-	</cfquery>
-
-	<cfreturn result>	
-</cffunction>	
 
 --->
 
@@ -530,7 +437,7 @@
 </cffunction>
 
 
-
+--->
 
 <cffunction 
 	name="coldfire_udf_getTemplates" 
@@ -538,12 +445,23 @@
 	output="false" 
 	hint="Gets templates.">
 	
-	<cfargument name="data" type="query" required="true">
+	<cfargument name="data" type="struct" required="true">
 
-	<cfreturn coldfire_udf_getFiles(data, true)>
+	<cfset var pages = data.pages>	
+	
+	<!--- TODO: Join with history and figure out which templates are top level templates --->
+	
+	<cfquery dbType="query" name="result" debug="false">
+		select src as template, total as totaltime, count as totalinstances, avg as avgtime
+		from pages
+		where src like '%.cfm'
+	</cfquery>
+	
+	<cfreturn result>	
+	
 </cffunction>
 
-
+<!---
 
 
 <cffunction 
@@ -663,7 +581,6 @@
 	<cfargument name="debugMode" type="boolean" required="false" default="false">
 	<cfargument name="maxHeader" type="numeric" required="false" default="8000">
 	
-	
 	<cfset var debugging = "">
 	<cfset var result = StructNew()>
 	<cfset var varJSON = "">
@@ -686,11 +603,11 @@
 		<cfset varArray = coldfire_udf_decode(varJSON)>
 	</cfif>			
 	
-	<cfset result.general= coldfire_udf_encode(coldfire_udf_getGeneral(debugging))>
+	<cfset result.general= coldfire_udf_encode(coldfire_udf_getGeneral(debugging))>	
+	<cfset result.templates = coldfire_udf_encode(coldfire_udf_getTemplates(debugging))>		
+	<cfset result.ctemplates = coldfire_udf_encode(coldfire_udf_getChildTemplates(debugging))>
+	<cfset result.cfcs = coldfire_udf_encode(coldfire_udf_getCFCs(debugging))>
 	<!---
-	<cfset result.templates = coldfire_udf_encode(coldfire_udf_getTemplates(qEvents))>		
-	<cfset result.ctemplates = coldfire_udf_encode(coldfire_udf_getChildTemplates(qEvents))>
-	<cfset result.cfcs = coldfire_udf_encode(coldfire_udf_getCFCs(qEvents))>
 	<cfset result.execeptions = coldfire_udf_encode(coldfire_udf_getExceptions(qEvents))>
 	<cfset result.queries = coldfire_udf_encode(coldfire_udf_getQueries(qEvents))>
 	<cfset result.trace = coldfire_udf_encode(coldfire_udf_getTrace(qEvents))>			
@@ -700,10 +617,10 @@
 
 	<!--- now split into arrays --->
 	<cfset result.general = coldfire_udf_sizeSplit(result.general, arguments.maxHeader)>
-	<!---
 	<cfset result.templates = coldfire_udf_sizeSplit(result.templates, arguments.maxHeader)>
 	<cfset result.ctemplates = coldfire_udf_sizeSplit(result.ctemplates, arguments.maxHeader)>
 	<cfset result.cfcs = coldfire_udf_sizeSplit(result.cfcs, arguments.maxHeader)>
+	<!---
 	<cfset result.execeptions = coldfire_udf_sizeSplit(result.execeptions, arguments.maxHeader)>
 	<cfset result.queries = coldfire_udf_sizeSplit(result.queries, arguments.maxHeader)>
 	<cfset result.trace = coldfire_udf_sizeSplit(result.trace, arguments.maxHeader)>
@@ -718,17 +635,17 @@
 	
 	<cfloop index="x" from="1" to="#arrayLen(result.general)#">
 		<cfheader name="x-coldfire-general-#x#" value="#result.general[x]#">
-	</cfloop>
-	<!---
+	</cfloop>	
 	<cfloop index="x" from="1" to="#arrayLen(result.templates)#">
 		<cfheader name="x-coldfire-templates-#x#" value="#result.templates[x]#">
 	</cfloop>
 	<cfloop index="x" from="1" to="#arrayLen(result.ctemplates)#">
 		<cfheader name="x-coldfire-ctemplates-#x#" value="#result.ctemplates[x]#">
-	</cfloop>
+	</cfloop>	
 	<cfloop index="x" from="1" to="#arrayLen(result.cfcs)#">
 		<cfheader name="x-coldfire-cfcs-#x#" value="#result.cfcs[x]#">
 	</cfloop>
+	<!---
 	<cfloop index="x" from="1" to="#arrayLen(result.execeptions)#">
 		<cfheader name="x-coldfire-exceptions-#x#" value="#result.execeptions[x]#">
 	</cfloop>
