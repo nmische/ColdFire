@@ -116,6 +116,7 @@
 	
 </cffunction>
 
+
 <cffunction 
 	name="coldfire_udf_getGeneral"
 	returntype="query"
@@ -185,6 +186,7 @@
 	
 </cffunction>
 
+
 <cffunction 
 	name="coldfire_udf_getQueries" 
 	returnType="query"
@@ -216,6 +218,7 @@
 	
 </cffunction>
 
+
 <cffunction 
 	name="coldfire_udf_getTemplates" 
 	returtType="query"
@@ -238,8 +241,6 @@
 	
 </cffunction>
 
-<!---
-
 
 <cffunction 
 	name="coldfire_udf_getTimer"
@@ -247,20 +248,24 @@
 	output="false"		
 	hint="Gets Timer info">
 		
-	<cfargument name="data" type="query" required="true">
+	<cfargument name="data" type="struct" required="true">
 	
+	<cfset var timers = "">
 	<cfset var result = queryNew("")>
 	
+	<cfif not isDefined("data.timers")>
+		<cfset timers = queryNew('label,time,template')>
+	<cfelse>
+		<cfset timers = data.timers>
+	</cfif>	
+	
 	<cfquery dbType="query" name="result" debug="false">
-	select	message, endtime-starttime as duration
-	from arguments.data
-	where type = 'CFTimer'
+		select	label as message, time as duration
+		from timers
 	</cfquery>
 
 	<cfreturn result>
 </cffunction>
-
-
 
 
 <cffunction 
@@ -269,36 +274,45 @@
 	output="false"  
 	hint="Gets Trace info">
 	
-	<cfargument name="data" type="query" required="true">
+	<cfargument name="data" type="struct" required="true">
 	
-	<cfset var result = queryNew("")>
-	<cfset var last = 0>
+	<cfset var traces = "">
+	<cfset var result = queryNew("message,endtime,priority,category,result,delta")>
+	<cfset var first_result = "">
+	<cfset var resultString = "">
 	
-	<cfquery dbType="query" name="result" debug="false">
-	select message, endtime, priority, category, result
-	from data
-	where type = 'Trace'
+	<cfif not isDefined("data.traces")>
+		<cfset traces = queryNew("type,category,text,template,line,var,total,trace")>
+	<cfelse>
+		<cfset traces = data.traces>
+	</cfif>
+	
+	<cfquery dbType="query" name="first_result" debug="false">
+		select type as priority, category as category, time as delta, text as message, varname, varvalue
+		from traces
 	</cfquery>
 
-	<!--- before we leave, do delta --->
-	<cfset queryAddColumn(result, "delta", arrayNew(1))>
-	
-	<cfloop query="result">
-		<cfif currentRow is 1>
-			<cfset querySetCell(result, "delta", 0, currentRow)>
-		<cfelse>
-			<cfset querySetCell(result, "delta", endtime-last, currentRow)>
-		</cfif>
+	<cfloop query="first_result">
 		
-		<cfset last = endtime>
-				
+		<cfset QueryAddRow(result)>
+		<cfset QuerySetCell(result, "message", message)>
+		<cfset QuerySetCell(result, "endtime", 0)>
+		<cfset QuerySetCell(result, "priority", priority)>
+		<cfset QuerySetCell(result, "category", category)>
+		<cfset QuerySetCell(result, "delta", delta)>
+		
+		<cfif currentRow is 1>
+			<cfset QuerySetCell(result, "delta", 0)>
+		</cfif>
+		<!--- TODO: Enhance Trace --->
+		<cfif Len(varname)>
+			<cfset QuerySetCell(result, "result", varname & "=" & varvalue)>
+		</cfif>
+						
 	</cfloop>
 	
 	<cfreturn result>
 </cffunction>
-
-
-
 
 <cffunction
 	name="coldfire_udf_getVariables"
@@ -347,8 +361,6 @@
 </cffunction>
 
 
---->
-
 <cffunction 
 	name="coldfire_udf_main" 
 	returntype="void" 
@@ -385,11 +397,9 @@
 	<cfset result.ctemplates = coldfire_udf_encode(coldfire_udf_getChildTemplates(debugging))>
 	<cfset result.cfcs = coldfire_udf_encode(coldfire_udf_getCFCs(debugging))>
 	<cfset result.queries = coldfire_udf_encode(coldfire_udf_getQueries(debugging))>
-	<!---
-	<cfset result.trace = coldfire_udf_encode(coldfire_udf_getTrace(qEvents))>			
-	<cfset result.timer = coldfire_udf_encode(coldfire_udf_getTimer(qEvents))>			
+	<cfset result.trace = coldfire_udf_encode(coldfire_udf_getTrace(debugging))>
+	<cfset result.timer = coldfire_udf_encode(coldfire_udf_getTimer(debugging))>				
 	<cfset result.variables = coldfire_udf_encode(coldfire_udf_getVariables(varArray))>
-	--->
 
 	<!--- now split into arrays --->
 	<cfset result.general = coldfire_udf_sizeSplit(result.general, arguments.maxHeader)>
@@ -397,11 +407,9 @@
 	<cfset result.ctemplates = coldfire_udf_sizeSplit(result.ctemplates, arguments.maxHeader)>
 	<cfset result.cfcs = coldfire_udf_sizeSplit(result.cfcs, arguments.maxHeader)>
 	<cfset result.queries = coldfire_udf_sizeSplit(result.queries, arguments.maxHeader)>
-	<!---
 	<cfset result.trace = coldfire_udf_sizeSplit(result.trace, arguments.maxHeader)>
 	<cfset result.timer = coldfire_udf_sizeSplit(result.timer, arguments.maxHeader)>
 	<cfset result.variables = coldfire_udf_sizeSplit(result.variables, arguments.maxHeader)>
-	--->
 
 
 	<cfif arguments.debugMode>
@@ -423,7 +431,6 @@
 	<cfloop index="x" from="1" to="#arrayLen(result.queries)#">
 		<cfheader name="x-coldfire-queries-#x#" value="#result.queries[x]#">
 	</cfloop>
-	<!---
 	<cfloop index="x" from="1" to="#arrayLen(result.trace)#">
 		<cfheader name="x-coldfire-trace-#x#" value="#result.trace[x]#">				
 	</cfloop>
@@ -433,7 +440,6 @@
 	<cfloop index="x" from="1" to="#arrayLen(result.variables)#">
 		<cfheader name="x-coldfire-variables-#x#" value="#result.variables[x]#">				
 	</cfloop>
-	--->
 	
 	<cfcatch>
 		<!--- make sure we don't throw an error --->
