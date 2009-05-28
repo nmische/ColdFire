@@ -1244,8 +1244,8 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		
 	storedProcTag:
 		DIV(
-			TAG("$this.spParamsTag", {parameters: "$row.PARAMETERS"}),
-			TAG("$this.spResultSetsTag", {resultsets: "$row.RESULTSETS"})
+			TAG("$row|spParamDisplay", {parameters: "$row.PARAMETERS"}),
+			TAG("$row|spResultSetDisplay", {resultsets: "$row.RESULTSETS"})
 		),
 		
 	spParamsTag:
@@ -1408,6 +1408,26 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		
 	blankDiv:
 		DIV(""),
+		
+	spParamDisplay: function(row)
+	{
+		var params = row.PARAMETERS;
+		if (params.length && params.length > 0) {
+			 return this.spParamsTag; 
+		} else {
+			 return this.blankDiv; 
+		}
+	},
+	
+	spResultSetDisplay: function(row)
+	{
+		var rs = row.RESULTSETS;
+		if (rs.length && rs.length > 0) {
+			 return this.spResultSetsTag; 
+		} else {
+			 return this.blankDiv; 
+		}
+	},
 	
 	queryDisplay: function(row)
 	{
