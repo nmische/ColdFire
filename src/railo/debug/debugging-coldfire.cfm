@@ -56,8 +56,7 @@
 		<cfheader name="x-coldfire-general-#x#" value="#result.general[x]#">
 	</cfloop>
 	<cfcatch></cfcatch>
-	</cftry>
-	
+	</cftry>	
 	
 </cffunction>
 
@@ -116,45 +115,6 @@
 	<cfreturn result />	
 	
 </cffunction>
-
-<!---
-
-
-<cffunction 
-	name="coldfire_udf_getExceptions"
-	returntype="query"
-	output="false" 
-	hint="Gets includes, custom tags.">
-		
-	<cfargument name="data" type="query" required="true">
-
-	<cfset var result = queryNew("timestamp,name,template,line,message")>
-	<cfset var tmp = "">
-	
-	<cfquery dbType="query" name="tmp" debug="false">
-		SELECT *
-		FROM data
-		WHERE type = 'Exception'
-	</cfquery>
-	
-	<cfloop query="tmp">
-		<cfset queryAddRow(result)>
-		<cfset querySetCell(result,"timestamp",tmp.timestamp)>
-		<cfset querySetCell(result,"name",tmp.name)>
-		<cfset querySetCell(result,"template",tmp.template)>
-		<cfset querySetCell(result,"line",tmp.line)>
-		<cfset querySetCell(result,"message",tmp.message)>
-	</cfloop>
-	
-	<cfreturn result>
-	
-</cffunction>
-
-
-
-
---->
-
 
 <cffunction 
 	name="coldfire_udf_getGeneral"
@@ -225,219 +185,36 @@
 	
 </cffunction>
 
-<!---
-
 <cffunction 
 	name="coldfire_udf_getQueries" 
 	returnType="query"
 	output="false"  
 	hint="Gets queries from debugging info">
 		
-	<cfargument name="data" type="query" required="true">
+	<cfargument name="data" type="struct" required="true">
 	
 	<cfset var result = queryNew("datasource, queryname, et, sql, parameters, resultsets, recordsreturned, type, cachedquery, template, timestamp")>	
-	<cfset var coldfire_queries = "">
-	<cfset var coldfire_storedproc = "">		
-	<cfset var x = "">
-	<cfset var q = "">
-	<cfset var sql = "">
-	<cfset var attr = "">
-	<cfset var rslt = "">
-	<cfset var parameters = "">
-	<cfset var resultsets = "">	
-	<cfset var recordcount = 0>	
-	<cfset var cfsqltypes = "cf_sql_bigint,cf_sql_binary,cf_sql_bit,cf_sql_blob,cf_sql_decimal,cf_sql_double,cf_sql_float,cf_sql_integer,cf_sql_longvarbinary,cf_sql_money,cf_sql_numeric,cf_sql_real,cf_sql_smallint,cf_sql_tinyint,cf_sql_varbinary">
-	<cfset cfsqltypes = cfsqltypes & ",cf_sql_date,cf_sql_time,cf_sql_timestamp">
-	<cfset cfsqltypes = cfsqltypes & ",cf_sql_char,cf_sql_clob,cf_sql_idstamp,cf_sql_longvarchar,cf_sql_varchar">
-	
-	<!--- Process SQL queries --->
-	<cftry>
-		<cfquery dbType="query" name="coldfire_queries" debug="false">
-			SELECT *, (endtime - starttime) AS executiontime
-			FROM data
-			WHERE type = 'SqlQuery' 
-		</cfquery>
-		<cfscript>
-			if( coldfire_queries.recordcount eq 1 and len(trim(coldfire_queries.executiontime)) )
-			{
-				querySetCell(coldfire_queries, "executiontime", "0", 1);
-			}
-		</cfscript>
-		<cfcatch type="Any">
-			<cfscript>
-				coldfire_queries = queryNew("datasource, queryname, et, sql, parameters, resultsets, recordsreturned, type, cachedquery, template, timestamp");
-			</cfscript>		
-		</cfcatch>
-	</cftry>
+	<cfset var coldfire_queries = data.queries>	
 	
 	<!--- Add SQL queries to the result --->
-	<cfloop query="coldfire_queries">
-		
-		<cfset sql = coldfire_queries.body>
-		<cfset parameters = "">
-		<cfset resultsets = "">	
-		<cfset recordcount = 0>
-				
-		<cfif ArrayLen(coldfire_queries.attributes[coldfire_queries.currentRow])>
-			<cfset parameters = ArrayNew(1)>		
-			<!--- build an array of parameter data --->
-			<cfloop from="1" to="#ArrayLen(coldfire_queries.attributes[coldfire_queries.currentRow])#" index="x">
-				<cfset attr = coldfire_queries.attributes[coldfire_queries.currentRow][x]>
-				<cfset parameters[x] = ArrayNew(1)>
-				<cfif StructKeyExists(attr,"sqltype")>
-					<cfset parameters[x][1] = ListFindNoCase(cfsqltypes,attr.sqltype)>
-				<cfelse>
-					<cfset parameters[x][1] = "">
-				</cfif>			
-				<cfif StructKeyExists(attr,"value")>
-					<cfset parameters[x][2] = attr.value>
-				<cfelse>
-					<cfset parameters[x][2] = "">
-				</cfif> 
-			</cfloop>
-		</cfif>				
-		
-		<!--- Get the rowcount --->
-		<cfif IsDefined("coldfire_queries.rowcount") AND IsNumeric(coldfire_queries.rowcount)>
-			<cfset recordcount = Max(coldfire_queries.rowcount, 0)>
-		<cfelseif IsQuery("coldfire_queries.result")>
-			<cfset q = coldfire_queries.result>
-			<cfset recordcount = q.recordcount>
-		</cfif>
-		
+	<cfloop query="coldfire_queries">		
 		<cfset QueryAddRow(result)>
 		<cfset QuerySetCell(result,"datasource",coldfire_queries.datasource)>
 		<cfset QuerySetCell(result,"queryname",coldfire_queries.name)>
-		<cfset QuerySetCell(result,"et",coldfire_queries.executiontime)>		
-		<cfset QuerySetCell(result,"sql",sql)>
-		<cfset QuerySetCell(result,"parameters",parameters)>
-		<cfset QuerySetCell(result,"resultsets",resultsets)>
-		<cfset QuerySetCell(result,"recordsreturned",recordcount)>
-		<cfset QuerySetCell(result,"type",coldfire_queries.type)>
-		<cfset QuerySetCell(result,"cachedquery",coldfire_queries.cachedquery)>
-		<cfset QuerySetCell(result,"template",coldfire_queries.template)>
-		<cfset QuerySetCell(result,"timestamp",coldfire_queries.timestamp)>
-	
+		<cfset QuerySetCell(result,"et",coldfire_queries.time)>		
+		<cfset QuerySetCell(result,"sql",coldfire_queries.sql)>
+		<cfset QuerySetCell(result,"parameters",ArrayNew(1))>
+		<cfset QuerySetCell(result,"resultsets","")>
+		<cfset QuerySetCell(result,"recordsreturned",Max(coldfire_queries.count, 0))>
+		<cfset QuerySetCell(result,"type","SqlQuery")>
+		<cfset QuerySetCell(result,"cachedquery","")>
+		<cfset QuerySetCell(result,"template",coldfire_queries.src)>
+		<cfset QuerySetCell(result,"timestamp","")>	
 	</cfloop>
-	
-	<!--- Process stored procedures --->
-	<cftry>
-		<cfquery dbType="query" name="coldfire_storedproc" debug="false">
-			SELECT *, (endtime - starttime) AS executiontime
-			FROM data
-			WHERE type = 'StoredProcedure'
-		</cfquery>
-		<cfscript>
-			if( coldfire_storedproc.recordcount eq 1 and len(trim(coldfire_storedproc.executiontime)) )
-			{
-				querySetCell(coldfire_storedproc, "executiontime", "0", 1);
-			}
-		</cfscript>
-		<cfcatch type="Any">
-			<cfscript>
-				coldfire_storedproc = queryNew('datasource, queryname, et, sql, parameters, resultsets, recordsreturned, type, cachedquery, template, timestamp');
-			</cfscript>						
-		</cfcatch>
-	</cftry>
-	
-	<!--- Add stored procedures to the result --->
-	<cfloop query="coldfire_storedproc">
-			
-		<cfset sql = "">
-		<cfset parameters = "">
-		<cfset resultsets = "">
-		<cfset recordcount = "n/a">	
-		
-		<cfif ArrayLen(coldfire_storedproc.attributes[coldfire_storedproc.currentRow])>
-			<cfset parameters = ArrayNew(1)>		
-			<!--- build an array of parameter data --->
-			<cfloop from="1" to="#ArrayLen(coldfire_storedproc.attributes[coldfire_storedproc.currentRow])#" index="x">
-				<cfset attr = coldfire_storedproc.attributes[coldfire_storedproc.currentRow][x]>
-				<cfset parameters[x] = ArrayNew(1)>
-				<cfif StructKeyExists(attr,"type")>
-					<cfset parameters[x][1] = attr.type>
-				<cfelse>
-					<cfset parameters[x][1] = "IN">
-				</cfif>	
-				<cfif StructKeyExists(attr,"sqltype")>
-					<cfset parameters[x][2] = ListFindNoCase(cfsqltypes,attr.sqltype)>
-				<cfelse>
-					<cfset parameters[x][2] = "">
-				</cfif>			
-				<cfif StructKeyExists(attr,"value")>
-					<cfset parameters[x][3] = attr.value>
-				<cfelse>
-					<cfset parameters[x][3] = "">
-				</cfif> 
-				<cfif StructKeyExists(attr,"variable")>
-					<cfset parameters[x][4] = "#attr.variable# = #coldfire_udf_CFDebugSerializable(attr.variable)#">
-				<cfelse>
-					<cfset parameters[x][4] = "">
-				</cfif>
-				<cfif StructKeyExists(attr,"dbvarname")>
-					<cfset parameters[x][5] = attr.dbvarname>
-				<cfelse>
-					<cfset parameters[x][5] = "">
-				</cfif>
-				<cfif StructKeyExists(attr,"maxLength")>
-					<cfset parameters[x][6] = attr.maxLength>
-				<cfelse>
-					<cfset parameters[x][6] = "">
-				</cfif>
-				<cfif StructKeyExists(attr,"scale")>
-					<cfset parameters[x][7] = attr.scale>
-				<cfelse>
-					<cfset parameters[x][7] = "">
-				</cfif>
-				<cfif StructKeyExists(attr,"null")>
-					<cfset parameters[x][8] = attr.null>
-				<cfelse>
-					<cfset parameters[x][8] = "">
-				</cfif>
-			</cfloop>
-		</cfif>	
-		
-		<cfif ArrayLen(coldfire_storedproc.result[coldfire_storedproc.currentRow])>
-			<cfset resultsets = ArrayNew(1)>		
-			<!--- build an array of parameter data --->
-			<cfloop from="1" to="#ArrayLen(coldfire_storedproc.result[coldfire_storedproc.currentRow])#" index="x">
-				<cfset rslt = coldfire_storedproc.result[coldfire_storedproc.currentRow][x]>
-				<cfset resultsets[x] = ArrayNew(1)>
-				<cfif StructKeyExists(rslt,"name")>
-					<cfset resultsets[x][1] = rslt.name>
-				<cfelse>
-					<cfset resultsets[x][1] = "">
-				</cfif>	
-				<cfif StructKeyExists(rslt,"resultSet")>
-					<cfset resultsets[x][2] = rslt.resultSet>
-				<cfelse>
-					<cfset resultsets[x][2] = "">
-				</cfif>			
-			</cfloop>
-		</cfif>			
-				
-		<cfset QueryAddRow(result)>
-		<cfset QuerySetCell(result,"datasource",coldfire_storedproc.datasource)>
-		<cfset QuerySetCell(result,"queryname",coldfire_storedproc.name)>
-		<cfset QuerySetCell(result,"et",coldfire_storedproc.executiontime)>
-		<cfset QuerySetCell(result,"sql",sql)>
-		<cfset QuerySetCell(result,"parameters",parameters)>
-		<cfset QuerySetCell(result,"resultsets",resultsets)>
-		<cfset QuerySetCell(result,"recordsreturned",recordcount)>
-		<cfset QuerySetCell(result,"type",coldfire_storedproc.type)>
-		<cfset QuerySetCell(result,"cachedquery",coldfire_storedproc.cachedquery)>
-		<cfset QuerySetCell(result,"template",coldfire_storedproc.template)>
-		<cfset QuerySetCell(result,"timestamp",coldfire_storedproc.timestamp)>
-	
-	
-	</cfloop>	
 	
 	<cfreturn result>
 	
 </cffunction>
-
-
---->
 
 <cffunction 
 	name="coldfire_udf_getTemplates" 
@@ -607,9 +384,8 @@
 	<cfset result.templates = coldfire_udf_encode(coldfire_udf_getTemplates(debugging))>		
 	<cfset result.ctemplates = coldfire_udf_encode(coldfire_udf_getChildTemplates(debugging))>
 	<cfset result.cfcs = coldfire_udf_encode(coldfire_udf_getCFCs(debugging))>
+	<cfset result.queries = coldfire_udf_encode(coldfire_udf_getQueries(debugging))>
 	<!---
-	<cfset result.execeptions = coldfire_udf_encode(coldfire_udf_getExceptions(qEvents))>
-	<cfset result.queries = coldfire_udf_encode(coldfire_udf_getQueries(qEvents))>
 	<cfset result.trace = coldfire_udf_encode(coldfire_udf_getTrace(qEvents))>			
 	<cfset result.timer = coldfire_udf_encode(coldfire_udf_getTimer(qEvents))>			
 	<cfset result.variables = coldfire_udf_encode(coldfire_udf_getVariables(varArray))>
@@ -620,9 +396,8 @@
 	<cfset result.templates = coldfire_udf_sizeSplit(result.templates, arguments.maxHeader)>
 	<cfset result.ctemplates = coldfire_udf_sizeSplit(result.ctemplates, arguments.maxHeader)>
 	<cfset result.cfcs = coldfire_udf_sizeSplit(result.cfcs, arguments.maxHeader)>
-	<!---
-	<cfset result.execeptions = coldfire_udf_sizeSplit(result.execeptions, arguments.maxHeader)>
 	<cfset result.queries = coldfire_udf_sizeSplit(result.queries, arguments.maxHeader)>
+	<!---
 	<cfset result.trace = coldfire_udf_sizeSplit(result.trace, arguments.maxHeader)>
 	<cfset result.timer = coldfire_udf_sizeSplit(result.timer, arguments.maxHeader)>
 	<cfset result.variables = coldfire_udf_sizeSplit(result.variables, arguments.maxHeader)>
@@ -644,14 +419,11 @@
 	</cfloop>	
 	<cfloop index="x" from="1" to="#arrayLen(result.cfcs)#">
 		<cfheader name="x-coldfire-cfcs-#x#" value="#result.cfcs[x]#">
-	</cfloop>
-	<!---
-	<cfloop index="x" from="1" to="#arrayLen(result.execeptions)#">
-		<cfheader name="x-coldfire-exceptions-#x#" value="#result.execeptions[x]#">
-	</cfloop>
+	</cfloop>	
 	<cfloop index="x" from="1" to="#arrayLen(result.queries)#">
 		<cfheader name="x-coldfire-queries-#x#" value="#result.queries[x]#">
 	</cfloop>
+	<!---
 	<cfloop index="x" from="1" to="#arrayLen(result.trace)#">
 		<cfheader name="x-coldfire-trace-#x#" value="#result.trace[x]#">				
 	</cfloop>
@@ -1244,7 +1016,3 @@
 		<cfreturn UCase(mid(str,1,1)) & Mid(str,2,size)>
 	</cfif>
 </cffunction>
-
-
-
-
