@@ -27,14 +27,20 @@ http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_web
 
 ------------------------------ LAST UPDATE ----------------------------- 
 
-Last Updated: May 11, 2009 (@VERSION@)
+Last Updated: May 27, 2009 (@VERSION@)
+
+* fixed stored procedure domplate to support procedures with no 
+  parameters or resultsets.
+
+
+------------------------------ OLDER UPDATES ---------------------------
+
+Last Updated: May 11, 2009 (1.3.187.192)
 
 * fixed component domplate to support components with no methods.
 * added option to show execution time totals at top of tab.
 * fixed issue with preference persistence.
 
-
------------------------------- OLDER UPDATES ---------------------------
 
 Last Updated: April 4, 2009 (1.3.187.187)
 
