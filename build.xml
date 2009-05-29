@@ -13,6 +13,7 @@
 	<property name="src.railo.dir" location ="src/railo" />
 	<property name="build.dir" location="build" />
 	<property name="build.cf.dir" location ="build/coldfusion" />
+	<property name="build.railo.dir" location ="build/railo" />
 	<property name="build.ff.dir" location ="build/firefox" />
 	<property name="dist.dir" location="dist" />
 
@@ -50,12 +51,14 @@
 	
 	<target name="version-cf" depends="version-src" if="use.cf.version">
 		<property name="version" value="${major.version}.${minor.version}.${coldfusion.revision}.${firefox.revision}"/>
+		<property name="cf.revision" value="${coldfusion.revision}" />
 		<echo message="Using CF Version Number" />
 		<echo message="Version ${version}" />
 	</target>
 	
 	<target name="version-railo" depends="version-src" unless="use.cf.version">
 		<property name="version" value="${major.version}.${minor.version}.${railo.revision}.${firefox.revision}"/>
+		<property name="cf.revision" value="${railo.revision}" />
 		<echo message="Using Railo Version Number" />
 		<echo message="Version ${version}" />
 	</target>
@@ -216,7 +219,7 @@
         <copy file="${src.cf.dir}/debug/coldfire.cfm" tofile="${cfserver.debug.dir}/coldfire.cfm" overwrite="true">
                <filterchain>
                        <replacetokens>
-                            <token key="CF_REVISION" value="${coldfusion.revision}"/>
+                            <token key="CF_REVISION" value="${cf.revision}"/>
                        </replacetokens>
                </filterchain>
         </copy>
@@ -227,7 +230,7 @@
         <copy file="${src.railo.dir}/debug/debugging-coldfire.cfm" tofile="${railoserver.debug.dir}/debugging-coldfire.cfm" overwrite="true">
                <filterchain>
                        <replacetokens>
-                            <token key="CF_REVISION" value="${coldfusion.revision}"/>
+                            <token key="CF_REVISION" value="${cf.revision}"/>
                        </replacetokens>
                </filterchain>
         </copy>
@@ -237,7 +240,7 @@
         <copy file="${src.cf.dir}/coldspring/ColdFireAdvice.cfc" tofile="${basedir}/tests/ajax/ColdFireAdvice.cfc" overwrite="true">
                <filterchain>
                        <replacetokens>
-                            <token key="CF_REVISION" value="${coldfusion.revision}"/>
+                            <token key="CF_REVISION" value="${cf.revision}"/>
                        </replacetokens>
                </filterchain>
         </copy>		
@@ -271,14 +274,14 @@
 		<copy file="${src.cf.dir}/debug/coldfire.cfm" tofile="${build.cf.dir}/debug/coldfire.cfm" overwrite="true">
                <filterchain>
                        <replacetokens>
-                            <token key="CF_REVISION" value="${coldfusion.revision}"/>
+                            <token key="CF_REVISION" value="${cf.revision}"/>
                        </replacetokens>
                </filterchain>
         </copy>
 		<copy file="${src.cf.dir}/coldspring/ColdFireAdvice.cfc" tofile="${build.cf.dir}/coldspring/ColdFireAdvice.cfc" overwrite="true">
                <filterchain>
                        <replacetokens>
-                            <token key="CF_REVISION" value="${coldfusion.revision}"/>
+                            <token key="CF_REVISION" value="${cf.revision}"/>
                        </replacetokens>
                </filterchain>
         </copy>
@@ -286,8 +289,19 @@
 		<copy file="${src.cf.dir}/appcfc/cf7/Application.cfc" tofile="${build.cf.dir}/appcfc/cf7/Application.cfc" overwrite="true" />
 		<copy file="${src.cf.dir}/appcfc/cf8/Application.cfc" tofile="${build.cf.dir}/appcfc/cf8/Application.cfc" overwrite="true" />
 	</target>
+	
+	<target name="build-railo" depends="set-up-build" description="prepares railo debug template for distribution">
+			<mkdir dir="${build.railo.dir}" />
+			<copy file="${src.railo.dir}/debug/debugging-coldfire.cfm" tofile="${build.railo.dir}/debug/debugging-coldfire.cfm" overwrite="true">
+	               <filterchain>
+	                       <replacetokens>
+	                            <token key="CF_REVISION" value="${cf.revision}"/>
+	                       </replacetokens>
+	               </filterchain>
+	        </copy>
+	</target>
 
-	<target name="build-chrome-jar" depends="build-coldfusion" description="create the xpi chrome contents including the chrome jar">
+	<target name="build-chrome-jar" depends="build-coldfusion,build-railo" description="create the xpi chrome contents including the chrome jar">
 		<mkdir dir="${build.ff.dir}" />
 		<mkdir dir="${build.ff.dir}/jar" />
 		<mkdir dir="${build.ff.dir}/chrome" />
@@ -384,13 +398,19 @@
 		</zip>
 	</target>
 	
-	<target name="make-coldfuion-dist" depends="make-xpi-dist" description="copy the codfusion template for distribution">
+	<target name="make-coldfuion-dist" depends="make-xpi-dist" description="copy the coldfusion template for distribution">
 		<copy todir="${dist.dir}/coldfusion">
 			<fileset dir="${build.cf.dir}" />
 		</copy>
 	</target>
+	
+	<target name="make-railo-dist" depends="make-coldfuion-dist" description="copy the railo template for distribution">
+		<copy todir="${dist.dir}/railo">
+			<fileset dir="${build.railo.dir}" />
+		</copy>
+	</target>
 
-	<target name="make-docs-dist" depends="make-coldfuion-dist" description="copy the docs for distribution">
+	<target name="make-docs-dist" depends="make-railo-dist" description="copy the docs for distribution">
 		<copy todir="${dist.dir}">
 			<fileset dir="${src.dir}/docs" includes="*.txt" />
 			 <filterchain>
