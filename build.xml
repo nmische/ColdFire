@@ -1,6 +1,8 @@
 <project name="coldfire" default="make-dist-zip" basedir=".">
 	<description>coldfire build file</description>
 	
+	<taskdef name="compare" classname="com.orangevolt.tools.ant.CompareTask"/>
+		
 	<property file="branch.properties" />
 	<xmlproperty file="src/firefox/install.rdf" />
 	
@@ -8,8 +10,10 @@
 	<property name="src.dir" location="src" />
 	<property name="src.cf.dir" location ="src/coldfusion" />
 	<property name="src.ff.dir" location ="src/firefox" />
+	<property name="src.railo.dir" location ="src/railo" />
 	<property name="build.dir" location="build" />
 	<property name="build.cf.dir" location ="build/coldfusion" />
+	<property name="build.railo.dir" location ="build/railo" />
 	<property name="build.ff.dir" location ="build/firefox" />
 	<property name="dist.dir" location="dist" />
 
@@ -18,36 +22,65 @@
 	<property name="extension.id" value="${RDF.Description.em:id}" />
 	
 	<!-- get version info -->
-	<target name="version" depends="properties-local, no-properties-local, cf-rev, ff-rev" description="compute version number">
+	<target name="version-props" depends="properties-local, no-properties-local, cf-rev, railo-rev, ff-rev" description="compute version number">
         
 		
 		<condition property="revs.available">
 			<and>
 				<available file="${basedir}/cfrev.properties" />
+				<available file="${basedir}/railorev.properties" />
 				<available file="${basedir}/ffrev.properties" />				
 			</and>					
 		</condition>
 		
-		<fail unless="revs.available" message="Property files cfrev.properties or ffrev.properties not found."/>
+		<fail unless="revs.available" message="Property files cfrev.properties, railorev.properties or ffrev.properties not found."/>
 		
 		<tstamp/>
 		
         <property file="cfrev.properties"/>
+		<property file="railorev.properties"/>
 		<property file="ffrev.properties"/>
-		<property name="version" value="${major.version}.${minor.version}.${coldfusion.revision}.${firefox.revision}"/>
-		<echo message="Version ${version}" />
+		
     </target>
+	
+	<target name="version-src" depends="version-props">		
+		<compare arg1="${coldfusion.revision}" arg2="${railo.revision}" numeric="true">
+			<greater property="use.cf.version" />
+		</compare>		
+	</target>
+	
+	<target name="version-cf" depends="version-src" if="use.cf.version">
+		<property name="version" value="${major.version}.${minor.version}.${coldfusion.revision}.${firefox.revision}"/>
+		<property name="cf.revision" value="${coldfusion.revision}" />
+		<echo message="Using CF Version Number" />
+		<echo message="Version ${version}" />
+	</target>
+	
+	<target name="version-railo" depends="version-src" unless="use.cf.version">
+		<property name="version" value="${major.version}.${minor.version}.${railo.revision}.${firefox.revision}"/>
+		<property name="cf.revision" value="${railo.revision}" />
+		<echo message="Using Railo Version Number" />
+		<echo message="Version ${version}" />
+	</target>
+	
+	<target name="version" depends="version-cf,version-railo" />
 	
 	
 	<!-- set up properties -->	
 	<target name="cf-rev-require">
-		<uptodate property="cf.rev.notRequired" targetfile="cf.rev.properties">
+		<uptodate property="cf.rev.notRequired" targetfile="cfrev.properties">
 			<srcfiles dir="${src.cf.dir}"/>
 		</uptodate>
 	</target>
 	
+	<target name="railo-rev-require">
+		<uptodate property="railo.rev.notRequired" targetfile="railorev.properties">
+			<srcfiles dir="${src.railo.dir}"/>
+		</uptodate>
+	</target>
+	
 	<target name="ff-rev-require">
-		<uptodate property="ff.rev.notRequired" targetfile="ff.rev.properties">
+		<uptodate property="ff.rev.notRequired" targetfile="ffrev.properties">
 			<srcfiles dir="${src.ff.dir}"/>
 		</uptodate>
 	</target>
@@ -63,6 +96,24 @@
 					<tokenfilter>
 						<filetokenizer/>
 						<replaceregex pattern="r([0-9]*)(.*)" replace="coldfusion.revision=\1" flags="s" />
+					</tokenfilter>				
+				</outputfilterchain>
+			</redirector>			
+		</exec>		
+		
+	</target>
+	
+	<target name="railo-rev" unless="railo.rev.notRequired" depends="railo-rev-require">		
+		<exec executable="svn" dir="${src.railo.dir}" >
+			<arg line="log --quiet --limit 1"/>
+			<redirector output="railorev.properties">
+				<outputfilterchain>
+					<linecontainsregexp>
+					  <regexp pattern="r[0-9]+"/>
+					</linecontainsregexp>
+					<tokenfilter>
+						<filetokenizer/>
+						<replaceregex pattern="r([0-9]*)(.*)" replace="railo.revision=\1" flags="s" />
 					</tokenfilter>				
 				</outputfilterchain>
 			</redirector>			
@@ -92,6 +143,10 @@
         <available file="${basedir}/cfrev.properties" property="cfrev.properties.available"/>
     </target>
 	
+	<target name="railo-rev-check" description="check to see if a railorev.properties file exists">
+        <available file="${basedir}/railorev.properties" property="railorev.properties.available"/>
+    </target>
+	
 	<target name="ff-rev-check" description="check to see if a ffrev.properties file exists">
         <available file="${basedir}/ffrev.properties" property="ffrev.properties.available"/>
     </target>
@@ -111,7 +166,8 @@
 		<property name="install.dir" value="OperatingSystemPathToTestPofile"/>
        	<property name="cfserver.debug.dir" value="OperatingSystemPathToColdFusionDebugTemplates" />
 		<property name="cfserver.cftags.dir" value="OperatingSystemPathToColdFusionCFTagsTemplates" />
-		<property name="cfserver.cfide.dir" value="OperatingSystemPathToColdFusionCFIDEDirectory" />		
+		<property name="cfserver.cfide.dir" value="OperatingSystemPathToColdFusionCFIDEDirectory" />
+		<property name="railoserver.debug.dir" value="OperatingSystemPathToRailoDebugTemplates" />		
 		<property name="profile.name" value="NameOfTestProfile" />
     </target>
 
@@ -163,18 +219,28 @@
         <copy file="${src.cf.dir}/debug/coldfire.cfm" tofile="${cfserver.debug.dir}/coldfire.cfm" overwrite="true">
                <filterchain>
                        <replacetokens>
-                            <token key="CF_REVISION" value="${coldfusion.revision}"/>
+                            <token key="CF_REVISION" value="${cf.revision}"/>
                        </replacetokens>
                </filterchain>
         </copy>
 		<copy file="${src.cf.dir}/cftags/trace.cfm" tofile="${cfserver.cftags.dir}/trace.cfm" overwrite="true" />
 	</target>
 	
+	<target name="copy-to-railoserver" depends="version,check-trace,backup-trace" description="copies railo debug template to server">
+        <copy file="${src.railo.dir}/debug/debugging-coldfire.cfm" tofile="${railoserver.debug.dir}/debugging-coldfire.cfm" overwrite="true">
+               <filterchain>
+                       <replacetokens>
+                            <token key="CF_REVISION" value="${cf.revision}"/>
+                       </replacetokens>
+               </filterchain>
+        </copy>
+	</target>
+	
 	<target name="copy-to-tests" depends="version" description="copies coldspring advice to tests directory">
         <copy file="${src.cf.dir}/coldspring/ColdFireAdvice.cfc" tofile="${basedir}/tests/ajax/ColdFireAdvice.cfc" overwrite="true">
                <filterchain>
                        <replacetokens>
-                            <token key="CF_REVISION" value="${coldfusion.revision}"/>
+                            <token key="CF_REVISION" value="${cf.revision}"/>
                        </replacetokens>
                </filterchain>
         </copy>		
@@ -184,7 +250,13 @@
 
 	<target name="incremental-cf" depends="version, copy-to-cfserver" description="builds a development version of the coldfusion debug template and copies to server" />
 
-	<target name="incremental-both" depends="version, expand-templates, copy-to-extensions, copy-to-cfserver" />
+	<target name="incremental-railo" depends="version, copy-to-railoserver" description="builds a development version of the railo debug template and copies to server" />
+	
+	<target name="incremental-ff-cf" depends="version, expand-templates, copy-to-extensions, copy-to-cfserver" />
+
+	<target name="incremental-ff-railo" depends="version, expand-templates, copy-to-extensions, copy-to-railoserver" />
+		
+	<target name="incremental-all" depends="version, expand-templates, copy-to-extensions, copy-to-cfserver, copy-to-railoserver" />
 
 	<target name="incremental-relaunch" depends="version, expand-templates, copy-to-extensions, copy-to-cfserver, start-firefox" />
 		
@@ -202,14 +274,14 @@
 		<copy file="${src.cf.dir}/debug/coldfire.cfm" tofile="${build.cf.dir}/debug/coldfire.cfm" overwrite="true">
                <filterchain>
                        <replacetokens>
-                            <token key="CF_REVISION" value="${coldfusion.revision}"/>
+                            <token key="CF_REVISION" value="${cf.revision}"/>
                        </replacetokens>
                </filterchain>
         </copy>
 		<copy file="${src.cf.dir}/coldspring/ColdFireAdvice.cfc" tofile="${build.cf.dir}/coldspring/ColdFireAdvice.cfc" overwrite="true">
                <filterchain>
                        <replacetokens>
-                            <token key="CF_REVISION" value="${coldfusion.revision}"/>
+                            <token key="CF_REVISION" value="${cf.revision}"/>
                        </replacetokens>
                </filterchain>
         </copy>
@@ -217,8 +289,19 @@
 		<copy file="${src.cf.dir}/appcfc/cf7/Application.cfc" tofile="${build.cf.dir}/appcfc/cf7/Application.cfc" overwrite="true" />
 		<copy file="${src.cf.dir}/appcfc/cf8/Application.cfc" tofile="${build.cf.dir}/appcfc/cf8/Application.cfc" overwrite="true" />
 	</target>
+	
+	<target name="build-railo" depends="set-up-build" description="prepares railo debug template for distribution">
+			<mkdir dir="${build.railo.dir}" />
+			<copy file="${src.railo.dir}/debug/debugging-coldfire.cfm" tofile="${build.railo.dir}/debug/debugging-coldfire.cfm" overwrite="true">
+	               <filterchain>
+	                       <replacetokens>
+	                            <token key="CF_REVISION" value="${cf.revision}"/>
+	                       </replacetokens>
+	               </filterchain>
+	        </copy>
+	</target>
 
-	<target name="build-chrome-jar" depends="build-coldfusion" description="create the xpi chrome contents including the chrome jar">
+	<target name="build-chrome-jar" depends="build-coldfusion,build-railo" description="create the xpi chrome contents including the chrome jar">
 		<mkdir dir="${build.ff.dir}" />
 		<mkdir dir="${build.ff.dir}/jar" />
 		<mkdir dir="${build.ff.dir}/chrome" />
@@ -315,13 +398,19 @@
 		</zip>
 	</target>
 	
-	<target name="make-coldfuion-dist" depends="make-xpi-dist" description="copy the codfusion template for distribution">
+	<target name="make-coldfuion-dist" depends="make-xpi-dist" description="copy the coldfusion template for distribution">
 		<copy todir="${dist.dir}/coldfusion">
 			<fileset dir="${build.cf.dir}" />
 		</copy>
 	</target>
+	
+	<target name="make-railo-dist" depends="make-coldfuion-dist" description="copy the railo template for distribution">
+		<copy todir="${dist.dir}/railo">
+			<fileset dir="${build.railo.dir}" />
+		</copy>
+	</target>
 
-	<target name="make-docs-dist" depends="make-coldfuion-dist" description="copy the docs for distribution">
+	<target name="make-docs-dist" depends="make-railo-dist" description="copy the docs for distribution">
 		<copy todir="${dist.dir}">
 			<fileset dir="${src.dir}/docs" includes="*.txt" />
 			 <filterchain>
