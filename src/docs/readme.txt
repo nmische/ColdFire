@@ -27,13 +27,18 @@ http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_web
 
 ------------------------------ LAST UPDATE ----------------------------- 
 
-Last Updated: May 27, 2009 (@VERSION@)
+Last Updated: May 29, 2009 (@VERSION@)
+
+* inital release of Railo support.
+
+
+------------------------------ OLDER UPDATES ---------------------------
+
+Last Updated: May 27, 2009 (1.3.187.199)
 
 * fixed stored procedure domplate to support procedures with no 
   parameters or resultsets.
 
-
------------------------------- OLDER UPDATES ---------------------------
 
 Last Updated: May 11, 2009 (1.3.187.192)
 
