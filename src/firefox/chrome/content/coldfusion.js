@@ -1305,7 +1305,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			BR(),
 			DIV({class: "queryParam"}, "$parameters|formatParamHeader"),
 			FOR("param", "$parameters",
-				DIV({class: "queryParam"},"$param|fomatParamString")
+				DIV({class: "queryParam"},"$param|formatParamString")
 			)
 		),
 		
@@ -1578,7 +1578,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 					if (showParam) {
 						var param = params[i];
 						param[param.length] = i + 1;
-						val += " /* " + this.fomatParamString(param) + " */ ";
+						val += " /* " + this.formatParamString(param) + " */ ";
 					}						
 					sqlText = sqlText.replace(/\?/,val);
 				}				
@@ -1606,7 +1606,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		var type = param[0];
 		var value = param[1];
 		var tmpVal = value;
-		if (type == 2){
+		if (type == 3){
 			// handle bit types
 			tmpVal = (value == "1" || value.toUpperCase() == "TRUE" || value.toUpperCase() == "YES") ? 1 : 0;
 		} else if ( type < 15){
@@ -1615,7 +1615,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		} else if (type < 18) {
 			// handle date time types
 			tmpVal = (value.indexOf("{") == 0) ? value : "'" + value + "'";
-		} else if (type < 23) {
+		} else if (type < 24) {
 			// handle text types
 			tmpVal = "'" + value.toString().replace(/'/g, "''") + "'";
 		}
@@ -1632,7 +1632,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		return $CFSTR("QueryParamValues") + " -";
 	},
 	
-	fomatParamString: function(param) {		
+	formatParamString: function(param) {		
 		return $CFSTR("Parameter") + " #" + param[param.length-1] + " (" + this.cfsqltypes[param[0]] + ") = " + param[1];
 	},
 	
@@ -1701,7 +1701,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 						var param = params[i];
 						param[param.length] = i + 1;
 						// get the formatted value	
-						var val = this.fomatParamString(param);
+						var val = this.formatParamString(param);
 						sqlText += "\n" + val;
 					}	
 				}
