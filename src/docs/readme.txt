@@ -27,12 +27,17 @@ http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_web
 
 ------------------------------ LAST UPDATE ----------------------------- 
 
-Last Updated: May 29, 2009 (@VERSION@)
+Last Updated: June 23, 2009 (@VERSION@)
 
-* inital release of Railo support.
+* fix for query parameter formatting.
 
 
 ------------------------------ OLDER UPDATES ---------------------------
+
+Last Updated: May 29, 2009 (1.3.207.199)
+
+* inital release of Railo support.
+
 
 Last Updated: May 27, 2009 (1.3.187.199)
 
