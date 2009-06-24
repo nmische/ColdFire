@@ -945,7 +945,6 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 	// NetMonitor listener interface method
 	
 	onResponse: function(context, file) {
-		FBTrace.sysout("onResponse");
 		var panel = context.getPanel("coldfusion");
 		panel.updateFile(file);		
 	},
