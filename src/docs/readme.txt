@@ -29,10 +29,15 @@ http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_web
 
 Last Updated: June 23, 2009 (@VERSION@)
 
-* fix for query parameter formatting.
+* initial support for Firefox 3.5/Firebug 1.4.
 
 
 ------------------------------ OLDER UPDATES ---------------------------
+
+Last Updated: June 23, 2009 (1.3.207.211)
+
+* fix for query parameter formatting.
+
 
 Last Updated: May 29, 2009 (1.3.207.199)
 
