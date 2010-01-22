@@ -686,20 +686,19 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 	
 	// extends module
 	
-	initialize: function() 
+	initialize: function(owner) 
 	{		
+		Firebug.Module.initialize.apply(this, arguments);
+		Firebug.NetMonitor.addListener(this);		
 		ColdFire = FirebugChrome.window.ColdFire;
 		ColdFire.initialize();
-		observerService.addObserver(this, "firebug-http-event", false);
+		observerService.addObserver(this, "firebug-http-event", false);		
 	},
-	
-	initializeUI: function(detachArgs)
-    {
-        Firebug.NetMonitor.addListener(this);
-    },
 	
 	shutdown: function() 
 	{
+		Firebug.Module.shutdown.apply(this, arguments);
+		Firebug.NetMonitor.removeListener(this);
 		ColdFire.shutdown();
 		ColdFire = null;
 		observerService.removeObserver(this, "firebug-http-event");
@@ -707,7 +706,6 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 		{
 			Firebug.setPref( 'defaultPanelName','console' );
 		}
-		Firebug.NetMonitor.removeListener(this);
 	},	
 	
 	initContext: function( context ) 
@@ -946,7 +944,7 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 	
 	// NetMonitor listener interface method
 	
-	onLoad: function(context, file) {
+	onResponse: function(context, file) {
 		var panel = context.getPanel("coldfusion");
 		panel.updateFile(file);		
 	},

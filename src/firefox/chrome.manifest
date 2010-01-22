@@ -1,4 +1,4 @@
-content coldfireextension chrome/content/ xpcnativewrappers=no
+content coldfireextension chrome/content/
 locale  coldfireextension en-US chrome/locale/en-US/
 skin    coldfireextension classic/1.0 chrome/skin/classic/
 skin	coldfireextension-os classic/1.0 chrome/skin/classic/win/
