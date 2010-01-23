@@ -30,7 +30,6 @@ http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_web
 Last Updated: January 21, 2010 (@VERSION@)
 
 * initial support for Firefox 3.6/Firebug 1.5.
-* fix for CF6 support (issue 57)
 
 
 ------------------------------ OLDER UPDATES ---------------------------
