@@ -606,33 +606,11 @@ Handles server side debugging for ColdFire
 	<cfset var result = queryNew("")>
 	<cfset var last = 0>
 	
-	<cftry>
-	
-		<cfquery dbType="query" name="result" debug="false">
-		select message, endtime, priority, category, result
-		from data
-		where type = 'Trace'
-		</cfquery>
-		
-		<cfcatch>
-			
-			<cfset result = queryNew("message,endtime,priority,category,result")>
-			
-			<cfloop query="data">
-				<cfif data.type eq 'Trace'>
-					<cfset queryAddRow(result)>
-					<cfset querySetCell(result, "message", message, currentRow)>
-					<cfset querySetCell(result, "endtime", endtime, currentRow)>
-					<cfset querySetCell(result, "priority", priority, currentRow)>
-					<cfset querySetCell(result, "category", category, currentRow)>
-					<cfset querySetCell(result, "result", result, currentRow)>
-				</cfif>			
-			</cfloop>		
-		
-		</cfcatch>
-	
-	</cftry>
-	
+	<cfquery dbType="query" name="result" debug="false">
+	select message, endtime, priority, category, result
+	from data
+	where type = 'Trace'
+	</cfquery>
 
 	<!--- before we leave, do delta --->
 	<cfset queryAddColumn(result, "delta", arrayNew(1))>
