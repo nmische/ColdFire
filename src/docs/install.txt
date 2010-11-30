@@ -74,7 +74,7 @@ you must have both the Firefox web browser
 (http://www.mozilla.org/firefox) as well as the Firebug extension
 (www.getfirebug.com) installed. There are different version of the
 Firefox web browser and Firebug extension available. This version of
-ColdFire has been designed to work with Firefox 3.6 and Firebug 1.5.
+ColdFire has been designed to work with Firefox 3.6 and Firebug 1.6.
 
 4.2 ColdFire
 
