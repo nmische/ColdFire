@@ -45,7 +45,7 @@ const STATE_STOP = Ci.nsIWebProgressListener.STATE_STOP;
 const STATE_IS_REQUEST = Ci.nsIWebProgressListener.STATE_IS_REQUEST;
 const NOTIFY_ALL = Ci.nsIWebProgress.NOTIFY_ALL;
 const nsIObserverService = Ci.nsIObserverService;
-const observerService = CCSV("@joehewitt.com/firebug-http-observer;1", "nsIObserverService");
+const observerService = httpObserver;
 const promtService = CCSV("@mozilla.org/embedcomp/prompt-service;1", "nsIPromptService");
 
 // Database Types
@@ -2346,7 +2346,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 			var traceCell = null;
 			for (var i = 0; i < this.rowData.traceRows.length; i++) {
 				if (this.rowData.traceRows && this.rowData.traceRows[i] && this.rowData.traceRows[i].RESULT) {
-					traceCell = getElementsByClass("traceValue", this.table, "td")[i];
+					traceCell = getElementsByClass(this.table, "traceValue")[i];
 					FormatterPlate.dump.append({
 						value: eval('(' + this.rowData.traceRows[i].RESULT + ')')
 					}, traceCell);
@@ -2378,7 +2378,7 @@ ColdFirePanel.prototype = domplate(Firebug.Panel,
 		var varCell = null;	
 		for( var i = 0; i < vars.length; i++ ){			
 			if (this.rowData.variablesRows && this.rowData.variablesRows[i] && this.rowData.variablesRows[i].VALUE) {
-				varCell = getElementsByClass("varValue", this.table, "td")[i];
+				varCell = getElementsByClass(this.table, "varValue")[i];
 				FormatterPlate.dump.append( {value: eval('(' + this.rowData.variablesRows[i].VALUE + ')')}, varCell);
 			}			
 		}	
