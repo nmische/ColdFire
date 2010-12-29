@@ -34,7 +34,7 @@ Last Updated: December 28, 2010 (@VERSION@)
 
 ------------------------------ OLDER UPDATES ---------------------------
 
-Last Updated: November 29, 2010 (@VERSION@)
+Last Updated: November 29, 2010 (1.5.207.232)
 
 * initial support for Firefox 3.6/Firebug 1.6.
 
