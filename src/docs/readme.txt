@@ -27,12 +27,17 @@ http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_web
 
 ------------------------------ LAST UPDATE ----------------------------- 
 
+Last Updated: December 28, 2010 (@VERSION@)
+
+* fixed issues with changing views. (issue 62)
+
+
+------------------------------ OLDER UPDATES ---------------------------
+
 Last Updated: November 29, 2010 (@VERSION@)
 
 * initial support for Firefox 3.6/Firebug 1.6.
 
-
------------------------------- OLDER UPDATES ---------------------------
 
 Last Updated: January 21, 2010 (1.5.207.223)
 
