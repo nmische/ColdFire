@@ -939,7 +939,7 @@ Firebug.ColdFireModule = extend(Firebug.Module,
 		this.coldfireView = view;
 		this.syncFilterButtons();
 		this.syncVariablesBox();		
-		FirebugContext.getPanel( "coldfusion" ).displayCurrentView();
+		Firebug.currentContext.getPanel( "coldfusion" ).displayCurrentView();
 	},	
 	
 	// NetMonitor listener interface method
