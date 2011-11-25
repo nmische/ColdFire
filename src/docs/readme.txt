@@ -14,11 +14,11 @@ limitations under the License.
 
 Support Us! Like this app? Visit our wishlists:
 
-Raymond Camden 
-http://www.amazon.com/o/registry/2TCL1D08EZEYE 
-
 Nathan Mische
 https://www.amazon.com/gp/registry/wishlist/1PMU5WXR9RZNJ/ref=wl_web/
+
+Raymond Camden 
+http://www.amazon.com/o/registry/2TCL1D08EZEYE 
 
 Adam Podolnick
 http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_web
@@ -27,12 +27,17 @@ http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_web
 
 ------------------------------ LAST UPDATE ----------------------------- 
 
-Last Updated: March 23, 2011 (@VERSION@)
+Last Updated: June 23, 2011 (@VERSION@)
 
-* updated to work with Firefox 4/Firebug 1.7. (issue 64)
+* updated to work with Firefox 5. (issue 65)
 
 
 ------------------------------ OLDER UPDATES ---------------------------
+
+Last Updated: March 23, 2011 (1.7.207.239)
+
+* updated to work with Firefox 4/Firebug 1.7. (issue 64)
+
 
 Last Updated: December 28, 2010 (1.6.207.235)
 
