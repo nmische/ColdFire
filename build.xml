@@ -301,12 +301,11 @@
 	        </copy>
 	</target>
 
-	<target name="build-chrome-jar" depends="build-coldfusion,build-railo" description="create the xpi chrome contents including the chrome jar">
+	<target name="build-xpi-chrome" depends="build-coldfusion,build-railo" description="create the xpi chrome contents">
 		<mkdir dir="${build.ff.dir}" />
-		<mkdir dir="${build.ff.dir}/jar" />
 		<mkdir dir="${build.ff.dir}/chrome" />
 
-		<copy todir="${build.ff.dir}/jar">
+		<copy todir="${build.ff.dir}/chrome">
 			<fileset dir="${src.ff.dir}/chrome" includes="content/**, locale/**, skin/**" excludes="${excludes}, **/*.gif"/>
 			<filterchain>
                    <replacetokens>
@@ -315,49 +314,13 @@
            </filterchain>
 		</copy>
 		
-		<copy todir="${build.ff.dir}/jar">
+		<copy todir="${build.ff.dir}/chrome">
 			<fileset dir="${src.ff.dir}/chrome" includes="**/*.gif" />
 		</copy>
 		
-		<zip destfile="${build.ff.dir}/chrome/${name}.jar" 
-			update="true"
-			basedir="${build.ff.dir}/jar"
-			includes="**" />		
-
-		<delete dir="${build.ff.dir}/jar" />
-		
 	</target>
-
-	<!--
-	<target name="build-platform-jars" description="create xpi platform jars">
-        <mkdir dir="${build.ff.dir}/Darwin" />
-        <mkdir dir="${build.ff.dir}/Linux" />
-        <mkdir dir="${build.ff.dir}/linux-gnu" />
-        <mkdir dir="${build.ff.dir}/WINNT" />
-        <zip destfile="${build.ff.dir}/Darwin/${ant.project.name}.jar" 
-			update="true"
-            basedir="${src.ff.dir}/platform/Darwin" 
-			includes="skin/**" 
-			excludes="${excludes}" />
-        <zip destfile="${build.ff.dir}/Linux/${ant.project.name}.jar" 
-			update="true"
-            basedir="${src.ff.dir}/platform/Linux"
-            includes="skin/**"
-            excludes="${excludes}" />
-        <zip destfile="${build.ff.dir}/linux-gnu/${ant.project.name}.jar" 
-			update="true"
-            basedir="${src.ff.dir}/platform/linux-gnu"
-            includes="skin/**"
-            excludes="${excludes}" />
-        <zip destfile="${build.ff.dir}/WINNT/${ant.project.name}.jar" 
-			update="true"
-            basedir="${src.ff.dir}/platform/WINNT"
-            includes="skin/**"
-            excludes="${excludes}" />
-    </target>
-	-->
 	
-	<target name="build-xpi-defaults" depends="build-chrome-jar" description="create the xpi defaults contents">
+	<target name="build-xpi-defaults" depends="build-xpi-chrome" description="create the xpi defaults contents">
 		<mkdir dir="${build.ff.dir}/defaults" />		
 
 		<copy todir="${build.ff.dir}/defaults">
@@ -379,11 +342,7 @@
 		
 		<copy file="${src.ff.dir}/install.rdf" toDir="${build.ff.dir}" />
 		<copy file="${src.ff.dir}/chrome.manifest" toDir="${build.ff.dir}" />
-		<!--
- 		Need to include the space because "chrome/" recursively matches (replace is stupid). 
-		-->
-		<replace file="${build.ff.dir}/chrome.manifest" token=" chrome/" value=" jar:chrome/${name}.jar!/" />	
-	
+		
 	</target>
 
 	<target name="set-up-dist" depends="build-xpi" description="sets up dist directory">
