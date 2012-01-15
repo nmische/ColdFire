@@ -1,7 +1,0 @@
-
-@import "chrome://coldfireextension/skin/coldfire.css";
-@import "chrome://coldfireextension-os/skin/coldfire.css";
-
-#fbColdFireVariableLine {
-    -moz-binding: url("chrome://coldfireextension/content/bindings.xml#variableLine");
-}

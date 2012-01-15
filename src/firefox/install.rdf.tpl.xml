@@ -4,16 +4,15 @@
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
 
   <Description about="urn:mozilla:install-manifest">
-    <em:id>ColdFireExtension@crspy.net</em:id>
+    <em:id>coldfire@riaforge.org</em:id>
     <em:version>@VERSION@</em:version>
-    <em:type>2</em:type>
-   
+
     <!-- Firefox -->
     <em:targetApplication>
       <Description>
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
-        <em:minVersion>3.0</em:minVersion>
-        <em:maxVersion>5.0.*</em:maxVersion>
+        <em:minVersion>4.0</em:minVersion>
+        <em:maxVersion>20.0.*</em:maxVersion>
       </Description>
     </em:targetApplication>
 
@@ -23,5 +22,5 @@
     <em:contributor>Raymond Camden</em:contributor>
     <em:contributor>Nathan Mische</em:contributor>
     <em:homepageURL>http://coldfire.riaforge.com</em:homepageURL>
-  </Description>      
+  </Description>
 </RDF>

@@ -1,26 +1,23 @@
-#fbColdFireVariablePrompt {
-    margin: 2px 0 2px 7px;
-    font-family: Monaco, monospace;
-    color: #0000FF;
-}
+/* See license.txt for terms of usage */
 
-#fbColdFireVariableLine {
-    -moz-appearance: none;
-    margin: 2px 0 0 0;
-    padding: 0 4px;
-    height: 0;
-    border: none;
-	font-family: Monaco, monospace;
-}
+/*************************************************************************************************/
 
-#fbColdFireVariableLine > .textbox-input-box > .textbox-textarea {
+/* Style applied on the panel node.
+   Rule syntax: .panelNode-<ext-id> */
+.panelNode-coldfire {
     overflow: hidden;
+    color: green;
+    padding: 10px;
+    font-size: 12px;
+    font-weight: bold;
 }
 
-#fbColdFireVariableBox {
-    border-top: 1px solid #CCCCCC;
-    background-color: #FFFFFF;
+/*************************************************************************************************/
+
+/* Firebug Tracing Console customization. All messages from this example use this color.
+   This helps to distinguish logs from those coming from Firebug
+   Rule syntax: .DBG_<ext-id>
+   See: http://getfirebug.com/wiki/index.php/FBTrace for more details */
+.DBG_COLDFIRE {
+    color: rgb(101, 0, 114);
 }
-
-
-
