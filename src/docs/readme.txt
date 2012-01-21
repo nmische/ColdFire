@@ -29,10 +29,14 @@ http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_web
 
 Last Updated: June 23, 2011 (@VERSION@)
 
-* updated to work with Firefox 5. (issue 65)
+* updated to work with Firefox 9 and Firebug 1.9+. (issues 66, 67, 68 and 69)
 
 
 ------------------------------ OLDER UPDATES ---------------------------
+
+Last Updated: June 23, 2011 (1.7.207.246)
+
+* updated to work with Firefox 5. (issue 65)
 
 Last Updated: March 23, 2011 (1.7.207.239)
 

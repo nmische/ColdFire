@@ -74,13 +74,13 @@ you must have both the Firefox web browser
 (http://www.mozilla.org/firefox) as well as the Firebug extension
 (www.getfirebug.com) installed. There are different version of the
 Firefox web browser and Firebug extension available. This version of
-ColdFire has been designed to work with Firefox 4.0 and Firebug 1.7.
+ColdFire has been designed to work with Firefox 9.0 and Firebug 1.9.
 
 4.2 ColdFire
 
 To install the ColdFire extension, extract the .zip installation
 package to a folder on your computer. Next go to the File/Open dialog
-in Firefox and select the coldfire_v1.5.XX.XX.xpi, located in the 
+in Firefox and select the coldfire_v1.9.XX.XX.xpi, located in the 
 Firefox folder of the extracted installation package, and open it.
 Be sure to restart Firefox when asked.
 
