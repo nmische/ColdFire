@@ -20,7 +20,7 @@ function(FBTrace, TraceModule, TraceListener) {
 	
 var ColdFire =
 {
-    version: "1.9.239.1",
+    version: "@VERSION@",
 	
 	initialize: function()
     {
