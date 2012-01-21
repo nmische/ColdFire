@@ -180,7 +180,7 @@
 		<mkdir dir="${build.ff.dir}/chrome" />
 
 		<copy todir="${build.ff.dir}/chrome">
-			<fileset dir="${src.ff.dir}/chrome" includes="content/**, locale/**, skin/**" excludes="${excludes}, **/*.gif"/>
+			<fileset dir="${src.ff.dir}/chrome" includes="content/**, icons/**, locale/**, skin/**" excludes="${excludes}, **/*.gif, **/*.png, **/*.ico"/>
 			<filterchain>
                    <replacetokens>
                         <token key="VERSION" value="${version}"/>
@@ -189,7 +189,7 @@
 		</copy>
 		
 		<copy todir="${build.ff.dir}/chrome">
-			<fileset dir="${src.ff.dir}/chrome" includes="**/*.gif" />
+			<fileset dir="${src.ff.dir}/chrome" includes="**/*.gif, **/*.png, **/*.ico" />
 		</copy>
 		
 	</target>
