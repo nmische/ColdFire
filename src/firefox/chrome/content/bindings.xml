@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+
+<bindings xmlns="http://www.mozilla.org/xbl"
+    xmlns:xbl="http://www.mozilla.org/xbl"
+    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<binding id="variableLine" extends="chrome://global/content/bindings/textbox.xml#textarea">
+    <handlers>
+    	<handler event="keypress" keycode="VK_RETURN" modifiers="" preventdefault="true"><![CDATA[
+	        var panel = Firebug.currentContext ? Firebug.currentContext.getPanel('coldfusion') : null;
+			if (panel)			
+				panel.addVariable();
+        ]]></handler>
+
+    	<handler event="keypress" keycode="VK_ESCAPE" preventdefault="true"><![CDATA[
+	        var panel = Firebug.currentContext ? Firebug.currentContext.getPanel('coldfusion') : null;
+			if (panel)				
+				panel.clearVariableLine();
+        ]]></handler>
+    </handlers>
+</binding>
+
+</bindings>

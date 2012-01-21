@@ -19,6 +19,7 @@
 	<li><a href="domplate/index.cfm">Domplate</a></li>
 	<li><a href="cflocation/index.cfm">CFLocation</a></li>
 	<li><a href="trace/index.cfm">CFTrace</a></li>
+	<li><a href="timer/index.cfm">CFTimer</a></li>
 	<li><a href="formpost/index.cfm">Form Post Tests</a></li>
 	<li><a href="lost/index.cfm" style="color: ##fff">LOST</a></li>
 	<li><a href="railo/index.cfm">Railo Tests</a></li>

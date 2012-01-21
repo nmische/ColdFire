@@ -1,1 +1,10 @@
 pref("extensions.firebug.DBG_COLDFIRE", true);
+pref("extensions.firebug.coldfire.parseParams", true);
+pref("extensions.firebug.coldfire.suppressWhiteSpace", false);
+pref("extensions.firebug.coldfire.logMsgs", false);
+pref("extensions.firebug.coldfire.maxQueueRequests", 10);
+pref("extensions.firebug.coldfire.showLastRequest", true);
+pref("extensions.firebug.coldfire.enhanceTrace", false);
+pref("extensions.firebug.coldfire.forceDebug", false);
+pref("extensions.firebug.coldfire.dbType", 1);
+pref("extensions.firebug.coldfire.etTotalsOnTop", false);

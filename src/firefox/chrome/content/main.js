@@ -17,10 +17,12 @@ function(FBTrace, TraceModule, TraceListener) {
 
 // ********************************************************************************************* //
 // The application/extension object
-
-var theApp =
+	
+var ColdFire =
 {
-    initialize: function()
+    version: "1.9.239.1",
+	
+	initialize: function()
     {
         // Register trace customization listener for FBTrace. DBG_COLDFIRE represents a CSS rule
         // that is automatically associated with all logs prefixed with "coldfire;".
@@ -28,27 +30,23 @@ var theApp =
         // The last parameter represents URL of the stylesheet that should be used by
         // the tracing console.
         this.traceListener = new TraceListener("coldfire;", "DBG_COLDFIRE", true,
-            "resource://coldfire/skin/classic/coldfire.css");
+            "chrome://coldfire/skin/trace.css");
         TraceModule.addListener(this.traceListener);
 
         if (FBTrace.DBG_COLDFIRE)
-            FBTrace.sysout("coldfire; ColdFire extension initialize");
-
-        // TODO: Extension initialization
+            FBTrace.sysout("coldfire; ColdFire extension initialize");  
     },
 
     shutdown: function()
     {
-        if (FBTrace.DBG_COLDFIRE)
-            FBTrace.sysout("coldfire; ColdFire extension shutdown");
-
-        // TODO: Extension shutdown
-
         TraceModule.removeListener(this.traceListener);
-    }
+    },
+        
 }
 
-return theApp;
+window.ColdFire = top.ColdFire = ColdFire;
+
+return ColdFire;
 
 // ********************************************************************************************* //
 });

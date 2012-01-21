@@ -1,10 +1,8 @@
 <project name="coldfire" default="make-dist-zip" basedir=".">
 	<description>coldfire build file</description>
-	
-	<taskdef name="compare" classname="com.orangevolt.tools.ant.CompareTask"/>
 		
 	<property file="branch.properties" />
-	<xmlproperty file="src/firefox/install.rdf" />
+	<xmlproperty file="src/firefox/install.rdf.tpl.xml" />
 	
 	<!-- project directories -->
 	<property name="src.dir" location="src" />
@@ -20,136 +18,12 @@
 	<property name="excludes" value="**/.*, **/*.jar, **/*.db" />
 	<property name="name" value="${ant.project.name}" />
 	<property name="extension.id" value="${RDF.Description.em:id}" />
-	
-	<!-- get version info -->
-	<target name="version-props" depends="properties-local, no-properties-local, cf-rev, railo-rev, ff-rev" description="compute version number">
-        
-		
-		<condition property="revs.available">
-			<and>
-				<available file="${basedir}/cfrev.properties" />
-				<available file="${basedir}/railorev.properties" />
-				<available file="${basedir}/ffrev.properties" />				
-			</and>					
-		</condition>
-		
-		<fail unless="revs.available" message="Property files cfrev.properties, railorev.properties or ffrev.properties not found."/>
-		
-		<tstamp/>
-		
-        <property file="cfrev.properties"/>
-		<property file="railorev.properties"/>
-		<property file="ffrev.properties"/>
-		
-    </target>
-	
-	<target name="version-src" depends="version-props">		
-		<compare arg1="${coldfusion.revision}" arg2="${railo.revision}" numeric="true">
-			<greater property="use.cf.version" />
-		</compare>		
-	</target>
-	
-	<target name="version-cf" depends="version-src" if="use.cf.version">
-		<property name="version" value="${major.version}.${minor.version}.${coldfusion.revision}.${firefox.revision}"/>
-		<property name="cf.revision" value="${coldfusion.revision}" />
-		<echo message="Using CF Version Number" />
-		<echo message="Version ${version}" />
-	</target>
-	
-	<target name="version-railo" depends="version-src" unless="use.cf.version">
-		<property name="version" value="${major.version}.${minor.version}.${railo.revision}.${firefox.revision}"/>
-		<property name="cf.revision" value="${railo.revision}" />
-		<echo message="Using Railo Version Number" />
-		<echo message="Version ${version}" />
-	</target>
-	
-	<target name="version" depends="version-cf,version-railo" />
-	
-	
-	<!-- set up properties -->	
-	<target name="cf-rev-require">
-		<uptodate property="cf.rev.notRequired" targetfile="cfrev.properties">
-			<srcfiles dir="${src.cf.dir}"/>
-		</uptodate>
-	</target>
-	
-	<target name="railo-rev-require">
-		<uptodate property="railo.rev.notRequired" targetfile="railorev.properties">
-			<srcfiles dir="${src.railo.dir}"/>
-		</uptodate>
-	</target>
-	
-	<target name="ff-rev-require">
-		<uptodate property="ff.rev.notRequired" targetfile="ffrev.properties">
-			<srcfiles dir="${src.ff.dir}"/>
-		</uptodate>
-	</target>
-	
-	<target name="cf-rev" unless="cf.rev.notRequired" depends="cf-rev-require">		
-		<exec executable="svn" dir="${src.cf.dir}" >
-			<arg line="log --quiet --limit 1"/>
-			<redirector output="cfrev.properties">
-				<outputfilterchain>
-					<linecontainsregexp>
-					  <regexp pattern="r[0-9]+"/>
-					</linecontainsregexp>
-					<tokenfilter>
-						<filetokenizer/>
-						<replaceregex pattern="r([0-9]*)(.*)" replace="coldfusion.revision=\1" flags="s" />
-					</tokenfilter>				
-				</outputfilterchain>
-			</redirector>			
-		</exec>		
-		
-	</target>
-	
-	<target name="railo-rev" unless="railo.rev.notRequired" depends="railo-rev-require">		
-		<exec executable="svn" dir="${src.railo.dir}" >
-			<arg line="log --quiet --limit 1"/>
-			<redirector output="railorev.properties">
-				<outputfilterchain>
-					<linecontainsregexp>
-					  <regexp pattern="r[0-9]+"/>
-					</linecontainsregexp>
-					<tokenfilter>
-						<filetokenizer/>
-						<replaceregex pattern="r([0-9]*)(.*)" replace="railo.revision=\1" flags="s" />
-					</tokenfilter>				
-				</outputfilterchain>
-			</redirector>			
-		</exec>		
-		
-	</target>
-		
-	<target name="ff-rev" unless="ff.rev.notRequired" depends="ff-rev-require">		
-		<exec executable="svn" dir="${src.ff.dir}" >
-			<arg line="log --quiet --limit 1"/>
-			<redirector output="ffrev.properties">
-				<outputfilterchain>
-					<linecontainsregexp>
-					  <regexp pattern="r[0-9]+"/>
-					</linecontainsregexp>
-					<tokenfilter>
-						<filetokenizer/>
-						<replaceregex pattern="r([0-9]*)(.*)" replace="firefox.revision=\1" flags="s" />
-					</tokenfilter>				
-				</outputfilterchain>
-			</redirector>			
-		</exec>					
-				
+
+	<target name="version">
+		<property name="version" value="${major.version}.${minor.version}.${cfml.version}.${firefox.version}"/>
+		<property name="cf.revision" value="${cfml.version}" />
+		<echo message="Version ${version}" />		
 	</target>	
-		
-	<target name="cf-rev-check" description="check to see if a cfrev.properties file exists">
-        <available file="${basedir}/cfrev.properties" property="cfrev.properties.available"/>
-    </target>
-	
-	<target name="railo-rev-check" description="check to see if a railorev.properties file exists">
-        <available file="${basedir}/railorev.properties" property="railorev.properties.available"/>
-    </target>
-	
-	<target name="ff-rev-check" description="check to see if a ffrev.properties file exists">
-        <available file="${basedir}/ffrev.properties" property="ffrev.properties.available"/>
-    </target>
 		
 	<target name="local-check" description="check to see if a local.properties file exists">
         <available file="${basedir}/local.properties" property="local.properties.available"/>

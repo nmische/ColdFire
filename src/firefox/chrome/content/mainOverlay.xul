@@ -1,4 +1,92 @@
 <?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://coldfire/content/coldfire.css"?>
+
+<!DOCTYPE overlay SYSTEM "chrome://coldfire/locale/coldfire.dtd">
+
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-    <script type="application/x-javascript" src="chrome://coldfire/content/mainOverlay.js"/>
+	<script type="application/x-javascript" src="chrome://coldfire/content/mainOverlay.js"/>
+    
+	<stringbundleset id="stringbundleset"> 
+		<stringbundle id="strings_coldfire" src="chrome://coldfire/locale/coldfire.properties"/> 
+	</stringbundleset> 
+		
+	<toolbar id="fbToolbar" align="center" role="toolbar">
+		 <hbox id="fbToolbarInner" class="innerToolbar" insertbefore="fbDetachButton" flex="1" align="center">
+			<hbox id="fbColdFireButtons" insertafter="fbNetButtons" collapsed="true" class="noTabStop"> 
+				<hbox id="fbColdFireButtonsFilter" class="noTabStop">           
+				
+						<toolbarseparator/> 
+						
+						<toolbarbutton 
+							id="fbColdFireFilter-General" 
+							label="&coldfire.General;"
+							type="radio" 
+							class="toolbar-text-button" 
+							group="firebugColdFireFilter" 
+							oncommand="Firebug.ColdFireModule.changeCurrentView('General')" /> 
+						<toolbarbutton 
+							id="fbColdFireFilter-ET" 
+							label="&coldfire.ExecTimes;"
+							type="radio" 
+							class="toolbar-text-button" 
+							group="firebugColdFireFilter" 
+							oncommand="Firebug.ColdFireModule.changeCurrentView('ET')"/> 
+						<toolbarbutton 
+							id="fbColdFireFilter-Exceptions" 
+							label="&coldfire.Exceptions;"
+							type="radio" 
+							class="toolbar-text-button" 
+							group="firebugColdFireFilter"
+							oncommand="Firebug.ColdFireModule.changeCurrentView('Exceptions')" /> 
+						<toolbarbutton 
+							id="fbColdFireFilter-DB" 
+							label="&coldfire.DBQueries;"
+							type="radio" 
+							class="toolbar-text-button" 
+							group="firebugColdFireFilter" 
+							oncommand="Firebug.ColdFireModule.changeCurrentView('DB')"/> 
+						<toolbarbutton 
+							id="fbColdFireFilter-Traces" 
+							label="&coldfire.Traces;"
+							type="radio" 
+							class="toolbar-text-button" 
+							group="firebugColdFireFilter" 
+							oncommand="Firebug.ColdFireModule.changeCurrentView('Traces')"/> 
+						<toolbarbutton 
+							id="fbColdFireFilter-Timer" 
+							label="&coldfire.Timer;"
+							type="radio" 
+							class="toolbar-text-button"
+							group="firebugColdFireFilter"
+							oncommand="Firebug.ColdFireModule.changeCurrentView('Timer')"/> 
+						<toolbarbutton 
+							id="fbColdFireFilter-Variables" 
+							label="&coldfire.Variables;"
+							type="radio" 
+							class="toolbar-text-button" 
+							group="firebugColdFireFilter" 
+							oncommand="Firebug.ColdFireModule.changeCurrentView('Variables')"/> 
+							
+						
+				</hbox>
+			</hbox> 
+		</hbox>     	
+	</toolbar> 
+	
+	
+	<vbox id="fbContentBox">
+		<hbox id="fbColdFireVariableBox" collapsed="true"> 
+	        <label 
+	        	id="fbColdFireVariablePrompt" 
+	        	value="&coldfire.AddVariable;:"/>
+	       	<textbox 
+	       		id="fbColdFireVariableLine" 
+	       		multiline="false" 
+	       		flex="1"/>
+	    </hbox>
+	</vbox>
+    
+    
+    
 </overlay>
