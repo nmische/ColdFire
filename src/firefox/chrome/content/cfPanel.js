@@ -350,7 +350,10 @@ ColdFirePanel.prototype = Obj.extend(Firebug.ActivablePanel,
             }
             this.rowData.generalRows.push( temp );
         }
-        }catch(e){ logger.logMessage(e) }
+        }catch(e){ 
+        	if (FBTrace.DBG_ERRORS)
+                FBTrace.sysout("coldfire; ColdFirePanel.generateRows EXCEPTION", e);
+        }
         
         try{        
         //exception rows
@@ -364,7 +367,10 @@ ColdFirePanel.prototype = Obj.extend(Firebug.ActivablePanel,
             };    
             this.rowData.exceptionRows.push(exception);
         }
-        }catch(e){ logger.logMessage(e) }
+        }catch(e){ 
+        	if (FBTrace.DBG_ERRORS)
+                FBTrace.sysout("coldfire; ColdFirePanel.generateRows EXCEPTION", e);
+        }
         
         try{
         //query rows        
@@ -386,7 +392,10 @@ ColdFirePanel.prototype = Obj.extend(Firebug.ActivablePanel,
             };    
             this.rowData.queryRows.push(query);
         }
-        }catch(e){ logger.logMessage(e) }
+        }catch(e){ 
+        	if (FBTrace.DBG_ERRORS)
+                FBTrace.sysout("coldfire; ColdFirePanel.generateRows EXCEPTION", e);
+        }
         
         try{
         //et rows      
@@ -429,7 +438,10 @@ ColdFirePanel.prototype = Obj.extend(Firebug.ActivablePanel,
             };
             this.rowData.etRows.push(temp);
         }
-        }catch(e){ logger.logMessage(e) }
+        }catch(e){ 
+        	if (FBTrace.DBG_ERRORS)
+                FBTrace.sysout("coldfire; ColdFirePanel.generateRows EXCEPTION", e);
+        }
         
         try{
         //trace rows
@@ -445,7 +457,10 @@ ColdFirePanel.prototype = Obj.extend(Firebug.ActivablePanel,
             };
             this.rowData.traceRows.push(trace);
         }
-        }catch(e){ logger.logMessage(e) }
+        }catch(e){ 
+        	if (FBTrace.DBG_ERRORS)
+                FBTrace.sysout("coldfire; ColdFirePanel.generateRows EXCEPTION", e);
+        }
         
         try{
         //timer rows
@@ -457,7 +472,10 @@ ColdFirePanel.prototype = Obj.extend(Firebug.ActivablePanel,
             };
             this.rowData.timerRows.push(timer);
         }
-        }catch(e){ logger.logMessage(e) }
+        }catch(e){ 
+        	if (FBTrace.DBG_ERRORS)
+                FBTrace.sysout("coldfire; ColdFirePanel.generateRows EXCEPTION", e);
+        }
         
         try{
         //variable rows
@@ -469,7 +487,10 @@ ColdFirePanel.prototype = Obj.extend(Firebug.ActivablePanel,
             };
             this.rowData.variablesRows.push(variable);
         }
-        }catch(e){ logger.logMessage(e) }
+        }catch(e){ 
+        	if (FBTrace.DBG_ERRORS)
+                FBTrace.sysout("coldfire; ColdFirePanel.generateRows EXCEPTION", e);
+        }
         
         //total exection time
         if (this.rowData.totalET < 0) {
@@ -483,7 +504,10 @@ ColdFirePanel.prototype = Obj.extend(Firebug.ActivablePanel,
             VALUE: this.rowData.totalET + " ms" 
         }
         this.rowData.generalRows.push( temp );
-        }catch(e){ logger.logMessage(e) }
+        }catch(e){ 
+        	if (FBTrace.DBG_ERRORS)
+                FBTrace.sysout("coldfire; ColdFirePanel.generateRows EXCEPTION", e);
+        }
         
     },
     
@@ -779,10 +803,13 @@ ColdFirePanel.prototype = Obj.extend(Firebug.ActivablePanel,
     updateFile: function(file)
     {
         
+    	if (FBTrace.DBG_COLDFIRE)
+            FBTrace.sysout("coldfire; ColdFirePanel.updateFile",file);
+    	
         var index = this.queue.indexOf(file);
-                    
+                            
         if ((index == -1) && (this.hasColdFireHeader(file))) {
-            
+        	
             if (this.queue.length >= Options.get("coldfire.maxQueueRequests"))
                 this.queue.splice(0, 1);
             
@@ -799,14 +826,31 @@ ColdFirePanel.prototype = Obj.extend(Firebug.ActivablePanel,
     },
     
     hasColdFireHeader: function(file){
+    	
+    	if (FBTrace.DBG_COLDFIRE)
+            FBTrace.sysout("coldfire; ColdFirePanel.hasColdFireHeader", file);
+    	
         if (!file.responseHeaders) {
+        	
+        	if (FBTrace.DBG_COLDFIRE)
+                FBTrace.sysout("coldfire; ColdFirePanel.hasColdFireHeader; false; no headers");
+        	
             return false;
         }
                     
         for (var i = 0; i < file.responseHeaders.length; i++){
-            if (file.responseHeaders[i].name.match(/x-coldfire/))
-                return true;            
+            if (file.responseHeaders[i].name.match(/x-coldfire/)) {
+            	
+            	if (FBTrace.DBG_COLDFIRE)
+                    FBTrace.sysout("coldfire; ColdFirePanel.hasColdFireHeader; true");
+            	
+                return true;          
+                
+            }
         }
+        
+        if (FBTrace.DBG_COLDFIRE)
+            FBTrace.sysout("coldfire; ColdFirePanel.hasColdFireHeader; false; no coldfire headers");
         
         return false;
     },

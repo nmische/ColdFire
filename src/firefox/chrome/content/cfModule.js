@@ -108,14 +108,25 @@ Firebug.ColdFireModule = Obj.extend(Firebug.ActivableModule,
 	
 	// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
     // NetMonitor Listener
+	
+	onResponse: function(context, file) {	
 		
-	onResponseBody: function(context, file) {		
+		if (FBTrace.DBG_COLDFIRE)
+            FBTrace.sysout("coldfire; ColdFireModule.onResponse", file);
 		
 		var panel = context.getPanel(panelName);
 		panel.updateFile(file);		
 		
+	},
+		
+	onResponseBody: function(context, file) {	
+		
 		if (FBTrace.DBG_COLDFIRE)
-            FBTrace.sysout("coldfire; ColdFireModule.onResponseBody;");
+            FBTrace.sysout("coldfire; ColdFireModule.onResponseBody", file);
+		
+		var panel = context.getPanel(panelName);
+		panel.updateFile(file);		
+		
 	},
 	
 	// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
