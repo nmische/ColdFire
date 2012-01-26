@@ -32,14 +32,27 @@ var ColdFire =
         this.traceListener = new TraceListener("coldfire;", "DBG_COLDFIRE", true,
             "chrome://coldfire/skin/trace.css");
         TraceModule.addListener(this.traceListener);
-
+        
+        // Set the version number        
+        Components.utils.import("resource://gre/modules/AddonManager.jsm");
+        AddonManager.getAddonByID("coldfire@riaforge.org", this.setVersion); 
+        
         if (FBTrace.DBG_COLDFIRE)
-            FBTrace.sysout("coldfire; ColdFire extension initialize");  
+            FBTrace.sysout("coldfire; ColdFire extension initialize");
+        
     },
 
     shutdown: function()
     {
         TraceModule.removeListener(this.traceListener);
+    },
+    
+    setVersion: function(addon) {
+    	
+    	if (FBTrace.DBG_COLDFIRE)
+            FBTrace.sysout("coldfire; ColdFire extension setVersion", addon);
+    	
+    	ColdFire.version = addon.version;
     },
         
 }
