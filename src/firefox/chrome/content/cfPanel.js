@@ -157,7 +157,11 @@ ColdFirePanel.prototype = Obj.extend(Firebug.ActivablePanel,
         
     hide: function(state)
     {
-         
+        this.showToolbarButtons("fbColdFireButtons", false);
+        this.showToolbarButtons("fbColdFireVariableBox", false);
+        
+        if (FBTrace.DBG_COLDFIRE)
+            FBTrace.sysout("coldfire; ColdFirePanel.hide");
     },
     
     supportsObject: function(object)
