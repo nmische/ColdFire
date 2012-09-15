@@ -285,7 +285,7 @@ var ColdFireHttpObserver =
 // ********************************************************************************************* //
 // Registration
 
-Firebug.registerModule(Firebug.ColdFireModule);
+Firebug.registerActivableModule(Firebug.ColdFireModule);
 
 return Firebug.ColdFireModule;
 
