@@ -80,13 +80,13 @@ ColdFire has been designed to work with Firefox 9.0 and Firebug 1.9.
 
 To install the ColdFire extension, extract the .zip installation
 package to a folder on your computer. Next go to the File/Open dialog
-in Firefox and select the coldfire_v1.9.XX.XX.xpi, located in the 
+in Firefox and select the coldfire_v1.10.XX.XX.xpi, located in the 
 Firefox folder of the extracted installation package, and open it.
 Be sure to restart Firefox when asked.
 
 Next you need to find your ColdFusion installation folder. Typically
 this will be C:/ColdFusion9. ColdFire was tested on ColdFusion 9, but
-should work in ColdFusion 6-9. Under your ColdFusion installation
+should work in ColdFusion 6-10. Under your ColdFusion installation
 folder, find the WEB-INF/debug folder. Copy the coldfire.cfm template
 located in the /coldfusion/debug folder of the installation 
 package to this folder.

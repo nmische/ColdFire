@@ -27,12 +27,17 @@ http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_web
 
 ------------------------------ LAST UPDATE ----------------------------- 
 
-Last Updated: June 23, 2011 (@VERSION@)
+Last Updated: September 17, 2012 (@VERSION@)
 
-* updated to work with Firefox 9 and Firebug 1.9+. Added icons. (issues 66, 67, 68 and 69)
+* updated to work with Firefox 15 and Firebug 1.10+. (GitHub issues #8 and #9)
+* fixed issue with variables box. (GitHub issues #5)
 
 
 ------------------------------ OLDER UPDATES ---------------------------
+
+Last Updated: January 21, 2012 (1.9.207.249)
+
+* updated to work with Firefox 9 and Firebug 1.9+. Added icons. (issues 66, 67, 68 and 69)
 
 
 Last Updated: June 23, 2011 (1.7.207.246)
