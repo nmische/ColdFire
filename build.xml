@@ -9,6 +9,11 @@
 	<property name="src.cf.dir" location ="src/coldfusion" />
 	<property name="src.ff.dir" location ="src/firefox" />
 	<property name="src.railo.dir" location ="src/railo" />
+
+	<property name="incremental.dir" location="incremental" />
+	<property name="install.dir" value="${incremental.dir}/firefox"/>
+		
+
 	<property name="build.dir" location="build" />
 	<property name="build.cf.dir" location ="build/coldfusion" />
 	<property name="build.railo.dir" location ="build/railo" />
@@ -19,67 +24,64 @@
 	<property name="name" value="${ant.project.name}" />
 	<property name="extension.id" value="${RDF.Description.em:id}" />
 
-	<target name="version">
+	<target name="version" depends="properties-local, no-properties-local">
 		<property name="version" value="${major.version}.${minor.version}.${cfml.version}.${firefox.version}"/>
 		<property name="cf.revision" value="${cfml.version}" />
 		<echo message="Version ${version}" />		
-	</target>	
-		
+	</target>
+
 	<target name="local-check" description="check to see if a local.properties file exists">
-        <available file="${basedir}/local.properties" property="local.properties.available"/>
-    </target>
+		<available file="${basedir}/local.properties" property="local.properties.available"/>
+	</target>
 
 	<target name="properties-local" if="local.properties.available" depends="local-check">
-    	<echo message="Loading local properties file."/>
-    	<property file="local.properties"/>
-    </target>
+		<echo message="Loading local properties file."/>
+		<property file="local.properties"/>
+	</target>
 
-    <target name="no-properties-local" unless="local.properties.available" depends="local-check">
-        <echo message="No local properties file, setting defaults."/>
-        <!-- set these values -->
-		<property name="install.dir" value="OperatingSystemPathToTestPofile"/>
-       	<property name="cfserver.debug.dir" value="OperatingSystemPathToColdFusionDebugTemplates" />
-		<property name="cfserver.cftags.dir" value="OperatingSystemPathToColdFusionCFTagsTemplates" />
-		<property name="cfserver.cfide.dir" value="OperatingSystemPathToColdFusionCFIDEDirectory" />
-		<property name="railoserver.debug.dir" value="OperatingSystemPathToRailoDebugTemplates" />		
-		<property name="profile.name" value="NameOfTestProfile" />
-    </target>
+	<target name="no-properties-local" unless="local.properties.available" depends="local-check">
+		<echo message="No local properties file, setting defaults."/>
+		<!-- set these values -->
+		<property name="cfserver.debug.dir" value="/opt/coldfusion9/wwwroot/WEB-INF/debug" />
+		<property name="cfserver.cftags.dir" value="/opt/coldfusion9/wwwroot/WEB-INF/cftags" />
+		<property name="railoserver.debug.dir" value="/opt/railo/webroot/WEB-INF/railo/context/templates/debugging" />	
+	</target>
 
 	<!-- expand templates -->
 	<target name="install-dependency" description="check template or branch properties changes">
-        <uptodate property="install.expansion.notRequired" targetfile="${src.ff.dir}/install.rdf">
-            <srcfiles dir="." includes="src/firefox/install.rdf.tpl.xml,*.properties"/>
-        </uptodate>
+		<uptodate property="install.expansion.notRequired" targetfile="${src.ff.dir}/install.rdf">
+			<srcfiles dir="." includes="src/firefox/install.rdf.tpl.xml,*.properties"/>
+		</uptodate>
 		<echo message="${install.expansion.notRequired}" />
-    </target>
+	</target>
 
 	<target name="expand-install-template" depends="install-dependency, version" unless="install.expansion.notRequired" description="update install.rdf based on template and branch.properties">
-        <copy file="${src.ff.dir}/install.rdf.tpl.xml" tofile="${src.ff.dir}/install.rdf" overwrite="true">
-               <filterchain>
-                       <replacetokens>
-                            <token key="VERSION" value="${version}"/>
-                       </replacetokens>
-               </filterchain>
-        </copy>
-    </target>
+		<copy file="${src.ff.dir}/install.rdf.tpl.xml" tofile="${src.ff.dir}/install.rdf" overwrite="true">
+			<filterchain>
+				<replacetokens>
+					<token key="VERSION" value="${version}"/>
+				</replacetokens>
+			</filterchain>
+		</copy>
+	</target>
 
 	<target name="expand-templates" depends="expand-install-template" description="fill in version info" />
 
 	<!-- targets for incremental builds -->	
 
 	<target name="copy-to-extensions" depends="clean-reg" description="copies extension files to profle">
-        <copy todir="${install.dir}/extensions/${extension.id}" >
-            <fileset dir="${src.ff.dir}" excludes="**/*.tpl.xml, **/*.gif" />
-			<filterchain>
-                   <replacetokens>
-                        <token key="VERSION" value="${version}"/>
-                   </replacetokens>
-           </filterchain>
-        </copy>
 		<copy todir="${install.dir}/extensions/${extension.id}" >
-            <fileset dir="${src.ff.dir}" includes="**/*.gif" />
+			<fileset dir="${src.ff.dir}" excludes="**/*.tpl.xml, **/*.gif, **/*.png" />
+			<filterchain>
+				<replacetokens>
+					<token key="VERSION" value="${version}"/>
+				</replacetokens>
+			</filterchain>
 		</copy>
-    </target>
+		<copy todir="${install.dir}/extensions/${extension.id}" >
+			<fileset dir="${src.ff.dir}" includes="**/*.gif, **/*.png" />
+		</copy>
+	</target>
 	
 	<target name="check-trace" description="checks that a backup of trace.cfm exists as trace_adobe.cfm">
 		<available file="${cfserver.cftags.dir}/trace_adobe.cfm" property="trace_adobe.present" />
@@ -90,34 +92,34 @@
 	</target>
 	
 	<target name="copy-to-cfserver" depends="version,check-trace,backup-trace" description="copies coldfusion debug template to server">
-        <copy file="${src.cf.dir}/debug/coldfire.cfm" tofile="${cfserver.debug.dir}/coldfire.cfm" overwrite="true">
-               <filterchain>
-                       <replacetokens>
-                            <token key="CF_REVISION" value="${cf.revision}"/>
-                       </replacetokens>
-               </filterchain>
-        </copy>
+		<copy file="${src.cf.dir}/debug/coldfire.cfm" tofile="${cfserver.debug.dir}/coldfire.cfm" overwrite="true">
+			<filterchain>
+				<replacetokens>
+					<token key="CF_REVISION" value="${cf.revision}"/>
+				</replacetokens>
+			</filterchain>
+		</copy>
 		<copy file="${src.cf.dir}/cftags/trace.cfm" tofile="${cfserver.cftags.dir}/trace.cfm" overwrite="true" />
 	</target>
 	
 	<target name="copy-to-railoserver" depends="version,check-trace,backup-trace" description="copies railo debug template to server">
-        <copy file="${src.railo.dir}/debug/debugging-coldfire.cfm" tofile="${railoserver.debug.dir}/debugging-coldfire.cfm" overwrite="true">
-               <filterchain>
-                       <replacetokens>
-                            <token key="CF_REVISION" value="${cf.revision}"/>
-                       </replacetokens>
-               </filterchain>
-        </copy>
+		<copy file="${src.railo.dir}/debug/debugging-coldfire.cfm" tofile="${railoserver.debug.dir}/debugging-coldfire.cfm" overwrite="true">
+			<filterchain>
+				<replacetokens>
+					<token key="CF_REVISION" value="${cf.revision}"/>
+				</replacetokens>
+			</filterchain>
+		</copy>
 	</target>
 	
 	<target name="copy-to-tests" depends="version" description="copies coldspring advice to tests directory">
-        <copy file="${src.cf.dir}/coldspring/ColdFireAdvice.cfc" tofile="${basedir}/tests/ajax/ColdFireAdvice.cfc" overwrite="true">
-               <filterchain>
-                       <replacetokens>
-                            <token key="CF_REVISION" value="${cf.revision}"/>
-                       </replacetokens>
-               </filterchain>
-        </copy>		
+		<copy file="${src.cf.dir}/coldspring/ColdFireAdvice.cfc" tofile="${basedir}/tests/ajax/ColdFireAdvice.cfc" overwrite="true">
+			<filterchain>
+				<replacetokens>
+					<token key="CF_REVISION" value="${cf.revision}"/>
+				</replacetokens>
+			</filterchain>
+		</copy>		
 	</target>
 
 	<target name="incremental-ff" depends="version, expand-templates, copy-to-extensions" description="builds a development version of the firefox extension and copies to profile" />
@@ -132,11 +134,9 @@
 		
 	<target name="incremental-all" depends="version, expand-templates, copy-to-extensions, copy-to-cfserver, copy-to-railoserver" />
 
-	<target name="incremental-relaunch" depends="version, expand-templates, copy-to-extensions, copy-to-cfserver, start-firefox" />
-		
 	<target name="clean-reg" description="delete compreg.dat to reload service" >
-        <delete file="${install.dir}/compreg.dat"/>
-    </target>
+		<delete file="${install.dir}/compreg.dat"/>
+	</target>
 	
 	<!-- targets used for creating a distribution -->
 	<target name="set-up-build" depends="clean, version, expand-templates" description="sets up build directory">
@@ -146,33 +146,33 @@
 	<target name="build-coldfusion" depends="set-up-build" description="prepares coldfusion debug template for distribution">
 		<mkdir dir="${build.cf.dir}" />
 		<copy file="${src.cf.dir}/debug/coldfire.cfm" tofile="${build.cf.dir}/debug/coldfire.cfm" overwrite="true">
-               <filterchain>
-                       <replacetokens>
-                            <token key="CF_REVISION" value="${cf.revision}"/>
-                       </replacetokens>
-               </filterchain>
-        </copy>
+			<filterchain>
+				<replacetokens>
+					<token key="CF_REVISION" value="${cf.revision}"/>
+				</replacetokens>
+			</filterchain>
+		</copy>
 		<copy file="${src.cf.dir}/coldspring/ColdFireAdvice.cfc" tofile="${build.cf.dir}/coldspring/ColdFireAdvice.cfc" overwrite="true">
-               <filterchain>
-                       <replacetokens>
-                            <token key="CF_REVISION" value="${cf.revision}"/>
-                       </replacetokens>
-               </filterchain>
-        </copy>
+			<filterchain>
+				<replacetokens>
+					<token key="CF_REVISION" value="${cf.revision}"/>
+				</replacetokens>
+			</filterchain>
+		</copy>
 		<copy file="${src.cf.dir}/cftags/trace.cfm" tofile="${build.cf.dir}/cftags/trace.cfm" overwrite="true" />
 		<copy file="${src.cf.dir}/appcfc/cf7/Application.cfc" tofile="${build.cf.dir}/appcfc/cf7/Application.cfc" overwrite="true" />
 		<copy file="${src.cf.dir}/appcfc/cf8/Application.cfc" tofile="${build.cf.dir}/appcfc/cf8/Application.cfc" overwrite="true" />
 	</target>
 	
 	<target name="build-railo" depends="set-up-build" description="prepares railo debug template for distribution">
-			<mkdir dir="${build.railo.dir}" />
-			<copy file="${src.railo.dir}/debug/debugging-coldfire.cfm" tofile="${build.railo.dir}/debug/debugging-coldfire.cfm" overwrite="true">
-	               <filterchain>
-	                       <replacetokens>
-	                            <token key="CF_REVISION" value="${cf.revision}"/>
-	                       </replacetokens>
-	               </filterchain>
-	        </copy>
+		<mkdir dir="${build.railo.dir}" />
+		<copy file="${src.railo.dir}/debug/debugging-coldfire.cfm" tofile="${build.railo.dir}/debug/debugging-coldfire.cfm" overwrite="true">
+			<filterchain>
+				<replacetokens>
+					<token key="CF_REVISION" value="${cf.revision}"/>
+				</replacetokens>
+			</filterchain>
+		</copy>
 	</target>
 
 	<target name="build-xpi-chrome" depends="build-coldfusion,build-railo" description="create the xpi chrome contents">
@@ -182,10 +182,10 @@
 		<copy todir="${build.ff.dir}/chrome">
 			<fileset dir="${src.ff.dir}/chrome" includes="content/**, icons/**, locale/**, skin/**" excludes="${excludes}, **/*.gif, **/*.png, **/*.ico"/>
 			<filterchain>
-                   <replacetokens>
-                        <token key="VERSION" value="${version}"/>
-                   </replacetokens>
-           </filterchain>
+				<replacetokens>
+					<token key="VERSION" value="${version}"/>
+				</replacetokens>
+			</filterchain>
 		</copy>
 		
 		<copy todir="${build.ff.dir}/chrome">
@@ -246,11 +246,11 @@
 	<target name="make-docs-dist" depends="make-railo-dist" description="copy the docs for distribution">
 		<copy todir="${dist.dir}">
 			<fileset dir="${src.dir}/docs" includes="*.txt" />
-			 <filterchain>
-                   <replacetokens>
-						<token key="VERSION" value="${version}"/>
-                   </replacetokens>
-           </filterchain>
+			<filterchain>
+				<replacetokens>
+					<token key="VERSION" value="${version}"/>
+				</replacetokens>
+			</filterchain>
 		</copy>
 		<copy todir="${dist.dir}">
 			<fileset dir="${src.dir}/docs" excludes="*.txt" />
@@ -265,21 +265,10 @@
 	</target>
 	
 	<target name="clean" description="clean up">
-		<!-- Delete the ${build.dir} and ${dist.dir} directory trees -->
+		<!-- Delete the ${incremental.dir}, ${build.dir} and ${dist.dir} directory trees -->
+		<delete dir="${incremental.dir}" />
 		<delete dir="${build.dir}" />
 		<delete dir="${dist.dir}" />		
-	</target>
-
-	<target name="kill-firefox" description="closes and opens firefox on windows">
-		<exec executable="cmd"> 
-        	<arg line="/c TASKKILL /IM firefox.exe" />
-	   	</exec>
-	</target>
-
-	<target name="start-firefox" depends="version, kill-firefox">
-		<exec executable="cmd"> 
-        	<arg line='/c START firefox -P "${profile.name}"'/>
-    	</exec>
 	</target>
 	
 </project>
