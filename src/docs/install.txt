@@ -74,18 +74,19 @@ you must have both the Firefox web browser
 (http://www.mozilla.org/firefox) as well as the Firebug extension
 (www.getfirebug.com) installed. There are different version of the
 Firefox web browser and Firebug extension available. This version of
-ColdFire has been designed to work with Firefox 9.0 and Firebug 1.9.
+ColdFire has been designed to work with Firefox 18.0.1 and 
+Firebug 1.11.1.
 
 4.2 ColdFire
 
 To install the ColdFire extension, extract the .zip installation
 package to a folder on your computer. Next go to the File/Open dialog
-in Firefox and select the coldfire_v1.10.XX.XX.xpi, located in the 
+in Firefox and select the coldfire_v1.11.XX.XX.xpi, located in the 
 Firefox folder of the extracted installation package, and open it.
 Be sure to restart Firefox when asked.
 
 Next you need to find your ColdFusion installation folder. Typically
-this will be C:/ColdFusion9. ColdFire was tested on ColdFusion 9, but
+this will be C:/ColdFusion10. ColdFire was tested on ColdFusion 10, but
 should work in ColdFusion 6-10. Under your ColdFusion installation
 folder, find the WEB-INF/debug folder. Copy the coldfire.cfm template
 located in the /coldfusion/debug folder of the installation 
@@ -115,7 +116,7 @@ that if your application uses onRequestEnd you must call
 super.onRequestEnd() as part of your application's onRequestEnd method.
 Two Application.cfc components are provided in the coldfusion/appcfc
 folder of the installation package, one for ColdFusion MX 7 and one for
-ColdFusion 8/9.
+ColdFusion 8-10.
 
 -Enhanced Tracing-
 

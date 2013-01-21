@@ -27,13 +27,20 @@ http://www.amazon.com/gp/registry/wishlist/2IX25DTK2ITG6/ref=wl_web
 
 ------------------------------ LAST UPDATE ----------------------------- 
 
-Last Updated: September 17, 2012 (@VERSION@)
+Last Updated: January 20, 2013 (@VERSION@)
+
+* updated to work with Firefox 18 and Firebug 1.11+. 
+* updated JSON serialization in debugging tempate.
+* updated extensionto use JSON.parse. (GitHub issue #4)
+
+
+------------------------------ OLDER UPDATES ---------------------------
+
+Last Updated: September 17, 2012 (1.10.207.250)
 
 * updated to work with Firefox 15 and Firebug 1.10+. (GitHub issues #8 and #9)
 * fixed issue with variables box. (GitHub issues #5)
 
-
------------------------------- OLDER UPDATES ---------------------------
 
 Last Updated: January 21, 2012 (1.9.207.249)
 
