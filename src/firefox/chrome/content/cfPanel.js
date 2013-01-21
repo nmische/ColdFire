@@ -210,16 +210,16 @@ ColdFirePanel.prototype = Obj.extend(Firebug.ActivablePanel,
                 };
                 
                 var cfObj = {
-                    generalObj: eval( "(" + this.stringifyHeaders(headers.general) + ")" ),
-                    exceptionsObj: eval( "(" + this.stringifyHeaders(headers.exceptions) + ")" ),
-                    queriesObj: eval( "(" + this.stringifyHeaders(headers.queries) + ")" ),
-                    traceObj: eval( "(" + this.stringifyHeaders(headers.trace) + ")" ),
-                    templatesObj:  eval( "(" + this.stringifyHeaders(headers.templates) + ")" ),
-                    ctemplatesObj: eval( "(" + this.stringifyHeaders(headers.ctemplates) + ")" ),
-                    cfcsObj: eval( "(" + this.stringifyHeaders(headers.cfcs) + ")" ),
-                    timerObj: eval( "(" + this.stringifyHeaders(headers.timer) + ")"),
-                    variablesObj: eval( "(" + this.stringifyHeaders(headers.variables) + ")")
-                };            
+                    generalObj: JSON.parse(this.stringifyHeaders(headers.general)),
+                    exceptionsObj: JSON.parse(this.stringifyHeaders(headers.exceptions)),
+                    queriesObj: JSON.parse(this.stringifyHeaders(headers.queries)),
+                    traceObj: JSON.parse(this.stringifyHeaders(headers.trace)),
+                    templatesObj:  JSON.parse( this.stringifyHeaders(headers.templates)),
+                    ctemplatesObj: JSON.parse( this.stringifyHeaders(headers.ctemplates)),
+                    cfcsObj: JSON.parse(this.stringifyHeaders(headers.cfcs)),
+                    timerObj: JSON.parse(this.stringifyHeaders(headers.timer)),
+                    variablesObj: JSON.parse(this.stringifyHeaders(headers.variables))
+                };
             
             };    
         
@@ -659,7 +659,7 @@ ColdFirePanel.prototype = Obj.extend(Firebug.ActivablePanel,
                 if (this.rowData.traceRows && this.rowData.traceRows[i] && this.rowData.traceRows[i].RESULT) {
                     traceCell = Dom.getElementsByClass(this.table, "traceValue")[i];
                     this.FormatterPlate.dump.append({
-                        value: eval('(' + this.rowData.traceRows[i].RESULT + ')')
+                        value: JSON.parse(this.rowData.traceRows[i].RESULT)
                     }, traceCell);
                 }
             }
@@ -690,7 +690,7 @@ ColdFirePanel.prototype = Obj.extend(Firebug.ActivablePanel,
         for( var i = 0; i < vars.length; i++ ){            
             if (this.rowData.variablesRows && this.rowData.variablesRows[i] && this.rowData.variablesRows[i].VALUE) {
                 varCell = Dom.getElementsByClass(this.table, "varValue")[i];
-                this.FormatterPlate.dump.append( {value: eval('(' + this.rowData.variablesRows[i].VALUE + ')')}, varCell);
+                this.FormatterPlate.dump.append( {value: JSON.parse(this.rowData.variablesRows[i].VALUE )}, varCell);
             }            
         }    
     },
