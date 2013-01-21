@@ -369,6 +369,40 @@ Handles server side debugging for ColdFire
 	<cfset var cfsqltypes = "cf_sql_bigint,cf_sql_binary,cf_sql_bit,cf_sql_blob,cf_sql_decimal,cf_sql_double,cf_sql_float,cf_sql_integer,cf_sql_longvarbinary,cf_sql_money,cf_sql_numeric,cf_sql_real,cf_sql_smallint,cf_sql_tinyint,cf_sql_varbinary">
 	<cfset cfsqltypes = cfsqltypes & ",cf_sql_date,cf_sql_time,cf_sql_timestamp">
 	<cfset cfsqltypes = cfsqltypes & ",cf_sql_char,cf_sql_clob,cf_sql_idstamp,cf_sql_longvarchar,cf_sql_varchar">
+
+    <!--- Process ORM SQL Queries --->
+    <cftry>
+    	<cfquery dbType="query" name="coldfire_orm_queries" debug="false">
+			SELECT *, (endtime - starttime) AS executiontime
+			FROM data
+			WHERE type = 'ORMSqlQuery'
+		</cfquery>
+		<cfcatch type="Any">
+			<cfscript>
+				coldfire_orm_queries = queryNew("datasource, queryname, et, sql, parameters, resultsets, recordsreturned, type, cachedquery, template, timestamp");
+			</cfscript>		
+		</cfcatch>
+    </cftry>
+
+    <!--- Add ORM SQL queries to the result --->
+	<cfloop query="coldfire_orm_queries">
+		
+		<cfset sql = coldfire_orm_queries.body>
+		<cfset QueryAddRow(result)>
+		<cfset QuerySetCell(result,"datasource","")>
+		<cfset QuerySetCell(result,"queryname","ORM Query")>
+		<cfset QuerySetCell(result,"et",coldfire_orm_queries.executiontime)>
+		<cfset QuerySetCell(result,"sql",sql)>
+		<cfset QuerySetCell(result,"parameters","")>
+		<cfset QuerySetCell(result,"resultsets","")>
+		<cfset QuerySetCell(result,"recordsreturned","")>
+		<cfset QuerySetCell(result,"type",coldfire_orm_queries.type)>
+		<cfset QuerySetCell(result,"cachedquery","")>
+		<cfset QuerySetCell(result,"template",coldfire_orm_queries.template)>
+		<cfset QuerySetCell(result,"timestamp",coldfire_orm_queries.timestamp)>
+
+	</cfloop>
+
 	
 	<!--- Process SQL queries --->
 	<cftry>
@@ -1073,8 +1107,17 @@ Handles server side debugging for ColdFire
 		<cfreturn "{""__cftype__"":""wddx"",""data"":" & coldfire_udf_encode( tempVal, arguments.queryFormat, arguments.queryKeyCase ) & "}" />
 		
 	<!--- STRING --->
-	<cfelseif IsSimpleValue(_data)>
-		<cfreturn '"' & Replace(JSStringFormat(_data), "/", "\/", "ALL") & '"' />
+	<cfelseif IsSimpleValue(_data)>		
+		<!--- escape special JSON characters --->
+		<cfset _data = Replace(_data,'\','\\','ALL') />
+		<cfset _data = Replace(_data,'/','\/','ALL') />
+		<cfset _data = Replace(_data,'"','\"','ALL') />
+		<cfset _data = Replace(_data,Chr(8),'\b','ALL') />
+		<cfset _data = Replace(_data,Chr(12),'\f','ALL') />
+		<cfset _data = Replace(_data,Chr(10),'\n','ALL') />
+		<cfset _data = Replace(_data,Chr(13),'\r','ALL') />
+		<cfset _data = Replace(_data,Chr(9),'\t','ALL') />
+		<cfreturn '"' & _data  & '"' />		
 		
 	<!--- OBJECT --->
 	<cfelseif IsObject(_data)>	

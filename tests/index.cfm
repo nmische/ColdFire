@@ -22,6 +22,7 @@
 	<li><a href="timer/index.cfm">CFTimer</a></li>
 	<li><a href="formpost/index.cfm">Form Post Tests</a></li>
 	<li><a href="lost/index.cfm" style="color: ##fff">LOST</a></li>
+	<li><a href="orm/index.cfm">ORM</a></li>
 	<li><a href="railo/index.cfm">Railo Tests</a></li>
 </ul>
 </body>
